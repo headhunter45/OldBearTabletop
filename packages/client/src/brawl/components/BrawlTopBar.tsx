@@ -1,0 +1,288 @@
+import React, { useState } from 'react';
+import {
+  Share2,
+  Menu,
+  Check,
+  Swords,
+  Timer,
+  Play,
+  Pause,
+  ChevronRight,
+  Shield,
+  MessageSquareHeart,
+} from 'lucide-react';
+import { Player } from '@oldbear/shared';
+import { VoiceState } from '../../common/network/VoiceManager.js';
+import { FULL_VERSION_STRING } from '../../common/config/version.js';
+import { WargamePhase } from '../types/brawl.js';
+
+interface BrawlTopBarProps {
+  roomName: string;
+  activeMapName: string;
+  isOrganizer: boolean;
+  players: Player[];
+  localPlayer: Player | null;
+  activePlayerIndex: 1 | 2;
+  currentRound: number;
+  currentPhase: WargamePhase;
+  p1ClockSeconds: number;
+  p2ClockSeconds: number;
+  isClockRunning: boolean;
+  onToggleClock: () => void;
+  onNextPhase: () => void;
+  onSwitchActivePlayer: () => void;
+  onOpenArmyRoster: () => void;
+  onOpenDice: () => void;
+  onOpenMaps: () => void;
+  onOpenSoundboard: () => void;
+  onOpenBackup: () => void;
+  onAddNewModel: () => void;
+  onToggleMobileDrawer: () => void;
+  voiceState?: VoiceState;
+}
+
+const PHASES: WargamePhase[] = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight', 'Morale'];
+
+function formatClock(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
+  roomName,
+  activeMapName,
+  isOrganizer,
+  players,
+  localPlayer,
+  activePlayerIndex,
+  currentRound,
+  currentPhase,
+  p1ClockSeconds,
+  p2ClockSeconds,
+  isClockRunning,
+  onToggleClock,
+  onNextPhase,
+  onSwitchActivePlayer,
+  onOpenArmyRoster,
+  onOpenDice,
+  onOpenMaps,
+  onOpenSoundboard,
+  onOpenBackup,
+  onAddNewModel,
+  onToggleMobileDrawer,
+  voiceState,
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <header className="top-bar">
+      <div className="top-bar-left">
+        <button
+          className="btn-icon"
+          onClick={onToggleMobileDrawer}
+          title="Open Menu"
+          aria-label="Open Menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="room-info" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+            <span className="room-name" style={{ fontWeight: 800, color: '#f59e0b', letterSpacing: '0.5px' }}>
+              Old Bear Brawl
+            </span>
+            <span
+              style={{
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                background: 'rgba(245, 158, 11, 0.2)',
+                color: '#f59e0b',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Wargame
+            </span>
+          </div>
+          <span style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '-2px' }}>
+            {FULL_VERSION_STRING}
+          </span>
+        </div>
+
+        {/* Round & Phase Bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(0, 0, 0, 0.3)',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+            Round {currentRound}
+          </span>
+          <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>|</span>
+          <button
+            onClick={onNextPhase}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#38bdf8',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '2px 4px',
+              borderRadius: '4px',
+            }}
+            title="Click to advance to next phase"
+          >
+            {currentPhase} <ChevronRight size={14} />
+          </button>
+        </div>
+
+        {/* Chess Clock Indicator */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            background: isClockRunning ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.25)',
+            border: `1px solid ${isClockRunning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
+            padding: '3px 8px',
+            borderRadius: '6px',
+          }}
+        >
+          <Timer size={13} style={{ color: isClockRunning ? '#10b981' : 'var(--text-secondary)' }} />
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: activePlayerIndex === 1 ? '#38bdf8' : 'var(--text-secondary)',
+            }}
+          >
+            P1: {formatClock(p1ClockSeconds)}
+          </span>
+          <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>/</span>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: activePlayerIndex === 2 ? '#ef4444' : 'var(--text-secondary)',
+            }}
+          >
+            P2: {formatClock(p2ClockSeconds)}
+          </span>
+          <button
+            className="btn-icon"
+            style={{ width: '22px', height: '22px' }}
+            onClick={onToggleClock}
+            title={isClockRunning ? 'Pause Clock' : 'Start Clock'}
+          >
+            {isClockRunning ? <Pause size={11} /> : <Play size={11} />}
+          </button>
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '0.7rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: '0 2px',
+            }}
+            onClick={onSwitchActivePlayer}
+            title="Pass turn to opponent"
+          >
+            Pass Turn
+          </button>
+        </div>
+      </div>
+
+      <div className="top-bar-right">
+        {/* Army Roster Button */}
+        <button
+          className="btn-primary"
+          style={{
+            fontSize: '0.75rem',
+            padding: '4px 10px',
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            borderColor: '#b45309',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+          onClick={onOpenArmyRoster}
+          title="Open Army Roster"
+        >
+          <Shield size={14} /> Army
+        </button>
+
+        {/* Share Room Button */}
+        <button
+          className="btn-icon"
+          onClick={copyInviteLink}
+          title={copied ? 'Link Copied!' : 'Copy Room Invite Link'}
+          aria-label="Copy Room Invite Link"
+          style={{ color: copied ? '#10b981' : undefined }}
+        >
+          {copied ? <Check size={18} /> : <Share2 size={18} />}
+        </button>
+
+        {/* Feedback Link */}
+        <a
+          href="https://forms.gle/zD9Rmqj4c3Dffpw39"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-icon"
+          title="Send Feedback"
+          aria-label="Send Feedback"
+          style={{ textDecoration: 'none' }}
+        >
+          <MessageSquareHeart size={18} />
+        </a>
+
+        {/* Connected Players */}
+        <div className="player-avatars" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          {players.map((p) => {
+            const isSelf = p.id === localPlayer?.id;
+            return (
+              <div
+                key={p.id}
+                title={`${p.name}${isSelf ? ' (You)' : ''}`}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: p.color || '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  color: '#fff',
+                  border: isSelf ? '2px solid #fff' : '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                {p.name.charAt(0).toUpperCase()}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </header>
+  );
+};

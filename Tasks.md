@@ -136,7 +136,7 @@
 | [OB-133](#ob-133---advanced-dice-expression-engine--action-tied-rolls) | Pending | Advanced Dice Expression Engine & Action-Tied Rolls |
 | [OB-134](#ob-134---custom-image-spray-indicator-tool) | Pending | Custom Image "Spray" Indicator Tool |
 | [OB-135](#ob-135---universal-binder-exportimport-pipeline) | Pending | Universal `.binder` Export/Import Pipeline |
-| [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) | Pending | Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl |
+| [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) | Complete | Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl |
 | [OB-137](#ob-137---mobile-touch-hit-box--finger-offset-calibration) | Backlog | Mobile Touch Hit-Box & Finger Offset Calibration |
 | [OB-138](#ob-138---mobile-token-interaction-bar--left-menu-clipping) | Backlog | Mobile Token Interaction Bar & Left Menu Clipping |
 | [OB-139](#ob-139---reusable-help--tooltip-component) | Backlog | Reusable Help & Tooltip Component |
@@ -468,7 +468,7 @@ Establish an open, system-agnostic `.binder` (`application/json`) interchange fo
 ---
 
 ## OB-136 - Client Architectural Refactoring: Restructure into `src/common`, `src/vtt`, and `src/brawl`
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** None  
 **Description:**

@@ -15,7 +15,20 @@ import {
   Coins,
   Flame,
 } from 'lucide-react';
-import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
+import {
+  SavedCharacterRecord,
+  getSavedCharacters,
+  saveCharacterToStorage,
+  deleteSavedCharacter,
+} from '../storage/characterStorage.js';
+
+export type { SavedCharacterRecord };
+export {
+  getSavedCharacters,
+  saveCharacterToStorage,
+  deleteSavedCharacter,
+};
 
 interface CharacterFlyoutProps {
   player: Player;
@@ -26,63 +39,6 @@ interface CharacterFlyoutProps {
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
   onClose: () => void;
   isGm?: boolean;
-}
-
-export interface SavedCharacterRecord {
-  id: string;
-  name: string;
-  classes?: string;
-  avatarUrl?: string;
-  charData: DnDCharacter;
-  savedAt: number;
-}
-
-const LOCAL_STORAGE_KEY = 'oldbear_saved_characters';
-const GM_STORAGE_KEY = 'oldbear_gm_saved_characters';
-
-export function getSavedCharacters(isGm: boolean): SavedCharacterRecord[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const list: SavedCharacterRecord[] = raw ? JSON.parse(raw) : [];
-    if (isGm) {
-      const gmRaw = localStorage.getItem(GM_STORAGE_KEY);
-      const gmList: SavedCharacterRecord[] = gmRaw ? JSON.parse(gmRaw) : [];
-      const map = new Map<string, SavedCharacterRecord>();
-      for (const item of [...list, ...gmList]) {
-        map.set(item.id, item);
-      }
-      return Array.from(map.values());
-    }
-    return list;
-  } catch {
-    return [];
-  }
-}
-
-export function saveCharacterToStorage(char: DnDCharacter, isGm: boolean) {
-  try {
-    const record: SavedCharacterRecord = {
-      id: char.id,
-      name: char.name,
-      classes: char.classes,
-      avatarUrl: char.avatarUrl,
-      charData: char,
-      savedAt: Date.now(),
-    };
-    // Save to player's storage
-    const userRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const userList: SavedCharacterRecord[] = userRaw ? JSON.parse(userRaw) : [];
-    const updatedUserList = [record, ...userList.filter((c) => c.id !== char.id)];
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUserList.slice(0, 30)));
-
-    // Save to GM storage
-    const gmRaw = localStorage.getItem(GM_STORAGE_KEY);
-    const gmList: SavedCharacterRecord[] = gmRaw ? JSON.parse(gmRaw) : [];
-    const updatedGmList = [record, ...gmList.filter((c) => c.id !== char.id)];
-    localStorage.setItem(GM_STORAGE_KEY, JSON.stringify(updatedGmList.slice(0, 50)));
-  } catch (e) {
-    console.error('Failed to save character to localStorage:', e);
-  }
 }
 
 export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({

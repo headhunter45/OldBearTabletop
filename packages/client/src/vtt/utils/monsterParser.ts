@@ -1,5 +1,5 @@
 import { DnDCharacter, DnDAction, Token } from '@oldbear/shared';
-import { StoredAsset } from '../storage/db.js';
+import { StoredAsset } from '../../common/storage/db.js';
 
 export interface ParsedMonsterResult {
   asset: StoredAsset;

@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, User, Sparkles, Check, Package, Skull, Shield, Search } from 'lucide-react';
 import { StoredAsset, getAllAssets, saveAsset } from '../storage/db.js';
-import { getSavedCharacters, SavedCharacterRecord } from './CharacterFlyout.js';
+
+export interface SavedCharacterRecord {
+  id: string;
+  name: string;
+  classes?: string;
+  avatarUrl?: string;
+  charData?: any;
+  savedAt?: number;
+}
 
 export interface TokenSpawnData {
   name: string;
@@ -23,10 +31,11 @@ export interface TokenSpawnData {
   propHeight?: number;
 }
 
-interface TokenPickerModalProps {
+export interface TokenPickerModalProps {
   onClose: () => void;
   onCreateToken: (tokenData: TokenSpawnData) => void;
   isGm?: boolean;
+  loadCharacters?: (isGm: boolean) => SavedCharacterRecord[];
 }
 
 const PRESET_TOKENS = [
@@ -42,7 +51,7 @@ const PRESET_TOKENS = [
 
 type CategoryTab = 'tokens' | 'props' | 'monsters' | 'characters';
 
-export const TokenPickerModal: React.FC<TokenPickerModalProps> = ({ onClose, onCreateToken, isGm = true }) => {
+export const TokenPickerModal: React.FC<TokenPickerModalProps> = ({ onClose, onCreateToken, isGm = true, loadCharacters }) => {
   const [activeCategory, setActiveCategory] = useState<CategoryTab>('tokens');
   const [tokenName, setTokenName] = useState('Hero');
   const [size, setSize] = useState(1);
@@ -66,12 +75,14 @@ export const TokenPickerModal: React.FC<TokenPickerModalProps> = ({ onClose, onC
       try {
         const assets = await getAllAssets();
         setAllAssets(assets);
-        setSavedCharacters(getSavedCharacters(isGm));
+        if (loadCharacters) {
+          setSavedCharacters(loadCharacters(isGm));
+        }
       } catch (err) {
         console.warn('Failed to load assets for token picker:', err);
       }
     })();
-  }, [isGm]);
+  }, [isGm, loadCharacters]);
 
   // Derived asset lists
   const tokenAssets = allAssets.filter(
