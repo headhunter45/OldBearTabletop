@@ -129,7 +129,7 @@
 | OB-126 | Complete | Add MIT License file                                                                                                                                                           |
 | OB-127 | Done     | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
 | OB-128 | Pending  | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
-| OB-129 | Ready    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
+| OB-129 | Done     | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
 | OB-130 | Pending  | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Ready    | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
 | OB-132 | Ready    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
@@ -341,7 +341,7 @@ Dynamic map tile assembly on the canvas during play:
 
 ## OB-129 - Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering
 
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

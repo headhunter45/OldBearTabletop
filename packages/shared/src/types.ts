@@ -113,7 +113,7 @@ export interface FogState {
   shapes: FogShape[];
 }
 
-export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone';
+export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone' | 'tether';
 
 export interface ScreenMarker {
   id: string;
@@ -123,9 +123,18 @@ export interface ScreenMarker {
   color: string;
   x: number;
   y: number;
+  label?: string; // Custom name / label (e.g. "Spirit Guardians", "Threat Range")
+  opacity?: number; // 0.05 to 1.0
+  anchor?: 'center' | 'edge'; // Measure aura from token center vs base edge perimeter
+  attachedTokenId?: string; // ID of token this aura/indicator is attached to
+  tetherTargetId?: string; // ID of target token or prop tethered to
+  tetherStyle?: 'straight' | 'wiggly'; // connecting line style
+  tetherFrequency?: number; // frequency of sine wave (e.g. 10 to 50, default 24)
+  tetherAmplitude?: number; // amplitude in pixels (e.g. 5 to 25, default 10)
+  strokeWidth?: number; // stroke width (default 2.5)
   // Dynamic parameters depending on type
   points?: FogPoint[]; // for laser trails
-  targetX?: number; // for arrow
+  targetX?: number; // for arrow / tether
   targetY?: number;
   radius?: number; // for circle or cone
   width?: number; // for rectangle

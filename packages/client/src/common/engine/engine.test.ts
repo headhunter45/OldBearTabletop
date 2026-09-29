@@ -363,5 +363,77 @@ describe('Canvas Engine Utilities', () => {
     const isHitOutside = Math.hypot(380 - targetMarker.x, 200 - targetMarker.y) <= hitRadius;
     assert.strictEqual(isHitOutside, false);
   });
+
+  it('calculates anchor position, base edge offsets, and duplicates attached indicators (OB-129)', async () => {
+    const { getMarkerAnchorPosition, duplicateAttachedMarkers } = await import('./PointerSystem.js');
+    const mockToken = {
+      id: 'token-hero-1',
+      mapId: 'map-1',
+      name: 'Paladin',
+      x: 100,
+      y: 100,
+      size: 2, // 2x2 token = 100px wide
+      rotation: 0,
+      ringColor: '#38bdf8',
+      fillColor: '#000',
+      clipCircle: true,
+      currentHp: 50,
+      maxHp: 50,
+      tempHp: 0,
+      speed: 30,
+      conditions: [],
+      isProp: false,
+      layer: 'token' as const,
+    };
+
+    const mockTokens = { [mockToken.id]: mockToken };
+
+    // Marker attached to Paladin
+    const mockAura = {
+      id: 'aura-1',
+      type: 'circle' as const,
+      userId: 'user-1',
+      userName: 'Player',
+      color: '#38bdf8',
+      x: 0,
+      y: 0,
+      radius: 50,
+      attachedTokenId: mockToken.id,
+      anchor: 'edge' as const,
+      label: 'Aura of Protection',
+      opacity: 0.25,
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+
+    // 1. Center of 2x2 token at (100, 100) with gridSize 50 is (150, 150), baseRadius is 50px
+    const anchor = getMarkerAnchorPosition(mockAura, mockTokens, 50);
+    assert.strictEqual(anchor.isAttached, true);
+    assert.strictEqual(anchor.x, 150);
+    assert.strictEqual(anchor.y, 150);
+    assert.strictEqual(anchor.baseRadius, 50);
+
+    // 2. Base Edge measurement: effective radius = radius (50) + baseRadius (50) = 100px
+    const effectiveRadius = (mockAura.radius || 50) + (mockAura.anchor === 'edge' ? anchor.baseRadius : 0);
+    assert.strictEqual(effectiveRadius, 100);
+
+    // 3. Duplicating token duplicates attached indicator with new ID and targetToken ID
+    const duplicatedToken = {
+      ...mockToken,
+      id: 'token-hero-2',
+      name: 'Paladin 2',
+      x: 200,
+      y: 100,
+    };
+
+    const dupMarkers = duplicateAttachedMarkers(mockToken.id, duplicatedToken, [mockAura]);
+    assert.strictEqual(dupMarkers.length, 1);
+    assert.notStrictEqual(dupMarkers[0].id, mockAura.id);
+    assert.strictEqual(dupMarkers[0].attachedTokenId, duplicatedToken.id);
+    assert.strictEqual(dupMarkers[0].label, 'Aura of Protection');
+    assert.strictEqual(dupMarkers[0].anchor, 'edge');
+  });
 });
+
 

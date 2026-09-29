@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Token, Player, GameMap } from '@oldbear/shared';
-import { Heart, Shield, Plus, Minus, Settings, Trash2, ArrowRightLeft, Copy, UserCheck, Swords, RotateCw, Lock, Unlock } from 'lucide-react';
+import { Heart, Shield, Plus, Minus, Settings, Trash2, ArrowRightLeft, Copy, UserCheck, Swords, RotateCw, Lock, Unlock, Sparkles } from 'lucide-react';
 
 interface TokenControlsProps {
   token: Token;
@@ -12,6 +12,7 @@ interface TokenControlsProps {
   onTransferToken: (id: string, toMapId: string) => void;
   onSetInitiative?: (token: Token, score: number) => void;
   onOpenFullEditor: () => void;
+  onAddAura?: (token: Token) => void;
   canControl: boolean;
   isGm: boolean;
   maps: GameMap[];
@@ -131,6 +132,7 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
   onTransferToken,
   onSetInitiative,
   onOpenFullEditor,
+  onAddAura,
   canControl,
   isGm,
   maps,
@@ -422,6 +424,15 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
 
       {/* Full Editor Modal, Duplicate & Delete */}
       <div style={{ display: 'flex', gap: '0.3rem' }}>
+        {onAddAura && (
+          <button
+            className="btn-icon"
+            onClick={() => onAddAura(token)}
+            title="Attach Aura / Persistent Indicator (OB-129)"
+          >
+            <Sparkles size={16} />
+          </button>
+        )}
         {onDuplicateToken && (
           <button
             className="btn-icon"

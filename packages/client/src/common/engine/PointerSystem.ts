@@ -1,4 +1,4 @@
-import { ScreenMarker } from '@oldbear/shared';
+import { ScreenMarker, Token } from '@oldbear/shared';
 
 export function renderMarkers(
   ctx: CanvasRenderingContext2D,
@@ -6,7 +6,8 @@ export function renderMarkers(
   now: number,
   gridSize: number = 50,
   scaleFtPerCell: number = 5,
-  selectedMarkerId: string | null = null
+  selectedMarkerId: string | null = null,
+  tokens: Record<string, Token> = {}
 ): ScreenMarker[] {
   // Return non-expired or persistent markers
   const activeMarkers: ScreenMarker[] = [];
@@ -35,16 +36,19 @@ export function renderMarkers(
         renderArrow(ctx, marker, isSelected);
         break;
       case 'crosshair':
-        renderCrosshair(ctx, marker, elapsed, gridSize, scaleFtPerCell, isSelected);
+        renderCrosshair(ctx, marker, elapsed, gridSize, scaleFtPerCell, isSelected, tokens);
         break;
       case 'circle':
-        renderCircle(ctx, marker, gridSize, scaleFtPerCell, isSelected);
+        renderCircle(ctx, marker, gridSize, scaleFtPerCell, isSelected, tokens);
         break;
       case 'rectangle':
-        renderRectangle(ctx, marker, gridSize, scaleFtPerCell, isSelected);
+        renderRectangle(ctx, marker, gridSize, scaleFtPerCell, isSelected, tokens);
         break;
       case 'cone':
-        renderCone(ctx, marker, gridSize, scaleFtPerCell, isSelected);
+        renderCone(ctx, marker, gridSize, scaleFtPerCell, isSelected, tokens);
+        break;
+      case 'tether':
+        renderTether(ctx, marker, tokens, gridSize, scaleFtPerCell, isSelected);
         break;
     }
 
@@ -139,15 +143,141 @@ function renderArrow(ctx: CanvasRenderingContext2D, marker: ScreenMarker, isSele
   renderUserLabel(ctx, `${labelPrefix}${marker.userName}`, fromX, fromY - 10, marker.color);
 }
 
+export function getMarkerAnchorPosition(
+  marker: ScreenMarker,
+  tokens: Record<string, Token> = {},
+  gridSize: number = 50
+): { x: number; y: number; baseRadius: number; isAttached: boolean } {
+  if (marker.attachedTokenId && tokens[marker.attachedTokenId]) {
+    const t = tokens[marker.attachedTokenId];
+    const isProp = Boolean(t.isProp);
+    const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+    const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+    return {
+      x: t.x + w / 2,
+      y: t.y + h / 2,
+      baseRadius: Math.min(w, h) / 2,
+      isAttached: true,
+    };
+  }
+  return {
+    x: marker.x,
+    y: marker.y,
+    baseRadius: 0,
+    isAttached: false,
+  };
+}
+
+export function duplicateAttachedMarkers(
+  sourceTokenId: string,
+  targetToken: Token,
+  existingMarkers: ScreenMarker[]
+): ScreenMarker[] {
+  const attached = existingMarkers.filter((m) => m.attachedTokenId === sourceTokenId);
+  return attached.map((m) => ({
+    ...m,
+    id: `marker-${crypto.randomUUID()}`,
+    attachedTokenId: targetToken.id,
+    x: targetToken.x,
+    y: targetToken.y,
+    createdAt: Date.now(),
+  }));
+}
+
+export function renderTether(
+  ctx: CanvasRenderingContext2D,
+  marker: ScreenMarker,
+  tokens: Record<string, Token> = {},
+  gridSize: number = 50,
+  scaleFtPerCell: number = 5,
+  isSelected?: boolean
+) {
+  let x1 = marker.x;
+  let y1 = marker.y;
+  if (marker.attachedTokenId && tokens[marker.attachedTokenId]) {
+    const t = tokens[marker.attachedTokenId];
+    const isProp = Boolean(t.isProp);
+    const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+    const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+    x1 = t.x + w / 2;
+    y1 = t.y + h / 2;
+  }
+
+  let x2 = marker.targetX ?? marker.x;
+  let y2 = marker.targetY ?? marker.y;
+  if (marker.tetherTargetId && tokens[marker.tetherTargetId]) {
+    const t2 = tokens[marker.tetherTargetId];
+    const isProp2 = Boolean(t2.isProp);
+    const w2 = (isProp2 && t2.propWidth !== undefined ? t2.propWidth : t2.size) * gridSize;
+    const h2 = (isProp2 && t2.propHeight !== undefined ? t2.propHeight : t2.size) * gridSize;
+    x2 = t2.x + w2 / 2;
+    y2 = t2.y + h2 / 2;
+  }
+
+  const dist = Math.hypot(x2 - x1, y2 - y1);
+  const color = marker.color || '#38bdf8';
+  const strokeWidth = marker.strokeWidth ?? 2.5;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = isSelected ? strokeWidth + 2 : strokeWidth;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = isSelected ? 12 : 6;
+
+  if (marker.tetherStyle === 'wiggly') {
+    const freq = marker.tetherFrequency ?? 24;
+    const amp = marker.tetherAmplitude ?? 10;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    const steps = Math.max(10, Math.floor(dist / 4));
+    for (let i = 1; i <= steps; i++) {
+      const s = (i / steps) * dist;
+      const envelope = Math.sin((Math.PI * s) / Math.max(1, dist));
+      const wave = Math.sin((s * 2 * Math.PI) / freq) * amp * envelope;
+      const px = x1 + s * cosA - wave * sinA;
+      const py = y1 + s * sinA + wave * cosA;
+      ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  // Endpoints dots
+  ctx.beginPath();
+  ctx.arc(x1, y1, 4.5, 0, Math.PI * 2);
+  ctx.arc(x2, y2, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+
+  const distFt = Math.round((dist / gridSize) * scaleFtPerCell);
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
+  const labelPrefix = marker.locked ? '🔒 ' : '';
+  const label = marker.label ? `${marker.label}: ${distFt} ft` : `${distFt} ft tether`;
+  renderUserLabel(ctx, `${labelPrefix}${label}`, midX, midY - 12, color);
+
+  ctx.restore();
+}
+
 function renderCrosshair(
   ctx: CanvasRenderingContext2D,
   marker: ScreenMarker,
   elapsed: number,
   gridSize: number = 50,
   scaleFtPerCell: number = 5,
-  isSelected?: boolean
+  isSelected?: boolean,
+  tokens: Record<string, Token> = {}
 ) {
-  const { x, y, color } = marker;
+  const { x, y } = getMarkerAnchorPosition(marker, tokens, gridSize);
+  const color = marker.color;
   const minSize = 18;
   const size = Math.max(minSize, marker.radius ?? minSize);
   const pulse = Math.sin(elapsed / 150) * 3;
@@ -164,12 +294,11 @@ function renderCrosshair(
     ctx.restore();
   }
 
-  // Semi-transparent target area fill when expanded beyond minimum size
   if (size > minSize) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fillStyle = hexToRgba(color, 0.15);
+    ctx.fillStyle = hexToRgba(color, marker.opacity ?? 0.15);
     ctx.fill();
     ctx.restore();
   }
@@ -187,7 +316,6 @@ function renderCrosshair(
   ctx.lineTo(x, y + size);
   ctx.stroke();
 
-  // If expanded beyond 36px, draw inner concentric target ring
   if (size >= 36) {
     ctx.save();
     ctx.beginPath();
@@ -199,14 +327,13 @@ function renderCrosshair(
     ctx.restore();
   }
 
-  // Outer pulsating circle
   ctx.beginPath();
   ctx.arc(x, y, size + 4 + pulse, 0, Math.PI * 2);
   ctx.stroke();
 
   const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
-  const label = size > minSize ? `${labelPrefix}${marker.userName}: ${radiusFt} ft target` : `${labelPrefix}${marker.userName}`;
-  renderUserLabel(ctx, label, x, y - size - 12, color);
+  const labelText = marker.label ? `${marker.label}` : size > minSize ? `${marker.userName}: ${radiusFt} ft target` : `${marker.userName}`;
+  renderUserLabel(ctx, `${labelPrefix}${labelText}`, x, y - size - 12, color);
 }
 
 function renderCircle(
@@ -214,10 +341,15 @@ function renderCircle(
   marker: ScreenMarker,
   gridSize: number,
   scaleFtPerCell: number,
-  isSelected?: boolean
+  isSelected?: boolean,
+  tokens: Record<string, Token> = {}
 ) {
-  const { x, y, radius = 50, color } = marker;
-  const radiusFt = Math.round((radius / gridSize) * scaleFtPerCell);
+  const { x, y, baseRadius, isAttached } = getMarkerAnchorPosition(marker, tokens, gridSize);
+  const rawRadius = marker.radius || 50;
+  const effectiveRadius = marker.anchor === 'edge' && isAttached ? rawRadius + baseRadius : rawRadius;
+  const radiusFt = Math.round((rawRadius / gridSize) * scaleFtPerCell);
+  const color = marker.color;
+  const fillAlpha = marker.opacity ?? 0.2;
 
   if (isSelected) {
     ctx.save();
@@ -225,14 +357,26 @@ function renderCircle(
     ctx.lineWidth = 3.5;
     ctx.setLineDash([6, 6]);
     ctx.beginPath();
-    ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
+    ctx.arc(x, y, effectiveRadius + 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Base edge guide ring when anchored to token edge
+  if (marker.anchor === 'edge' && isAttached && baseRadius > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = hexToRgba(color, 0.45);
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
     ctx.stroke();
     ctx.restore();
   }
 
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = hexToRgba(color, 0.2);
+  ctx.arc(x, y, effectiveRadius, 0, Math.PI * 2);
+  ctx.fillStyle = hexToRgba(color, fillAlpha);
   ctx.fill();
 
   ctx.strokeStyle = color;
@@ -250,8 +394,8 @@ function renderCircle(
 
   // Radius label
   const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
-  const label = `${radiusFt} ft radius`;
-  renderUserLabel(ctx, `${labelPrefix}${marker.userName}: ${label}`, x, y - radius - 10, color);
+  const labelText = marker.label ? `${marker.label} (${radiusFt} ft)` : `${marker.userName}: ${radiusFt} ft radius`;
+  renderUserLabel(ctx, `${labelPrefix}${labelText}`, x, y - effectiveRadius - 10, color);
 }
 
 function renderRectangle(
@@ -259,11 +403,22 @@ function renderRectangle(
   marker: ScreenMarker,
   gridSize: number,
   scaleFtPerCell: number,
-  isSelected?: boolean
+  isSelected?: boolean,
+  tokens: Record<string, Token> = {}
 ) {
-  const { x, y, width = 100, height = 100, color } = marker;
+  let { x, y } = marker;
+  if (marker.attachedTokenId && tokens[marker.attachedTokenId]) {
+    const t = tokens[marker.attachedTokenId];
+    const isProp = Boolean(t.isProp);
+    const tw = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+    const th = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+    x = t.x + tw / 2 - (marker.width || 100) / 2;
+    y = t.y + th / 2 - (marker.height || 100) / 2;
+  }
+  const { width = 100, height = 100, color } = marker;
   const widthFt = Math.round((Math.abs(width) / gridSize) * scaleFtPerCell);
   const heightFt = Math.round((Math.abs(height) / gridSize) * scaleFtPerCell);
+  const fillAlpha = marker.opacity ?? 0.2;
 
   if (isSelected) {
     ctx.save();
@@ -274,7 +429,7 @@ function renderRectangle(
     ctx.restore();
   }
 
-  ctx.fillStyle = hexToRgba(color, 0.2);
+  ctx.fillStyle = hexToRgba(color, fillAlpha);
   ctx.fillRect(x, y, width, height);
 
   ctx.strokeStyle = color;
@@ -285,8 +440,8 @@ function renderRectangle(
   ctx.strokeRect(x, y, width, height);
 
   const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
-  const label = `${widthFt}ft × ${heightFt}ft`;
-  renderUserLabel(ctx, `${labelPrefix}${marker.userName}: ${label}`, x + width / 2, y - 10, color);
+  const labelText = marker.label ? `${marker.label} (${widthFt}ft × ${heightFt}ft)` : `${marker.userName}: ${widthFt}ft × ${heightFt}ft`;
+  renderUserLabel(ctx, `${labelPrefix}${labelText}`, x + width / 2, y - 10, color);
 }
 
 function renderUserLabel(
@@ -344,14 +499,20 @@ export function renderCone(
   marker: ScreenMarker,
   gridSize: number,
   scaleFtPerCell: number,
-  isSelected?: boolean
+  isSelected?: boolean,
+  tokens: Record<string, Token> = {}
 ) {
-  const { x, y, radius = 100, color } = marker;
+  const { x, y, baseRadius, isAttached } = getMarkerAnchorPosition(marker, tokens, gridSize);
+  const rawRadius = marker.radius || 100;
+  const effectiveRadius = marker.anchor === 'edge' && isAttached ? rawRadius + baseRadius : rawRadius;
+  const radius = effectiveRadius;
+  const color = marker.color;
+  const fillAlpha = marker.opacity ?? 0.22;
   const angleDeg = marker.angle ?? 0;
   const spreadAngle = marker.spreadAngle ?? 60;
   const thetaRad = (angleDeg * Math.PI) / 180;
   const alphaRad = ((spreadAngle / 2) * Math.PI) / 180;
-  const radiusFt = Math.round((radius / gridSize) * scaleFtPerCell);
+  const radiusFt = Math.round((rawRadius / gridSize) * scaleFtPerCell);
 
   const a1x = x + radius * Math.cos(thetaRad - alphaRad);
   const a1y = y + radius * Math.sin(thetaRad - alphaRad);
@@ -380,7 +541,7 @@ export function renderCone(
     ctx.arc(x, y, radius, thetaRad + alphaRad, thetaRad - alphaRad, true);
     ctx.closePath();
 
-    ctx.fillStyle = hexToRgba(accentColor, 0.22);
+    ctx.fillStyle = hexToRgba(accentColor, fillAlpha);
     ctx.fill();
 
     ctx.strokeStyle = accentColor;
@@ -410,7 +571,7 @@ export function renderCone(
   ctx.lineTo(a1x, a1y);
   ctx.arc(x, y, radius, thetaRad - alphaRad, thetaRad + alphaRad, false);
   ctx.closePath();
-  ctx.fillStyle = hexToRgba(color, 0.22);
+  ctx.fillStyle = hexToRgba(color, fillAlpha);
   ctx.fill();
 
   ctx.strokeStyle = color;
@@ -470,9 +631,9 @@ export function renderCone(
 
   // Label
   const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
-  const label = `${radiusFt} ft cone (${Math.round(spreadAngle)}°)`;
+  const labelText = marker.label ? `${marker.label} (${radiusFt} ft cone)` : `${marker.userName}: ${radiusFt} ft cone (${Math.round(spreadAngle)}°)`;
   const midLabelX = x + (radius * 0.5) * Math.cos(thetaRad);
   const midLabelY = y + (radius * 0.5) * Math.sin(thetaRad) - 12;
-  renderUserLabel(ctx, `${labelPrefix}${marker.userName}: ${label}`, midLabelX, midLabelY, color);
+  renderUserLabel(ctx, `${labelPrefix}${labelText}`, midLabelX, midLabelY, color);
 }
 

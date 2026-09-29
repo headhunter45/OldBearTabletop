@@ -17,6 +17,7 @@ import {
   Ruler,
   Pin,
   Zap,
+  Link,
 } from 'lucide-react';
 import { ActiveTool } from '../engine/CanvasEngine.js';
 
@@ -223,6 +224,8 @@ export const ToolBar: React.FC<ToolBarProps> = ({
             <Square size={18} />
           ) : activeTool === 'cone' ? (
             <Triangle size={18} />
+          ) : activeTool === 'tether' ? (
+            <Link size={18} />
           ) : (
             <Sparkles size={18} />
           )}
@@ -362,6 +365,26 @@ export const ToolBar: React.FC<ToolBarProps> = ({
             >
               <Triangle size={16} />
               <span>Cone / Arc (6)</span>
+            </button>
+
+            <button
+              className={`btn btn-secondary ${activeTool === 'tether' ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.35rem 0.6rem',
+                fontSize: '0.8rem',
+                justifyContent: 'flex-start',
+              }}
+              onClick={() => {
+                onSelectTool('tether');
+                setShowHighlightMenu(false);
+              }}
+              title="Token Tether Line (7)"
+            >
+              <Link size={16} />
+              <span>Token Tether (7)</span>
             </button>
 
             <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.2rem 0' }} />

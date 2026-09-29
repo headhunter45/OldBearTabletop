@@ -275,6 +275,37 @@ export const AppBrawl: React.FC = () => {
         />
       )}
 
+      {/* Selected Persistent Shape Controls (OB-129) */}
+      {selectedMarker && session && (
+        <MarkerControls
+          marker={selectedMarker}
+          onDelete={(id) => {
+            setSession((prev) => (prev ? { ...prev, markers: (prev.markers || []).filter((m) => m.id !== id) } : prev));
+            setSelectedMarker(null);
+            if (engineRef.current) engineRef.current.selectedMarkerId = null;
+            networkRef.current?.send({ type: 'marker-delete', id });
+          }}
+          onToggleLock={(id, locked) => {
+            setSession((prev) => (prev ? { ...prev, markers: (prev.markers || []).map((m) => (m.id === id ? { ...m, locked } : m)) } : prev));
+            setSelectedMarker((cur) => (cur && cur.id === id ? { ...cur, locked } : cur));
+            networkRef.current?.send({ type: 'marker-update', id, updates: { locked } });
+          }}
+          onUpdate={(id, updates) => {
+            setSession((prev) => (prev ? { ...prev, markers: (prev.markers || []).map((m) => (m.id === id ? { ...m, ...updates } : m)) } : prev));
+            setSelectedMarker((cur) => (cur && cur.id === id ? { ...cur, ...updates } : cur));
+            networkRef.current?.send({ type: 'marker-update', id, updates });
+          }}
+          onClose={() => {
+            setSelectedMarker(null);
+            if (engineRef.current) engineRef.current.selectedMarkerId = null;
+          }}
+          canControl={isOrganizer || selectedMarker.userId === localPlayer?.id}
+          tokens={session.tokens}
+          gridSize={session.maps[0]?.gridSize}
+          scaleFtPerCell={session.maps[0]?.scaleFtPerCell}
+        />
+      )}
+
       {/* Chat & Dice Roller */}
       {showDiceRoller && (
         <DiceRoller

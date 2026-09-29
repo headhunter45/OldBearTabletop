@@ -10,7 +10,7 @@ import { Viewport, Point } from './Viewport.js';
 import { renderGrid, snapToGrid } from './GridRenderer.js';
 import { renderToken, getCachedImage } from './TokenRenderer.js';
 import { FogRenderer } from './FogRenderer.js';
-import { renderMarkers, hexToRgba, getContrastingAccentColor } from './PointerSystem.js';
+import { renderMarkers, hexToRgba, getContrastingAccentColor, getMarkerAnchorPosition } from './PointerSystem.js';
 import { drawRuler, measureDistance, RulerMeasurement } from './Ruler.js';
 
 /**
@@ -36,6 +36,7 @@ export type ActiveTool =
   | 'circle'
   | 'rectangle'
   | 'cone'
+  | 'tether'
   | 'measure'
   | 'fog-reveal'
   | 'fog-hide';
@@ -184,7 +185,8 @@ export class CanvasEngine {
         now,
         currentMap.gridSize,
         currentMap.scaleFtPerCell,
-        this.selectedMarkerId
+        this.selectedMarkerId,
+        this.session.tokens
       );
     }
 
@@ -237,7 +239,9 @@ export class CanvasEngine {
         ephemeralMarkers,
         now,
         currentMap.gridSize,
-        currentMap.scaleFtPerCell
+        currentMap.scaleFtPerCell,
+        this.selectedMarkerId,
+        this.session.tokens
       );
       this.session.markers = [
         ...this.session.markers.filter((m) => m.persist),
@@ -482,6 +486,21 @@ export class CanvasEngine {
 
         this.drawMeasurementBadge(ctx, `${radiusFt} ft target`, (x1 + x2) / 2, (y1 + y2) / 2 - 14, color);
       }
+    } else if (this.activeTool === 'tether') {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+      ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      const distFt = Math.round((dist / gridSize) * scaleFtPerCell);
+      this.drawMeasurementBadge(ctx, `${distFt} ft tether`, (x1 + x2) / 2, (y1 + y2) / 2 - 14, color);
     } else if (this.activeTool === 'rectangle' || this.activeTool.startsWith('fog') || this.activeTool === 'box-select') {
       ctx.fillStyle = this.activeTool === 'fog-reveal'
         ? 'rgba(255, 255, 255, 0.2)'
@@ -1162,6 +1181,36 @@ export class CanvasEngine {
         durationMs: isPersistent ? 0 : 4000,
         createdAt: Date.now(),
       });
+    } else if (this.activeTool === 'tether') {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      if (dist >= 10 && currentMap) {
+        const startTokens = this.findMatchingTokens({ x: x1, y: y1 }, currentMap);
+        const endTokens = this.findMatchingTokens({ x: x2, y: y2 }, currentMap);
+        const startToken = startTokens[0];
+        const endToken = endTokens[0];
+
+        this.broadcastMarker({
+          id: crypto.randomUUID(),
+          type: 'tether',
+          userId: this.localPlayer.id,
+          userName: this.localPlayer.name,
+          color: this.localPlayer.color,
+          x: x1,
+          y: y1,
+          targetX: x2,
+          targetY: y2,
+          attachedTokenId: startToken?.id,
+          tetherTargetId: endToken?.id,
+          tetherStyle: 'straight',
+          tetherFrequency: 24,
+          tetherAmplitude: 10,
+          strokeWidth: 2.5,
+          mapId: currentMap?.id,
+          persist: true,
+          durationMs: 0,
+          createdAt: Date.now(),
+        });
+      }
     } else if (this.activeTool.startsWith('fog')) {
       const mode = this.activeTool === 'fog-reveal' ? 'reveal' : 'hide';
       const shape: FogShape = {
@@ -1217,30 +1266,45 @@ export class CanvasEngine {
     );
     for (let i = candidates.length - 1; i >= 0; i--) {
       const m = candidates[i];
+      const { x: mx, y: my, baseRadius, isAttached } = getMarkerAnchorPosition(m, this.session.tokens, map.gridSize);
+
       if (m.type === 'circle') {
-        const rad = m.radius || 50;
-        if (Math.hypot(worldPos.x - m.x, worldPos.y - m.y) <= rad) return m;
+        const rad = (m.radius || 50) + (m.anchor === 'edge' && isAttached ? baseRadius : 0);
+        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       } else if (m.type === 'rectangle') {
         const w = m.width || 100;
         const h = m.height || 100;
-        const minX = Math.min(m.x, m.x + w);
-        const maxX = Math.max(m.x, m.x + w);
-        const minY = Math.min(m.y, m.y + h);
-        const maxY = Math.max(m.y, m.y + h);
+        const minX = Math.min(mx, mx + w);
+        const maxX = Math.max(mx, mx + w);
+        const minY = Math.min(my, my + h);
+        const maxY = Math.max(my, my + h);
         if (worldPos.x >= minX && worldPos.x <= maxX && worldPos.y >= minY && worldPos.y <= maxY) {
           return m;
         }
       } else if (m.type === 'arrow') {
         const tx = m.targetX ?? m.x;
         const ty = m.targetY ?? m.y;
-        if (distToSegment(worldPos, { x: m.x, y: m.y }, { x: tx, y: ty }) <= 20) {
+        if (distToSegment(worldPos, { x: mx, y: my }, { x: tx, y: ty }) <= 20) {
+          return m;
+        }
+      } else if (m.type === 'tether') {
+        let tx = m.targetX ?? m.x;
+        let ty = m.targetY ?? m.y;
+        if (m.tetherTargetId && this.session.tokens[m.tetherTargetId]) {
+          const t2 = this.session.tokens[m.tetherTargetId];
+          const w2 = ((t2.isProp && t2.propWidth !== undefined ? t2.propWidth : t2.size) * map.gridSize) / 2;
+          const h2 = ((t2.isProp && t2.propHeight !== undefined ? t2.propHeight : t2.size) * map.gridSize) / 2;
+          tx = t2.x + w2;
+          ty = t2.y + h2;
+        }
+        if (distToSegment(worldPos, { x: mx, y: my }, { x: tx, y: ty }) <= 16) {
           return m;
         }
       } else if (m.type === 'cone') {
-        const rad = m.radius || 100;
-        const dist = Math.hypot(worldPos.x - m.x, worldPos.y - m.y);
+        const rad = (m.radius || 100) + (m.anchor === 'edge' && isAttached ? baseRadius : 0);
+        const dist = Math.hypot(worldPos.x - mx, worldPos.y - my);
         if (dist <= 25) return m; // Caster origin
-        const thetaDeg = (Math.atan2(worldPos.y - m.y, worldPos.x - m.x) * 180) / Math.PI;
+        const thetaDeg = (Math.atan2(worldPos.y - my, worldPos.x - mx) * 180) / Math.PI;
         const centerDeg = m.angle ?? 0;
         const diff = Math.abs(((thetaDeg - centerDeg + 540) % 360) - 180);
         const halfSpread = (m.spreadAngle ?? 60) / 2;
@@ -1252,7 +1316,7 @@ export class CanvasEngine {
         }
       } else if (m.type === 'crosshair') {
         const rad = Math.max(30, m.radius || 18);
-        if (Math.hypot(worldPos.x - m.x, worldPos.y - m.y) <= rad) return m;
+        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       }
     }
     return null;

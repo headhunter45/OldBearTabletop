@@ -47,6 +47,7 @@ import { ChatPanel } from '../common/components/ChatPanel.js';
 import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { MarkerControls } from '../common/components/MarkerControls.js';
+import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
 
 export const AppVtt: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -1078,11 +1079,15 @@ export const AppVtt: React.FC = () => {
       y: pos.y,
     };
 
+    // Duplicate any persistent indicators attached to this token (OB-129)
+    const dupMarkers = duplicateAttachedMarkers(token.id, duplicated, session.markers || []);
+
     setSession((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         tokens: { ...prev.tokens, [duplicated.id]: duplicated },
+        markers: dupMarkers.length > 0 ? [...(prev.markers || []), ...dupMarkers] : prev.markers,
       };
     });
     setSelectedToken(duplicated);
@@ -1091,6 +1096,12 @@ export const AppVtt: React.FC = () => {
     networkRef.current?.send({
       type: 'token-add',
       token: duplicated,
+    });
+    dupMarkers.forEach((m) => {
+      networkRef.current?.send({
+        type: 'marker-add',
+        marker: m,
+      });
     });
   };
 
@@ -1101,6 +1112,7 @@ export const AppVtt: React.FC = () => {
 
     const duplicatedTokens: Token[] = [];
     const updatedTokens = { ...session.tokens };
+    const allDupMarkers: ScreenMarker[] = [];
 
     for (let i = 0; i < tokensToDup.length; i++) {
       const tok = tokensToDup[i];
@@ -1121,16 +1133,81 @@ export const AppVtt: React.FC = () => {
       updatedTokens[duplicated.id] = duplicated;
       duplicatedTokens.push(duplicated);
 
+      // Duplicate attached indicators (OB-129)
+      const dupMarkers = duplicateAttachedMarkers(tok.id, duplicated, session.markers || []);
+      if (dupMarkers.length > 0) {
+        allDupMarkers.push(...dupMarkers);
+      }
+
       networkRef.current?.send({
         type: 'token-add',
         token: duplicated,
       });
     }
 
-    setSession((prev) => (prev ? { ...prev, tokens: updatedTokens } : prev));
+    allDupMarkers.forEach((m) => {
+      networkRef.current?.send({
+        type: 'marker-add',
+        marker: m,
+      });
+    });
+
+    setSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            tokens: updatedTokens,
+            markers: allDupMarkers.length > 0 ? [...(prev.markers || []), ...allDupMarkers] : prev.markers,
+          }
+        : prev
+    );
     setSelectedTokens(duplicatedTokens);
     setSelectedToken(duplicatedTokens[0] || null);
     engineRef.current?.selectTokens(duplicatedTokens.map((t) => t.id));
+  };
+
+  const handleAddAura = (token: Token) => {
+    if (!session || !localPlayer) return;
+    const currentMapId = token.mapId;
+    const gridSize = currentMap?.gridSize || 50;
+    const isProp = Boolean(token.isProp);
+    const tw = (isProp && token.propWidth !== undefined ? token.propWidth : token.size) * gridSize;
+    const th = (isProp && token.propHeight !== undefined ? token.propHeight : token.size) * gridSize;
+
+    const newMarker: ScreenMarker = {
+      id: crypto.randomUUID(),
+      type: 'circle',
+      userId: localPlayer.id,
+      userName: localPlayer.name,
+      color: token.ringColor || localPlayer.color || '#38bdf8',
+      x: token.x + tw / 2,
+      y: token.y + th / 2,
+      radius: gridSize * 2,
+      label: `${token.name} Aura`,
+      attachedTokenId: token.id,
+      anchor: 'center',
+      opacity: 0.22,
+      persist: true,
+      durationMs: 0,
+      mapId: currentMapId,
+      createdAt: Date.now(),
+    };
+
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        markers: [...(prev.markers || []), newMarker],
+      };
+    });
+    setSelectedMarker(newMarker);
+    if (engineRef.current) {
+      engineRef.current.selectedMarkerId = newMarker.id;
+    }
+    networkRef.current?.send({
+      type: 'marker-add',
+      marker: newMarker,
+    });
   };
 
   // Profile Update
@@ -1337,6 +1414,11 @@ export const AppVtt: React.FC = () => {
       if (e.key === '6') {
         e.preventDefault();
         setActiveTool('cone');
+        return;
+      }
+      if (e.key === '7') {
+        e.preventDefault();
+        setActiveTool('tether');
         return;
       }
 
@@ -1572,6 +1654,10 @@ export const AppVtt: React.FC = () => {
             }
           }}
           canControl={isGm || selectedMarker.userId === localPlayer?.id}
+          tokens={session.tokens}
+          selectedTokenId={selectedToken?.id}
+          gridSize={currentMap?.gridSize}
+          scaleFtPerCell={currentMap?.scaleFtPerCell}
         />
       )}
 
@@ -1586,6 +1672,7 @@ export const AppVtt: React.FC = () => {
           onDuplicateTokens={handleDuplicateTokens}
           onTransferToken={handleTransferToken}
           onSetInitiative={handleSetTokenInitiative}
+          onAddAura={handleAddAura}
           onOpenFullEditor={() => {
             setTokenToEdit(selectedToken);
             setShowTokenEditor(true);
