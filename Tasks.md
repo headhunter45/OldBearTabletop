@@ -151,7 +151,7 @@
 | [OB-148](#ob-148---dnd-beyond-cobaltsession-auth--private-sheets-support) | Backlog | D&D Beyond CobaltSession Auth & Private Sheets Support |
 | [OB-149](#ob-149---discord-embedded-app-sdk-activity-integration) | Backlog | Discord Embedded App SDK Activity Integration |
 | [OB-150](#ob-150---system-agnostic-ruleset-manifest--characterfiles-integration) | Backlog | System-Agnostic Ruleset Manifest & Characterfiles Integration |
-| [OB-151](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio) | Pending | Switch Container CI/CD to GitHub Container Registry (ghcr.io) |
+| [OB-151](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio) | Complete | Switch Container CI/CD to GitHub Container Registry (ghcr.io) |
 
 ---
 
@@ -632,7 +632,7 @@ Overhaul system handling by loading external system definition manifests (displa
 ---
 
 ## OB-151 - Switch Container CI/CD to GitHub Container Registry (ghcr.io)
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** None  
 **Description:**

@@ -125,7 +125,7 @@ The repository root contains a [`VERSION`](file:///Users/tom/Projects/OldBearRod
 
 | Flag | Parameter | Description | Default |
 |:---|:---|:---|:---|
-| `--registry` | `<URL>` | Container registry prefix (e.g. `ghcr.io/myorg/` or `registry.tomusan.com/`) | `${IMAGE_REGISTRY:-registry.tomusan.com/}` |
+| `--registry` | `<URL>` | Container registry prefix (default: `ghcr.io/headhunter45/`) | `${IMAGE_REGISTRY:-ghcr.io/headhunter45/}` |
 | `--tag` | `<TAG>` | Primary container image tag | Sourced from [`VERSION`](file:///Users/tom/Projects/OldBearRodeo/VERSION) (e.g. `0.1.0-alpha5`) |
 | `--push` | *None* | Automatically push images to the container registry after building | `false` |
 | `--test` | *None* | Execute automated test suites (`npm test`) before building images | `false` |
@@ -158,20 +158,27 @@ You can also build and tag all three images manually using Docker Compose:
 
 ```bash
 # Build all 3 images with your registry prefix
-IMAGE_REGISTRY=registry.tomusan.com/ docker compose build
+IMAGE_REGISTRY=ghcr.io/headhunter45/ docker compose build
 
 # Push all 3 images to your registry
-IMAGE_REGISTRY=registry.tomusan.com/ docker compose push
+IMAGE_REGISTRY=ghcr.io/headhunter45/ docker compose push
 ```
 
 This compiles and tags:
-- `registry.tomusan.com/oldbear_server:latest`
-- `registry.tomusan.com/oldbear_client:latest`
-- `registry.tomusan.com/oldbear_nginx:latest`
+- `ghcr.io/headhunter45/oldbear_server:latest`
+- `ghcr.io/headhunter45/oldbear_client:latest`
+- `ghcr.io/headhunter45/oldbear_nginx:latest`
 
 ### 4. Deploying on Your Production Server
 
 On your production server (e.g. behind Nginx Proxy Manager, Portainer, or standard Docker Compose):
+
+> [!NOTE]
+> **Authenticating with GitHub Container Registry (ghcr.io)**  
+> While the container images remain private, authenticate your production Docker host using a GitHub Personal Access Token (PAT with `read:packages` scope):
+> ```bash
+> echo "$CR_PAT" | docker login ghcr.io -u <github-username> --password-stdin
+> ```
 
 #### Option A: Using `docker-compose.yml` with `.env` (Recommended)
 
@@ -179,7 +186,7 @@ Place `docker-compose.yml` on the server and create a `.env` file with your sett
 
 ```env
 # 1. Container Registry
-IMAGE_REGISTRY=registry.tomusan.com/
+IMAGE_REGISTRY=ghcr.io/headhunter45/
 IMAGE_TAG=latest
 
 # 2. Ports
@@ -215,14 +222,14 @@ If using Portainer, Dockge, or a single standalone file, no configuration files 
 services:
   client:
     container_name: oldbear_client
-    image: registry.tomusan.com/oldbear_client:latest
+    image: ghcr.io/headhunter45/oldbear_client:latest
     restart: unless-stopped
     depends_on:
       - server
 
   nginx:
     container_name: oldbear_nginx
-    image: registry.tomusan.com/oldbear_nginx:latest
+    image: ghcr.io/headhunter45/oldbear_nginx:latest
     restart: unless-stopped
     ports:
       - '20001:80'
@@ -250,7 +257,7 @@ services:
 
   server:
     container_name: oldbear_server
-    image: registry.tomusan.com/oldbear_server:latest
+    image: ghcr.io/headhunter45/oldbear_server:latest
     restart: unless-stopped
     depends_on:
       postgres:
@@ -343,7 +350,7 @@ Old Bear Rodeo is configured using environment variables defined in `.env` (or `
 
 | Variable | Default | Description | Example |
 |:---|:---:|:---|:---|
-| `IMAGE_REGISTRY` | *None* | Docker container registry prefix with trailing slash | `registry.tomusan.com/` or `ghcr.io/myorg/` |
+| `IMAGE_REGISTRY` | *None* | Docker container registry prefix with trailing slash | `ghcr.io/headhunter45/` or `registry.tomusan.com/` |
 | `IMAGE_TAG` | `latest` | Tag used for pulling, building, or running container images | `latest`, `v0.1.0`, or git commit |
 | `PGDATA_PATH` | *Named volume* | Host directory path for persistent PostgreSQL database storage | `/mnt/Data/Apps/oldbear-vtt/pgdata` |
 

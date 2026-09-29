@@ -1,6 +1,6 @@
 services:
   client:
-    image: ${CLIENT_IMAGE:-${IMAGE_REGISTRY:-}oldbear_client:${IMAGE_TAG:-latest}}
+    image: ${CLIENT_IMAGE:-${IMAGE_REGISTRY:-ghcr.io/headhunter45/}oldbear_client:${IMAGE_TAG:-latest}}
     build:
       context: .
       dockerfile: docker/Dockerfile.client
@@ -14,7 +14,7 @@ services:
     restart: always
 
   server:
-    image: ${SERVER_IMAGE:-${IMAGE_REGISTRY:-}oldbear_server:${IMAGE_TAG:-latest}}
+    image: ${SERVER_IMAGE:-${IMAGE_REGISTRY:-ghcr.io/headhunter45/}oldbear_server:${IMAGE_TAG:-latest}}
     build:
       context: .
       dockerfile: docker/Dockerfile.server
@@ -56,7 +56,7 @@ services:
       - ${PGDATA_PATH:-pgdata}:/var/lib/postgresql/data
 
   nginx:
-    image: ${NGINX_IMAGE:-${IMAGE_REGISTRY:-}oldbear_nginx:${IMAGE_TAG:-latest}}
+    image: ${NGINX_IMAGE:-${IMAGE_REGISTRY:-ghcr.io/headhunter45/}oldbear_nginx:${IMAGE_TAG:-latest}}
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx

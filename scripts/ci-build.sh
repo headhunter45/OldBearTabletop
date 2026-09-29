@@ -22,7 +22,8 @@ fi
 GIT_COMMIT_SHORT="$(git rev-parse --short HEAD 2>/dev/null || echo "dev")"
 
 # Default configuration (can be overridden via CLI args or environment variables)
-IMAGE_REGISTRY="${IMAGE_REGISTRY:-registry.tomusan.com/}"
+IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io/headhunter45/}"
+IMAGE_REGISTRY="$(echo "${IMAGE_REGISTRY}" | tr '[:upper:]' '[:lower:]')"
 if [ -n "${IMAGE_REGISTRY}" ] && [[ "${IMAGE_REGISTRY}" != */ ]]; then
   IMAGE_REGISTRY="${IMAGE_REGISTRY}/"
 fi
@@ -35,7 +36,7 @@ RUN_TESTS=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --registry)
-      IMAGE_REGISTRY="$2"
+      IMAGE_REGISTRY="$(echo "$2" | tr '[:upper:]' '[:lower:]')"
       if [ -n "${IMAGE_REGISTRY}" ] && [[ "${IMAGE_REGISTRY}" != */ ]]; then
         IMAGE_REGISTRY="${IMAGE_REGISTRY}/"
       fi
@@ -70,7 +71,7 @@ while [[ $# -gt 0 ]]; do
       echo "Examples:"
       echo "  $0"
       echo "  $0 --push"
-      echo "  $0 --registry ghcr.io/myorg/ --tag v1.0.0 --push"
+      echo "  $0 --registry ghcr.io/headhunter45/ --tag v0.1.0 --push"
       exit 0
       ;;
     *)
