@@ -424,6 +424,15 @@ npm run dev -w @oldbear/client
 3. **Grid Overlay Toggle**:
    - In the left toolbar, click the **Grid Overlay (#)** button to instantly toggle grid visibility on or off.
    - The grid renders on top of the battlemap image but beneath all creature tokens and spell markers.
+4. **Submaps, Multi-Floors & Staging Areas**:
+   - Configure secondary submaps on any scene via the Map Settings modal.
+   - Presets include:
+     - **Building Floors**: Place adjacent upper levels or basements side-by-side on the same canvas scene.
+     - **Connected Dungeons**: Portal caverns and connected battlegrounds.
+     - **Deployment Zones**: Color-coded and labeled bounds for wargaming deployment.
+     - **Casualty Tray / Graveyard**: Dedicated off-table area for slain models to facilitate resurrection and VP scoring.
+     - **Off-Table Staging Area**: Holding area for Strategic Reserves, Deep Strike, and Embarked units inside Transports.
+   - **Scene Templates**: Click the **Duplicate as Scene Template** icon in the Maps Manager to clone a scene's full submap and staging layout with new maps.
 
 ---
 

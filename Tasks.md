@@ -130,7 +130,7 @@
 | OB-127 | Done    | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
 | OB-128 | Ready   | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
 | OB-129 | Done    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
-| OB-130 | Ready   | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
+| OB-130 | Done    | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Done    | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
 | OB-132 | Done    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
 | OB-133 | Done    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
@@ -374,7 +374,7 @@ Bottom context toolbar for persistent indicators and multi-aura support:
 
 ## OB-130 - Submaps & Secondary Logical Maps per Scene
 
-**Status:** Pending  
+**Status:** Done  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

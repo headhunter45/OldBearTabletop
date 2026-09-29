@@ -12,6 +12,7 @@ import { renderToken, getCachedImage } from './TokenRenderer.js';
 import { FogRenderer } from './FogRenderer.js';
 import { renderMarkers, hexToRgba, getContrastingAccentColor, getMarkerAnchorPosition } from './PointerSystem.js';
 import { drawRuler, measureDistance, RulerMeasurement } from './Ruler.js';
+import { renderSubmap } from './SubmapManager.js';
 
 /**
  * -----------------------------------------------------------------------------------------
@@ -270,6 +271,13 @@ export class CanvasEngine {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 2;
       ctx.strokeRect(0, 0, map.width, map.height);
+    }
+
+    // Render Secondary Submaps, Multi-floors, Staging Areas & Casualty Trays (OB-130)
+    if (Array.isArray(map.submaps) && map.submaps.length > 0) {
+      for (const submap of map.submaps) {
+        renderSubmap(ctx, submap, map, this.viewport.scale, getCachedImage);
+      }
     }
   }
 

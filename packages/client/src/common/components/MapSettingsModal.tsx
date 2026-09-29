@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GameMap, GridType } from '@oldbear/shared';
-import { X, Sliders, Trash2, Check, AlertCircle } from 'lucide-react';
+import { GameMap, GridType, SubmapConfig, SubmapType } from '@oldbear/shared';
+import { X, Sliders, Trash2, Check, AlertCircle, Layers, Plus } from 'lucide-react';
+import { createSubmapPreset } from '../engine/SubmapManager.js';
 
 interface MapSettingsModalProps {
   map: GameMap;
@@ -26,6 +27,7 @@ export const MapSettingsModal: React.FC<MapSettingsModalProps> = ({
   const [gridColor, setGridColor] = useState(map.gridColor || '#ffffff');
   const [gridOpacity, setGridOpacity] = useState(map.gridOpacity ?? 0.4);
   const [backgroundColor, setBackgroundColor] = useState(map.backgroundColor || '#090d16');
+  const [submaps, setSubmaps] = useState<SubmapConfig[]>(map.submaps || []);
 
   // String state for inputs to allow smooth backspacing without auto-snapping to 1
   const initialTilesX = map.tilesX || Math.max(1, Math.round(map.width / (map.gridSize || 50)));
@@ -49,6 +51,7 @@ export const MapSettingsModal: React.FC<MapSettingsModalProps> = ({
     setGridColor(map.gridColor || '#ffffff');
     setGridOpacity(map.gridOpacity ?? 0.4);
     setBackgroundColor(map.backgroundColor || '#090d16');
+    setSubmaps(map.submaps || []);
     const curTilesX = map.tilesX || Math.max(1, Math.round(map.width / (map.gridSize || 50)));
     const curTilesY = map.tilesY || Math.max(1, Math.round(map.height / (map.gridSize || 50)));
     setTilesXStr(String(curTilesX));
@@ -94,6 +97,15 @@ export const MapSettingsModal: React.FC<MapSettingsModalProps> = ({
     }
   };
 
+  const handleAddPreset = (type: SubmapType) => {
+    const newSubmap = createSubmapPreset(type, { ...map, submaps });
+    setSubmaps((prev) => [...prev, newSubmap]);
+  };
+
+  const handleRemoveSubmap = (id: string) => {
+    setSubmaps((prev) => prev.filter((s) => s.id !== id));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -135,6 +147,7 @@ export const MapSettingsModal: React.FC<MapSettingsModalProps> = ({
       gridSize: parsedGridSize,
       gridOffsetX: isNaN(parsedOffsetX) ? 0 : parsedOffsetX,
       gridOffsetY: isNaN(parsedOffsetY) ? 0 : parsedOffsetY,
+      submaps,
     });
     onClose();
   };
@@ -530,6 +543,114 @@ export const MapSettingsModal: React.FC<MapSettingsModalProps> = ({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Secondary Submaps & Layout Areas (OB-130) */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Layers size={14} color="var(--accent-primary)" />
+                    SECONDARY SUBMAPS & STAGING ({submaps.length})
+                  </label>
+                </div>
+
+                {/* Submap Preset Buttons */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.6rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                    onClick={() => handleAddPreset('building_floor')}
+                    title="Add an adjacent building floor (e.g. 2nd Floor, Attic)"
+                  >
+                    <Plus size={12} /> + Floor
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                    onClick={() => handleAddPreset('connected_dungeon')}
+                    title="Add a connected portal dungeon or cavern"
+                  >
+                    <Plus size={12} /> + Dungeon
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                    onClick={() => handleAddPreset('deployment_zone')}
+                    title="Add a color-coded wargaming deployment zone"
+                  >
+                    <Plus size={12} /> + Deployment Zone
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                    onClick={() => handleAddPreset('casualty_tray')}
+                    title="Add an off-table casualty tray / graveyard for slain models"
+                  >
+                    <Plus size={12} /> + Casualty Tray
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                    onClick={() => handleAddPreset('staging_area')}
+                    title="Add an off-table staging area for reserves, deep strike, or embarked units"
+                  >
+                    <Plus size={12} /> + Staging Area
+                  </button>
+                </div>
+
+                {/* Current Submaps List */}
+                {submaps.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '160px', overflowY: 'auto' }}>
+                    {submaps.map((sub) => (
+                      <div
+                        key={sub.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.4rem 0.6rem',
+                          background: 'var(--bg-surface)',
+                          borderRadius: 'var(--radius-sm)',
+                          border: `1px solid ${sub.borderColor || 'var(--border-subtle)'}`,
+                          fontSize: '0.78rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              backgroundColor: sub.borderColor || '#38bdf8',
+                            }}
+                          />
+                          <span style={{ fontWeight: 600, color: 'white' }}>{sub.name}</span>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                            ({sub.width} × {sub.height}px)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-icon"
+                          style={{ width: '22px', height: '22px', color: 'var(--accent-rose)' }}
+                          onClick={() => handleRemoveSubmap(sub.id)}
+                          title="Remove submap"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0.2rem 0' }}>
+                    No secondary submaps. Add a floor, deployment zone, or casualty tray above.
+                  </div>
+                )}
               </div>
 
               {/* Delete Map (Item 26 & 28) */}

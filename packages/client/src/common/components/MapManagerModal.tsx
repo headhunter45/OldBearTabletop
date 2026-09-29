@@ -3,6 +3,7 @@ import { GameMap, GridType } from '@oldbear/shared';
 import { Map, Plus, Upload, Check, Eye, Trash2, X, Settings, Sliders, Grid, ArrowRightLeft, Copy, Layers } from 'lucide-react';
 import { saveAsset, getAssetsByType, StoredAsset } from '../storage/db.js';
 import { MapSettingsModal } from './MapSettingsModal.js';
+import { duplicateSceneAsTemplate } from '../engine/SubmapManager.js';
 
 interface MapManagerModalProps {
   maps: GameMap[];
@@ -64,6 +65,12 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
     };
     onAddMap(duplicated);
     onSelectGmPreviewMap(duplicated.id);
+  };
+
+  const handleDuplicateAsTemplate = (scene: GameMap) => {
+    const templated = duplicateSceneAsTemplate(scene, `${scene.name} (Template Copy)`);
+    onAddMap(templated);
+    onSelectGmPreviewMap(templated.id);
   };
 
   const handleCreateSceneFromSelectedMap = () => {
@@ -300,6 +307,14 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                         title="Duplicate this Scene (same map)"
                       >
                         <Copy size={14} />
+                      </button>
+                      <button
+                        className="btn-icon"
+                        style={{ width: '28px', height: '28px' }}
+                        onClick={() => handleDuplicateAsTemplate(map)}
+                        title="Duplicate as Scene Template (preserves submaps & staging areas)"
+                      >
+                        <Layers size={14} color="var(--accent-primary)" />
                       </button>
                       <button
                         className="btn-icon"

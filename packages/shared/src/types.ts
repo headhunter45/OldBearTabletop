@@ -18,6 +18,32 @@ export interface Player {
 
 export type GridType = 'square' | 'hex' | 'none';
 
+export type SubmapType =
+  | 'building_floor'    // Multi-floor buildings (Floor 1, Floor 2, Basement side-by-side)
+  | 'connected_dungeon' // Connected portal dungeons (Tavern + Cavern)
+  | 'deployment_zone'   // Wargaming Deployment Zones (color-coded and labeled)
+  | 'casualty_tray'     // Casualty Tray / Graveyard (off-table area for slain models)
+  | 'staging_area'      // Off-Table Staging Area (Strategic Reserves, Deep Strike, Embarked)
+  | 'custom';
+
+export interface SubmapConfig {
+  id: string;
+  name: string;
+  type: SubmapType;
+  x: number; // canvas x offset in world coordinates
+  y: number; // canvas y offset in world coordinates
+  width: number; // width in pixels
+  height: number; // height in pixels
+  imageUrl?: string; // optional image for the submap / floor plan
+  backgroundColor?: string; // optional background fill
+  borderColor?: string; // border outline color
+  gridSize?: number; // independent grid cell size (defaults to parent map's gridSize)
+  gridType?: GridType;
+  showGrid?: boolean;
+  label?: string; // visible badge / label on map
+  colorCode?: string; // color badge for deployment zones / casualty trays
+}
+
 export interface GameMap {
   id: string;
   name: string;
@@ -38,6 +64,8 @@ export interface GameMap {
   baseMapId?: string; // ID of the underlying map asset/image when used across multiple scenes
   baseMapName?: string; // Display name of base map asset
   customStatuses?: Record<string, CustomStatusDefinition>; // Per-scene status overrides (OB-131)
+  submaps?: SubmapConfig[]; // Logical submaps, floors, staging areas, casualty trays (OB-130)
+  isTemplate?: boolean; // Scene template flag for duplicating layout with fresh maps (OB-130)
 }
 
 export interface Scene extends GameMap {
