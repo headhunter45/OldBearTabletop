@@ -33,6 +33,11 @@ import {
   parseTetraCubeMonster,
   createMonsterToken,
 } from './utils/monsterParser.js';
+import {
+  isPathbuilderExport,
+  parsePathbuilderExport,
+  createPathbuilderToken,
+} from './utils/pathbuilderParser.js';
 import { MapManagerModal } from '../common/components/MapManagerModal.js';
 import { SoundboardModal } from '../common/components/SoundboardModal.js';
 import { MobileDrawer } from '../common/components/MobileDrawer.js';
@@ -2235,6 +2240,28 @@ export const AppVtt: React.FC = () => {
             engineRef.current?.selectToken(newToken.id);
             existingList.push(newToken);
             showToast(`Spawned "${newToken.name}" on battlemap & saved to Asset Manager!`);
+            return true;
+          }
+          if (isPathbuilderExport(text)) {
+            const char = parsePathbuilderExport(text);
+            saveCharacterToStorage(char, isGm);
+            const newToken = createPathbuilderToken(
+              char,
+              currentMap?.id || session?.activeMapId || '',
+              worldPos.x,
+              worldPos.y
+            );
+            setSession((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                tokens: { ...prev.tokens, [newToken.id]: newToken },
+              };
+            });
+            networkRef.current?.send({ type: 'token-add', token: newToken });
+            engineRef.current?.selectToken(newToken.id);
+            existingList.push(newToken);
+            showToast(`Spawned "${newToken.name}" (PF2e) on battlemap & saved character!`);
             return true;
           }
           return false;

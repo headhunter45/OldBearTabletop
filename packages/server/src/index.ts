@@ -83,6 +83,31 @@ app.get('/api/dndbeyond/:characterId', async (req, res) => {
   }
 });
 
+// Proxy Pathbuilder 2e build exports
+app.get('/api/pathbuilder/:buildId', async (req, res) => {
+  try {
+    const buildId = req.params.buildId.replace(/[^\d]/g, '');
+    if (!buildId) {
+      res.status(400).json({ error: 'Invalid Pathbuilder 2e build ID' });
+      return;
+    }
+    const response = await fetch(`https://pathbuilder2e.com/json.php?id=${encodeURIComponent(buildId)}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) OldBearVTT/0.1.0',
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) {
+      res.status(response.status).json({ error: `Pathbuilder returned status ${response.status}` });
+      return;
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch build from Pathbuilder' });
+  }
+});
+
 // Fallback for HTTP GET /ws when a reverse proxy (e.g. Nginx Proxy Manager) fails to forward WebSocket upgrade
 app.get('/ws', (_req, res) => {
   res.status(426).json({

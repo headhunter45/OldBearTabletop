@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DnDCharacter, DnDAction, Token, Player, getActivationCategory } from '@oldbear/shared';
 import {
   User,
@@ -15,7 +15,15 @@ import {
   Coins,
   Flame,
   Dices,
+  Upload,
+  FileText,
 } from 'lucide-react';
+import {
+  isPathbuilderExport,
+  parsePathbuilderExport,
+  fetchPathbuilderBuild,
+  SAMPLE_PATHBUILDER_VALEROS,
+} from '../utils/pathbuilderParser.js';
 import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import {
   SavedCharacterRecord,
@@ -81,6 +89,13 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
     getSavedCharacters(isGm)
   );
   const [isMinimized, setIsMinimized] = useState(false);
+
+  // Pathbuilder 2e state (OB-144)
+  const [importSource, setImportSource] = useState<'dndbeyond' | 'pathbuilder'>('dndbeyond');
+  const [pathbuilderInput, setPathbuilderInput] = useState('');
+  const [pathbuilderPasteOpen, setPathbuilderPasteOpen] = useState(false);
+  const [pathbuilderPasteText, setPathbuilderPasteText] = useState('');
+  const pathbuilderFileRef = useRef<HTMLInputElement>(null);
 
   const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_character_sheet_pos',
@@ -158,7 +173,48 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
     }
   }, [character?.id, player.dndBeyondCharacterId, player.dndBeyondCharacter?.id]);
 
+  const handleImportPathbuilder = async (inputStr: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let char: DnDCharacter;
+      const trimmed = inputStr.trim();
+      if (trimmed.startsWith('{') || isPathbuilderExport(trimmed)) {
+        char = parsePathbuilderExport(trimmed);
+      } else {
+        const buildData = await fetchPathbuilderBuild(trimmed);
+        char = parsePathbuilderExport(buildData);
+      }
+      setCharacter(char);
+      onUpdatePlayerChar?.(char);
+      saveCharacterToStorage(char, isGm);
+      refreshSavedCharacters();
+      applyCharacterToBoard(char);
+      setPathbuilderPasteOpen(false);
+      setPathbuilderPasteText('');
+    } catch (err: any) {
+      setError(err.message || 'Could not import Pathbuilder 2e character.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePathbuilderFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      handleImportPathbuilder(text);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const fetchCharacter = async (charId: string) => {
+    if (charId.includes('pathbuilder2e.com') || charId.startsWith('pathbuilder:')) {
+      return handleImportPathbuilder(charId);
+    }
     setLoading(true);
     setError(null);
     try {
@@ -331,35 +387,148 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
           </div>
         )}
 
-        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-          LINK D&D BEYOND CHARACTER
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            placeholder="Character ID or URL (or 'demo')"
-            value={charInput}
-            onChange={(e) => setCharInput(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '0.5rem',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-surface-elevated)',
-              border: '1px solid var(--border-subtle)',
-              color: 'white',
-              fontSize: '0.8rem',
-            }}
-          />
+        {/* Import Source Tabs (OB-144) */}
+        <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.6rem' }}>
           <button
-            className="btn btn-primary"
-            style={{ padding: '0.5rem 0.8rem' }}
-            disabled={loading || !charInput.trim()}
-            onClick={() => fetchCharacter(charInput.trim())}
+            type="button"
+            className={`btn ${importSource === 'dndbeyond' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ flex: 1, padding: '0.35rem 0.5rem', fontSize: '0.75rem', justifyContent: 'center' }}
+            onClick={() => setImportSource('dndbeyond')}
           >
-            {loading ? <RefreshCw size={14} className="animate-spin" /> : <LinkIcon size={14} />}
-            {loading ? 'Syncing...' : 'Sync'}
+            D&D Beyond (5e)
+          </button>
+          <button
+            type="button"
+            className={`btn ${importSource === 'pathbuilder' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ flex: 1, padding: '0.35rem 0.5rem', fontSize: '0.75rem', justifyContent: 'center' }}
+            onClick={() => setImportSource('pathbuilder')}
+          >
+            Pathbuilder 2e (PF2e)
           </button>
         </div>
+
+        {importSource === 'dndbeyond' ? (
+          <>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+              LINK D&D BEYOND CHARACTER
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="Character ID or URL (or 'demo')"
+                value={charInput}
+                onChange={(e) => setCharInput(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'white',
+                  fontSize: '0.8rem',
+                }}
+              />
+              <button
+                className="btn btn-primary"
+                style={{ padding: '0.5rem 0.8rem' }}
+                disabled={loading || !charInput.trim()}
+                onClick={() => fetchCharacter(charInput.trim())}
+              >
+                {loading ? <RefreshCw size={14} className="animate-spin" /> : <LinkIcon size={14} />}
+                {loading ? 'Syncing...' : 'Sync'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+              IMPORT PATHBUILDER 2E CHARACTER
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <input
+                type="text"
+                placeholder="Build ID or URL (e.g. 12345 or json.php?id=...)"
+                value={pathbuilderInput}
+                onChange={(e) => setPathbuilderInput(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'white',
+                  fontSize: '0.8rem',
+                }}
+              />
+              <button
+                className="btn btn-primary"
+                style={{ padding: '0.5rem 0.8rem' }}
+                disabled={loading || !pathbuilderInput.trim()}
+                onClick={() => handleImportPathbuilder(pathbuilderInput)}
+              >
+                {loading ? <RefreshCw size={14} className="animate-spin" /> : <LinkIcon size={14} />}
+                {loading ? 'Importing...' : 'Import'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.35rem' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem 0.5rem', justifyContent: 'center' }}
+                onClick={() => pathbuilderFileRef.current?.click()}
+              >
+                <Upload size={13} /> Upload .json File
+              </button>
+              <input
+                type="file"
+                ref={pathbuilderFileRef}
+                accept=".json,application/json"
+                style={{ display: 'none' }}
+                onChange={handlePathbuilderFileUpload}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem 0.5rem', justifyContent: 'center' }}
+                onClick={() => setPathbuilderPasteOpen((v) => !v)}
+              >
+                <FileText size={13} /> {pathbuilderPasteOpen ? 'Hide Paste' : 'Paste JSON'}
+              </button>
+            </div>
+
+            {pathbuilderPasteOpen && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <textarea
+                  placeholder="Paste exported Pathbuilder 2e JSON here..."
+                  rows={4}
+                  value={pathbuilderPasteText}
+                  onChange={(e) => setPathbuilderPasteText(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg-surface-elevated)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    fontFamily: 'monospace',
+                    resize: 'vertical',
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ width: '100%', marginTop: '0.35rem', padding: '0.4rem', fontSize: '0.75rem', justifyContent: 'center' }}
+                  disabled={loading || !pathbuilderPasteText.trim()}
+                  onClick={() => handleImportPathbuilder(pathbuilderPasteText)}
+                >
+                  Apply Pasted JSON
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Board Token Assignment (Bug #41) */}
         <div style={{ marginTop: '0.6rem', marginBottom: '0.4rem' }}>
@@ -409,11 +578,20 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
               gap: '4px',
             }}
             onClick={() => {
-              setCharInput('demo');
-              fetchCharacter('demo');
+              if (importSource === 'pathbuilder') {
+                const char = parsePathbuilderExport(SAMPLE_PATHBUILDER_VALEROS);
+                setCharacter(char);
+                onUpdatePlayerChar?.(char);
+                saveCharacterToStorage(char, isGm);
+                refreshSavedCharacters();
+                applyCharacterToBoard(char);
+              } else {
+                setCharInput('demo');
+                fetchCharacter('demo');
+              }
             }}
           >
-            <Sparkles size={12} /> Click here to test with Demo Character
+            <Sparkles size={12} /> {importSource === 'pathbuilder' ? 'Click here to test with Valeros (PF2e Fighter Lvl 5)' : 'Click here to test with Demo Character'}
           </button>
         )}
 

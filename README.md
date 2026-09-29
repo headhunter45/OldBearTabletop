@@ -461,6 +461,23 @@ npm run dev -w @oldbear/client
 
 ---
 
+### Pathbuilder 2e (PF2e) Character Integration
+1. **Import by Build ID or URL**:
+   - Open the **Characters** flyout and switch to the **Pathbuilder 2e (PF2e)** tab.
+   - Enter your numeric Build ID or share URL (e.g. `https://pathbuilder2e.com/json.php?id=123456`) and click **Import**.
+2. **File Upload & JSON Paste**:
+   - Click **Upload .json File** to load an exported Pathbuilder character build from your device.
+   - Alternatively, toggle **Paste JSON** to paste the raw export text.
+3. **Global Drag and Drop**:
+   - Drag and drop any Pathbuilder `.json` export file directly onto the canvas to instantly spawn a ready-to-fight token and save the character sheet.
+4. **Calculated Mechanics & Strikes**:
+   - Automatically calculates level-scaled proficiencies across all 4 ranks (Trained, Expert, Master, Legendary).
+   - Computes Fortitude, Reflex, and Will saving throws, Perception DC, Armor Class (AC), and Hit Points (HP).
+   - Converts weapons and unarmed strikes into actionable attacks with attack bonuses and damage expressions.
+   - Populates core PF2e skills, granted Lore skills, feats, and spells.
+
+---
+
 ### Voice Chat & Audio Streaming
 1. **Quick Controls & Activity Indicators**:
    - The microphone icon pulses with a vibrant green wave when transmitting audio.

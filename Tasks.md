@@ -144,7 +144,7 @@
 | OB-141 | Backlog | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                           |
 | OB-142 | Backlog | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                              |
 | OB-143 | Backlog | [Direct Token Creation from D&D Beyond Monster/Character URL](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url)                                            |
-| OB-144 | Ready   | [Pathbuilder 2e (PF2e) JSON Character Import](#ob-144---pathbuilder-2e-pf2e-json-character-import)                                                                             |
+| OB-144 | Done    | [Pathbuilder 2e (PF2e) JSON Character Import](#ob-144---pathbuilder-2e-pf2e-json-character-import)                                                                             |
 | OB-145 | Backlog | [Live Video Feed Tokens](#ob-145---live-video-feed-tokens)                                                                                                                     |
 | OB-146 | Backlog | [WebRTC Webcam Video Mesh with Draggable PIP Tiles](#ob-146---webrtc-webcam-video-mesh-with-draggable-pip-tiles)                                                               |
 | OB-147 | Backlog | [Discord Two-Way Bot Sync Gateway](#ob-147---discord-two-way-bot-sync-gateway)                                                                                                 |
@@ -565,7 +565,7 @@ Spawn tokens directly onto the active battlemap from D&D Beyond monster or chara
 
 ## OB-144 - Pathbuilder 2e (PF2e) JSON Character Import
 
-**Status:** Backlog  
+**Status:** Done  
 **App:** VTT  
 **Depends On:** None  
 **Description:**
