@@ -42,11 +42,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run automated test suites
-        run: npm test
-
       - name: Build TypeScript workspaces
         run: npm run build
+
+      - name: Run automated test suites
+        run: npm test
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
