@@ -8,6 +8,7 @@ import {
   FogShape,
   DiceRollResult,
   SoundTrack,
+  ProgressClock,
 } from './types.js';
 
 export type ClientToServerMessage =
@@ -34,7 +35,10 @@ export type ClientToServerMessage =
   | { type: 'voice-force-mute'; targetPlayerId: string }
   | { type: 'audio-action'; trackId: string; action: 'play' | 'pause' | 'stop' | 'volume'; volume?: number; isLooping?: boolean }
   | { type: 'chat-send'; message: ChatMessage }
-  | { type: 'discord-webhook-update'; webhookUrl?: string };
+  | { type: 'discord-webhook-update'; webhookUrl?: string }
+  | { type: 'clock-add'; clock: ProgressClock }
+  | { type: 'clock-update'; id: string; updates: Partial<ProgressClock> }
+  | { type: 'clock-delete'; id: string };
 
 export interface ChatMessage {
   id: string;
@@ -77,4 +81,7 @@ export type ServerToClientMessage =
   | { type: 'voice-force-mute'; targetPlayerId: string }
   | { type: 'audio-action'; trackId: string; action: 'play' | 'pause' | 'stop' | 'volume'; volume?: number; isLooping?: boolean }
   | { type: 'chat-message'; message: ChatMessage }
-  | { type: 'discord-webhook-updated'; webhookUrl?: string };
+  | { type: 'discord-webhook-updated'; webhookUrl?: string }
+  | { type: 'clock-added'; clock: ProgressClock }
+  | { type: 'clock-updated'; id: string; updates: Partial<ProgressClock> }
+  | { type: 'clock-deleted'; id: string };

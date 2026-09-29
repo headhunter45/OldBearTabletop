@@ -136,6 +136,7 @@ export function createSession(name?: string, requestedId?: string): { session: G
     markers: [],
     diceHistory: [],
     soundtracks: [],
+    clocks: [],
   };
 
   sessions.set(id, { session, gmKey });

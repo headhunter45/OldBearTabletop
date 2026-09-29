@@ -206,8 +206,9 @@ export interface ScreenMarker {
 export interface ProgressClock {
   id: string;
   name: string;
-  segments: number; // e.g. 4, 6, 8, 12
-  filled: number; // 0 to segments
+  steps: number; // e.g. 4, 6, 8, 12 (OB-173: standardized on steps)
+  segments?: number; // legacy alias for steps
+  filled: number; // 0 to steps
   color: string;
   placedOnCanvas?: boolean;
   x?: number;
@@ -399,4 +400,5 @@ export interface GameSession {
   diceHistory: DiceRollResult[];
   soundtracks: SoundTrack[];
   discordWebhookUrl?: string;
+  clocks?: ProgressClock[];
 }

@@ -65,6 +65,8 @@ import { resolveStatusDefinitions, processTurnTransition } from '../common/statu
 import { TimerHUD } from '../common/components/TimerHUD.js';
 import { formatTimerCompletionText } from '../common/timer/timerUtils.js';
 import { ProgressClockModal } from '../common/components/ProgressClockModal.js';
+import { ClockWidget } from '../common/components/ClockWidget.js';
+import { ClockWidgetBar } from '../common/components/ClockWidgetBar.js';
 
 export const AppVtt: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -145,6 +147,31 @@ export const AppVtt: React.FC = () => {
   const [timerLabel, setTimerLabel] = useState<string>('Round Timer');
   const [isTimerOpen, setIsTimerOpen] = useState<boolean>(false);
   const [isClocksModalOpen, setIsClocksModalOpen] = useState<boolean>(false);
+  const [selectedClockId, setSelectedClockId] = useState<string | null>(null);
+  const [minimizedClockIds, setMinimizedClockIds] = useState<Set<string>>(() => {
+    if (typeof localStorage === 'undefined') return new Set();
+    try {
+      const raw = localStorage.getItem('obr_minimized_clocks');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const toggleClockCompact = (id: string) => {
+    setMinimizedClockIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      try {
+        localStorage.setItem('obr_minimized_clocks', JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+  };
   const [isHotkeysModalOpen, setIsHotkeysModalOpen] = useState<boolean>(false);
 
   // GM Preview Map vs Player Active Map
@@ -504,6 +531,41 @@ export const AppVtt: React.FC = () => {
 
         case 'discord-webhook-updated': {
           setSession((prev) => (prev ? { ...prev, discordWebhookUrl: msg.webhookUrl } : prev));
+          break;
+        }
+
+        case 'clock-added': {
+          setSession((prev) => {
+            if (!prev) return prev;
+            const existing = prev.clocks || [];
+            if (existing.some((c) => c.id === msg.clock.id)) return prev;
+            return { ...prev, clocks: [...existing, msg.clock] };
+          });
+          break;
+        }
+
+        case 'clock-updated': {
+          setSession((prev) => {
+            if (!prev) return prev;
+            const existing = prev.clocks || [];
+            return {
+              ...prev,
+              clocks: existing.map((c) => (c.id === msg.id ? { ...c, ...msg.updates } : c)),
+            };
+          });
+          break;
+        }
+
+        case 'clock-deleted': {
+          setSession((prev) => {
+            if (!prev) return prev;
+            const existing = prev.clocks || [];
+            return {
+              ...prev,
+              clocks: existing.filter((c) => c.id !== msg.id),
+            };
+          });
+          setSelectedClockId((cur) => (cur === msg.id ? null : cur));
           break;
         }
 
@@ -973,6 +1035,40 @@ export const AppVtt: React.FC = () => {
 
   const handleOpenClocks = () => {
     setIsClocksModalOpen(true);
+  };
+
+  const handleAddClock = (clock: ProgressClock) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        clocks: [...(prev.clocks || []), clock],
+      };
+    });
+    networkRef.current?.send({ type: 'clock-add', clock });
+  };
+
+  const handleUpdateClock = (id: string, updates: Partial<ProgressClock>) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        clocks: (prev.clocks || []).map((c) => (c.id === id ? { ...c, ...updates } : c)),
+      };
+    });
+    networkRef.current?.send({ type: 'clock-update', id, updates });
+  };
+
+  const handleDeleteClock = (id: string) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        clocks: (prev.clocks || []).filter((c) => c.id !== id),
+      };
+    });
+    if (selectedClockId === id) setSelectedClockId(null);
+    networkRef.current?.send({ type: 'clock-delete', id });
   };
 
   const handlePlaceClockOnCanvas = (clock: ProgressClock) => {
@@ -1976,10 +2072,51 @@ export const AppVtt: React.FC = () => {
         }}
       />
 
-      {/* Progress Clocks Modal (OB-132) */}
+      {/* Floating Screen Clock Widgets (OB-173) */}
+      {(session?.clocks || []).map((clock, index) => (
+        <ClockWidget
+          key={clock.id}
+          clock={clock}
+          index={index}
+          isSelected={selectedClockId === clock.id}
+          isCompact={minimizedClockIds.has(clock.id)}
+          onSelect={(id) => {
+            setSelectedClockId(id);
+            setSelectedToken(null);
+            setSelectedTokens([]);
+            setSelectedMarker(null);
+          }}
+          onUpdate={handleUpdateClock}
+          isGm={isGm}
+        />
+      ))}
+
+      {/* Contextual Clock Widget Bar (OB-173) */}
+      {(() => {
+        const selectedClock = (session?.clocks || []).find((c) => c.id === selectedClockId);
+        if (!selectedClock) return null;
+        return (
+          <ClockWidgetBar
+            clock={selectedClock}
+            isGm={isGm}
+            isCompact={minimizedClockIds.has(selectedClock.id)}
+            onToggleCompact={() => toggleClockCompact(selectedClock.id)}
+            onUpdate={handleUpdateClock}
+            onDelete={handleDeleteClock}
+            onClose={() => setSelectedClockId(null)}
+          />
+        );
+      })()}
+
+      {/* Progress Clocks Modal (OB-132, OB-173) */}
       <ProgressClockModal
         isOpen={isClocksModalOpen}
         onClose={() => setIsClocksModalOpen(false)}
+        clocks={session?.clocks || []}
+        onAddClock={handleAddClock}
+        onUpdateClock={handleUpdateClock}
+        onDeleteClock={handleDeleteClock}
+        isGm={isGm}
         onPlaceOnCanvas={handlePlaceClockOnCanvas}
         canvasMarkers={session?.markers}
         onUpdateMarker={handleUpdateMarker}

@@ -512,6 +512,50 @@ function handleMessage(ws: ClientSocket, msg: ClientToServerMessage) {
       break;
     }
 
+    case 'clock-add': {
+      if (!ws.roomId) return;
+      const session = getSession(ws.roomId);
+      if (session) {
+        if (!session.clocks) session.clocks = [];
+        session.clocks.push(msg.clock);
+      }
+      broadcastToRoom(ws.roomId, {
+        type: 'clock-added',
+        clock: msg.clock,
+      });
+      break;
+    }
+
+    case 'clock-update': {
+      if (!ws.roomId) return;
+      const session = getSession(ws.roomId);
+      if (session && session.clocks) {
+        const idx = session.clocks.findIndex((c) => c.id === msg.id);
+        if (idx !== -1) {
+          session.clocks[idx] = { ...session.clocks[idx], ...msg.updates };
+        }
+      }
+      broadcastToRoom(ws.roomId, {
+        type: 'clock-updated',
+        id: msg.id,
+        updates: msg.updates,
+      });
+      break;
+    }
+
+    case 'clock-delete': {
+      if (!ws.roomId) return;
+      const session = getSession(ws.roomId);
+      if (session && session.clocks) {
+        session.clocks = session.clocks.filter((c) => c.id !== msg.id);
+      }
+      broadcastToRoom(ws.roomId, {
+        type: 'clock-deleted',
+        id: msg.id,
+      });
+      break;
+    }
+
     case 'initiative-update': {
       if (!ws.roomId) return;
       const session = getSession(ws.roomId);
