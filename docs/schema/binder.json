@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.ttrpgwith.me/v1/binder.json",
+  "title": "BinderData",
+  "description": "JSON Schema for .binder collection and tabletop campaign interchange files",
+  "type": "object",
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "collections": {
+      "type": "array",
+      "description": "Optional card collections for MonsterCards / external app compatibility",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "cards"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cards": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "dashboard": {
+      "type": "array",
+      "description": "Optional dashboard layout elements"
+    },
+    "_oldbear": {
+      "type": "object",
+      "description": "Private extension block for OldBear data. The '_' prefix designates private app-specific data (analogous to vnd/* MIME types) that other apps should preserve or ignore.",
+      "properties": {
+        "vtt": {
+          "type": "object",
+          "description": "OldBear VTT state: scenes, maps, tokens, props, characters, markers, fog, and custom statuses"
+        },
+        "brawl": {
+          "type": "object",
+          "description": "OldBear Brawl state: army rosters, units, coherency settings, game rounds, and mission objectives"
+        }
+      }
+    }
+  }
+}

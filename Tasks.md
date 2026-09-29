@@ -128,9 +128,9 @@
 | OB-125 | Done    | Add feedback and GitHub repository links                                                                                                                                       |
 | OB-126 | Done    | Add MIT License file                                                                                                                                                           |
 | OB-127 | Done    | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
-| OB-128 | Pending | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
+| OB-128 | Ready   | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
 | OB-129 | Done    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
-| OB-130 | Pending | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
+| OB-130 | Ready   | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Done    | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
 | OB-132 | Done    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
 | OB-133 | Done    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
@@ -453,12 +453,19 @@ Deploy custom image decals, objective markers, and hazard overlays:
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**
 
-Establish an open, system-agnostic `.binder` (`application/json`) interchange format:
+Establish an open, system-agnostic `.binder` (`application/json`) interchange format based on the schema draft in `docs/schema/binder.json` (to be formally hosted at `https://schemas.ttrpgwith.me/v1/binder.json`):
 
-- Core entities: characters, tokens, props, maps, scenes, and statuses.
-- Namespaced extension blocks under `{ "vtt": {} }` and `{ "brawl": {} }`.
-- Strictly User-Generated Content (UGC) with zero hardcoded copyrighted material bundled. This is a note the we are not including any external content in the source. This is not a restriction on what can be output. If a user has entered it, they have a right to back it up.
-- Single-file export and import for campaigns, army rosters, and asset transfer.
+- **Schema Structure & Compatibility:**
+  - Required field: `schemaVersion: 1`.
+  - Optional `collections` (`[{ name, cards: [] }]`) and `dashboard` fields preserved for compatibility with external card/collection apps (e.g. MonsterCards).
+  - Private extension namespace under `_oldbear`: `{ "_oldbear": { "vtt": {}, "brawl": {} } }`. The `_` prefix convention designates our data as private application data (analogous to `vnd/*` MIME types) that other apps should ignore or preserve without error.
+- **Module Payloads:**
+  - `_oldbear.vtt`: scenes, maps, tokens, props, characters, markers, fog, and custom statuses.
+  - `_oldbear.brawl`: army rosters, units, points, coherency settings, battle rounds, and objectives.
+- **Content Policy:**
+  - Strictly User-Generated Content (UGC) with zero hardcoded copyrighted material bundled in the source. This is a note that we are not including any external content in the source; users have full rights to export and back up whatever content they create or enter.
+- **Functionality:**
+  - Single-file `.binder` export and import for campaigns, army rosters, scenes, and cross-session asset transfer.
 
 ## OB-136 - Client Architectural Refactoring: Restructure into `src/common`, `src/vtt`, and `src/brawl`
 
