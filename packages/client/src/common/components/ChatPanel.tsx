@@ -729,8 +729,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
-  const { windowRef, position, isDragging, handleMouseDown } = useDraggableWindow({
+  const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_chat_pos',
+    defaultZIndex: 50,
   });
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -792,7 +793,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             width: '360px',
             maxHeight: isMinimized ? '46px' : '440px',
             height: isMinimized ? '46px' : '420px',
-            zIndex: 46,
+            zIndex: zIndex ?? 50,
             borderRadius: 'var(--radius-lg)',
             display: 'flex',
             flexDirection: 'column',

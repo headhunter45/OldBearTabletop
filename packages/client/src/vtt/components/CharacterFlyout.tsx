@@ -79,8 +79,9 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
   );
   const [isMinimized, setIsMinimized] = useState(false);
 
-  const { windowRef, position, isDragging, handleMouseDown } = useDraggableWindow({
+  const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_character_sheet_pos',
+    defaultZIndex: 50,
   });
 
   // Manual fallback HP
@@ -231,7 +232,7 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
         maxHeight: isMinimized ? '52px' : 'calc(100vh - 6rem)',
         width: '420px',
         maxWidth: 'calc(100vw - 1.5rem)',
-        zIndex: 46,
+        zIndex: zIndex ?? 50,
         boxShadow: isDragging ? '0 24px 48px rgba(0,0,0,0.8)' : '0 16px 36px rgba(0,0,0,0.6)',
         transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden',

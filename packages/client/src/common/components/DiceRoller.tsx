@@ -36,8 +36,9 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
   const [viewFilter, setViewFilter] = useState<'mine' | 'all'>('mine');
   const [isMinimized, setIsMinimized] = useState(false);
 
-  const { windowRef, position, isDragging, handleMouseDown } = useDraggableWindow({
+  const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_dice_roller_pos',
+    defaultZIndex: 50,
   });
 
   const safeHistory = rollHistory || [];
@@ -118,7 +119,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
         width: '320px',
         maxWidth: 'calc(100vw - 1.5rem)',
         padding: isMinimized ? '0.65rem 1rem' : '0.75rem 1rem',
-        zIndex: 44,
+        zIndex: zIndex ?? 50,
         boxShadow: isDragging ? '0 16px 36px rgba(0,0,0,0.6)' : '0 10px 25px rgba(0,0,0,0.4)',
         transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden',

@@ -9,9 +9,10 @@ interface ArmyRosterFlyoutProps {
 }
 
 export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onDeployUnit }) => {
-  const { position, isDragging, handleMouseDown, windowRef } = useDraggableWindow({
+  const { position, isDragging, handleMouseDown, windowRef, zIndex } = useDraggableWindow({
     initialX: typeof window !== 'undefined' ? window.innerWidth - 380 : 500,
     initialY: 70,
+    defaultZIndex: 50,
   });
 
   const [activeArmy, setActiveArmy] = useState<WargameArmy>({
@@ -68,7 +69,7 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: 50,
+        zIndex: zIndex ?? 50,
         overflow: 'hidden',
       }}
     >

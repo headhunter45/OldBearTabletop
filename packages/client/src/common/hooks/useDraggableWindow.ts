@@ -1,14 +1,63 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-interface UseDraggableOptions {
+// Global stack of active floating window elements to manage z-index elevation (OB-127)
+const activeWindows: HTMLElement[] = [];
+export const BASE_WINDOW_Z_INDEX = 50;
+
+/**
+ * Elevates the given window element to the top of the floating window z-index stack.
+ * All registered windows have their z-index updated sequentially starting from BASE_WINDOW_Z_INDEX.
+ */
+export function bringWindowToFront(element: HTMLElement | null): number {
+  if (!element) return BASE_WINDOW_Z_INDEX;
+  const index = activeWindows.indexOf(element);
+  if (index !== -1) {
+    activeWindows.splice(index, 1);
+  }
+  activeWindows.push(element);
+  activeWindows.forEach((win, idx) => {
+    if (win?.style) {
+      win.style.zIndex = String(BASE_WINDOW_Z_INDEX + idx);
+    }
+  });
+  return BASE_WINDOW_Z_INDEX + activeWindows.length - 1;
+}
+
+/**
+ * Unregisters a window element from the global z-index stack.
+ */
+export function unregisterWindow(element: HTMLElement | null): void {
+  if (!element) return;
+  const index = activeWindows.indexOf(element);
+  if (index !== -1) {
+    activeWindows.splice(index, 1);
+  }
+}
+
+/**
+ * Returns a copy of the active window stack (useful for testing).
+ */
+export function getActiveWindowStack(): HTMLElement[] {
+  return [...activeWindows];
+}
+
+/**
+ * Resets the active window stack (useful for testing).
+ */
+export function clearActiveWindows(): void {
+  activeWindows.length = 0;
+}
+
+export interface UseDraggableOptions {
   initialX?: number;
   initialY?: number;
   storageKey?: string;
+  defaultZIndex?: number;
 }
 
 export function useDraggableWindow(options: UseDraggableOptions = {}) {
   const [position, setPosition] = useState<{ x: number; y: number } | null>(() => {
-    if (options.storageKey) {
+    if (options.storageKey && typeof localStorage !== 'undefined') {
       try {
         const saved = localStorage.getItem(options.storageKey);
         if (saved) return JSON.parse(saved);
@@ -20,11 +69,43 @@ export function useDraggableWindow(options: UseDraggableOptions = {}) {
     return null;
   });
 
+  const [zIndex, setZIndex] = useState<number>(options.defaultZIndex ?? BASE_WINDOW_Z_INDEX);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
   const windowRef = useRef<HTMLDivElement | null>(null);
 
+  const bringToFront = useCallback(() => {
+    if (windowRef.current) {
+      const topZ = bringWindowToFront(windowRef.current);
+      setZIndex(topZ);
+      return topZ;
+    }
+    return zIndex;
+  }, [zIndex]);
+
+  // Register window in z-index stack on mount and handle clicks inside window
+  useEffect(() => {
+    const el = windowRef.current;
+    if (!el) return;
+
+    const initialZ = bringWindowToFront(el);
+    setZIndex(initialZ);
+
+    const handleWindowFocus = () => {
+      bringToFront();
+    };
+
+    el.addEventListener('mousedown', handleWindowFocus);
+    return () => {
+      el.removeEventListener('mousedown', handleWindowFocus);
+      unregisterWindow(el);
+    };
+  }, [bringToFront]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Elevate window z-index on interaction/drag start (OB-127)
+    bringToFront();
+
     // Disable drag on mobile/narrow screens
     if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
 
@@ -44,7 +125,7 @@ export function useDraggableWindow(options: UseDraggableOptions = {}) {
       startY: currentY,
     };
     setIsDragging(true);
-  }, [position]);
+  }, [position, bringToFront]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -63,7 +144,7 @@ export function useDraggableWindow(options: UseDraggableOptions = {}) {
       const newPos = { x: newX, y: newY };
       setPosition(newPos);
 
-      if (options.storageKey) {
+      if (options.storageKey && typeof localStorage !== 'undefined') {
         try {
           localStorage.setItem(options.storageKey, JSON.stringify(newPos));
         } catch {}
@@ -89,5 +170,7 @@ export function useDraggableWindow(options: UseDraggableOptions = {}) {
     setPosition,
     isDragging,
     handleMouseDown,
+    zIndex,
+    bringToFront,
   };
 }

@@ -127,7 +127,7 @@
 | OB-124 | Complete | [Build version with short git hash in top bar and CI](#ob-124---build-version-with-short-git-hash-in-top-bar-and-ci)                                                           |
 | OB-125 | Complete | Add feedback and GitHub repository links                                                                                                                                       |
 | OB-126 | Complete | Add MIT License file                                                                                                                                                           |
-| OB-127 | Ready    | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
+| OB-127 | Done     | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
 | OB-128 | Pending  | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
 | OB-129 | Ready    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
 | OB-130 | Pending  | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
@@ -319,7 +319,7 @@ Single source of truth for application version (`VERSION` file) passed into CI b
 
 ## OB-127 - Window Z-Index Elevation on Drag
 
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** None  
 **Description:**

@@ -124,10 +124,11 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
 
   // Draggable window state (Task #112)
   const [isMinimized, setIsMinimized] = useState(false);
-  const { windowRef, position, isDragging: isWindowDragging, handleMouseDown } = useDraggableWindow({
+  const { windowRef, position, isDragging: isWindowDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_asset_manager_pos',
     initialX: typeof window !== 'undefined' ? Math.max(20, Math.min(window.innerWidth - 750, 80)) : 80,
     initialY: 80,
+    defaultZIndex: 55,
   });
 
   const handleAssetDragStart = (e: React.DragEvent, asset: StoredAsset, type: 'token' | 'prop' | 'monster' | 'character') => {
@@ -652,7 +653,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
         borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
         boxShadow: isWindowDragging ? '0 24px 48px rgba(0,0,0,0.75)' : '0 16px 36px rgba(0,0,0,0.55)',
-        zIndex: 55,
+        zIndex: zIndex ?? 55,
         transition: isWindowDragging
           ? 'none'
           : 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
