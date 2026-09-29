@@ -53,6 +53,9 @@ export function renderMarkers(
       case 'clock':
         renderClock(ctx, marker, isSelected);
         break;
+      case 'spray':
+        renderSpray(ctx, marker, isSelected, tokens, gridSize, scaleFtPerCell);
+        break;
     }
 
     ctx.restore();
@@ -763,5 +766,440 @@ export function renderClock(
   }
 
   ctx.restore();
+}
+
+const sprayImageCache = new Map<string, HTMLImageElement>();
+
+export function getSprayImage(url: string): HTMLImageElement | null {
+  if (!url) return null;
+  let img = sprayImageCache.get(url);
+  if (!img) {
+    if (typeof Image !== 'undefined') {
+      img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = url;
+      sprayImageCache.set(url, img);
+    } else {
+      return null;
+    }
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  spikes: number,
+  outerRadius: number,
+  innerRadius: number,
+  color: string
+) {
+  let rot = (Math.PI / 2) * 3;
+  let x = cx;
+  let y = cy;
+  const step = Math.PI / spikes;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function renderHazardStripesDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Dark caution base
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+
+  // Diagonal warning stripes
+  const stripeWidth = Math.max(12, radius * 0.22);
+  ctx.fillStyle = color || '#f59e0b';
+  for (let d = -radius * 2.5; d <= radius * 2.5; d += stripeWidth * 2) {
+    ctx.beginPath();
+    ctx.moveTo(d, -radius);
+    ctx.lineTo(d + stripeWidth, -radius);
+    ctx.lineTo(d + stripeWidth + radius * 2, radius);
+    ctx.lineTo(d + radius * 2, radius);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Outer warning border ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = color || '#f59e0b';
+  ctx.lineWidth = Math.max(3, radius * 0.05);
+  ctx.stroke();
+}
+
+function renderRadiationDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  // Background disk
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2.5, radius * 0.04);
+  ctx.stroke();
+
+  // Trefoil 3 blades: 60 degrees each at -90°, 30°, 150°
+  const rInner = radius * 0.28;
+  const rOuter = radius * 0.82;
+  const spanRad = (60 * Math.PI) / 180;
+  const halfSpan = spanRad / 2;
+
+  ctx.fillStyle = color;
+  const bladeAngles = [-Math.PI / 2, Math.PI / 6, (5 * Math.PI) / 6];
+  for (const centerA of bladeAngles) {
+    ctx.beginPath();
+    ctx.arc(0, 0, rOuter, centerA - halfSpan, centerA + halfSpan, false);
+    ctx.arc(0, 0, rInner, centerA + halfSpan, centerA - halfSpan, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Center hub
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function renderBiohazardDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  // Background disk
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(2.5, radius * 0.04);
+  ctx.stroke();
+
+  // 3 Biohazard crescent lobes at -90°, 30°, 150°
+  const lobeDist = radius * 0.36;
+  const lobeOuter = radius * 0.44;
+  const lobeInner = radius * 0.32;
+  const angles = [-Math.PI / 2, Math.PI / 6, (5 * Math.PI) / 6];
+
+  ctx.fillStyle = color;
+  for (const a of angles) {
+    const lx = lobeDist * Math.cos(a);
+    const ly = lobeDist * Math.sin(a);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(lx, ly, lobeOuter, 0, Math.PI * 2);
+    ctx.arc(lx, ly, lobeInner, 0, Math.PI * 2, true);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Center cutout & dot
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.09, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function renderObjectiveDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  // Background disc with glass effect
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+  ctx.fill();
+
+  // Outer reticle ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Inner dashed targeting circle
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.restore();
+
+  // Crosshair ticks
+  const tickIn = radius * 0.55;
+  const tickOut = radius * 0.98;
+  ctx.beginPath();
+  ctx.moveTo(0, -tickIn); ctx.lineTo(0, -tickOut);
+  ctx.moveTo(0, tickIn); ctx.lineTo(0, tickOut);
+  ctx.moveTo(-tickIn, 0); ctx.lineTo(-tickOut, 0);
+  ctx.moveTo(tickIn, 0); ctx.lineTo(tickOut, 0);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 5-point tactical star in center
+  drawStar(ctx, 0, 0, 5, radius * 0.38, radius * 0.18, color);
+}
+
+function renderFireBlastDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  const points = 16;
+  ctx.save();
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? radius : radius * 0.62;
+    const a = (i * Math.PI) / points;
+    const px = Math.cos(a) * r;
+    const py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+
+  const grad = ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius);
+  grad.addColorStop(0, '#fef08a');
+  grad.addColorStop(0.4, '#f97316');
+  grad.addColorStop(0.85, color || '#dc2626');
+  grad.addColorStop(1, 'rgba(153, 27, 27, 0.4)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = '#ea580c';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function renderMagicCircleDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+  ctx.save();
+  // Outer circle
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Secondary ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.88, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Inner ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.55, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Octagram squares
+  const rSq = radius * 0.88;
+  for (let offset = 0; offset < 2; offset++) {
+    const ang = (offset * Math.PI) / 4;
+    ctx.beginPath();
+    for (let j = 0; j < 4; j++) {
+      const a = ang + (j * Math.PI) / 2;
+      const x = rSq * Math.cos(a);
+      const y = rSq * Math.sin(a);
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Center glowing arcane orb
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = hexToRgba(color, 0.35);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+export function renderSpray(
+  ctx: CanvasRenderingContext2D,
+  marker: ScreenMarker,
+  isSelected: boolean = false,
+  tokens: Record<string, Token> = {},
+  gridSize: number = 50,
+  scaleFtPerCell: number = 5
+) {
+  const { x, y } = getMarkerAnchorPosition(marker, tokens, gridSize);
+  const radius = marker.radius || 50;
+  const rotationDeg = marker.rotation ?? marker.angle ?? 0;
+  const color = marker.color || '#f59e0b';
+  const opacity = marker.opacity ?? 0.85;
+  const diameterFt = Math.round(((radius * 2) / gridSize) * scaleFtPerCell);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate((rotationDeg * Math.PI) / 180);
+
+  // If selected, draw outline selection ring and rotation handle dot
+  if (isSelected) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 6]);
+    ctx.stroke();
+
+    // Rotation handle dot on the perimeter
+    ctx.beginPath();
+    ctx.arc(radius, 0, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    // Line from center to handle
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(radius, 0);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw Decal Content
+  const imgUrl = (marker.imageUrl?.trim()) || 'hazard';
+  const isPreset = ['hazard', 'hazard-stripes', 'biohazard', 'radiation', 'objective', 'fire', 'magic'].includes(imgUrl.toLowerCase());
+  const customImg = !isPreset ? getSprayImage(imgUrl) : null;
+
+  ctx.save();
+  ctx.globalAlpha = (ctx.globalAlpha || 1) * opacity;
+
+  if (customImg) {
+    // Custom user image: draw clipped to circle
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.clip();
+    try {
+      ctx.drawImage(customImg, -radius, -radius, radius * 2, radius * 2);
+    } catch {
+      // Fallback if drawImage fails
+    }
+    // Perimeter ring
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  } else if (!isPreset) {
+    // Custom image URL is still loading or invalid
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `bold ${Math.max(10, Math.round(radius * 0.2))}px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🖼️ Decal Loading...', 0, 0);
+  } else {
+    // Built-in presets
+    const preset = imgUrl.toLowerCase();
+    if (preset === 'hazard' || preset === 'hazard-stripes') {
+      renderHazardStripesDecal(ctx, radius, color);
+    } else if (preset === 'biohazard') {
+      renderBiohazardDecal(ctx, radius, color);
+    } else if (preset === 'radiation') {
+      renderRadiationDecal(ctx, radius, color);
+    } else if (preset === 'objective') {
+      renderObjectiveDecal(ctx, radius, color);
+    } else if (preset === 'fire') {
+      renderFireBlastDecal(ctx, radius, color);
+    } else if (preset === 'magic') {
+      renderMagicCircleDecal(ctx, radius, color);
+    }
+  }
+
+  ctx.restore(); // restore opacity
+  ctx.restore(); // restore rotation & translation
+
+  // Label pill at bottom
+  if (marker.label || marker.persist || isSelected) {
+    const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
+    const labelText = marker.label
+      ? `${labelPrefix}${marker.label} (⌀ ${diameterFt} ft)`
+      : `${labelPrefix}Spray Decal (⌀ ${diameterFt} ft, ${Math.round((rotationDeg + 360) % 360)}°)`;
+
+    ctx.save();
+    ctx.font = 'bold 12px Inter, sans-serif';
+    const textWidth = ctx.measureText(labelText).width;
+    const paddingX = 10;
+    const paddingY = 4;
+    const pillY = y + radius + 16;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.beginPath();
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(
+        x - textWidth / 2 - paddingX,
+        pillY - 8 - paddingY,
+        textWidth + paddingX * 2,
+        16 + paddingY * 2,
+        6
+      );
+    } else {
+      ctx.rect(
+        x - textWidth / 2 - paddingX,
+        pillY - 8 - paddingY,
+        textWidth + paddingX * 2,
+        16 + paddingY * 2
+      );
+    }
+    ctx.fill();
+    ctx.strokeStyle = isSelected ? '#38bdf8' : 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(labelText, x, pillY);
+    ctx.restore();
+  }
 }
 

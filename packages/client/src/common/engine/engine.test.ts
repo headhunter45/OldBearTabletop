@@ -4,7 +4,7 @@ import { Viewport } from './Viewport.js';
 import { measureDistance } from './Ruler.js';
 import { snapToGrid } from './GridRenderer.js';
 import { TRACKPAD_PAN_SENSITIVITY, TRACKPAD_ZOOM_SENSITIVITY, MOUSE_WHEEL_ZOOM_SENSITIVITY } from './CanvasEngine.js';
-import { getContrastingAccentColor, renderClock } from './PointerSystem.js';
+import { getContrastingAccentColor, renderClock, renderSpray } from './PointerSystem.js';
 
 describe('Canvas Engine Utilities', () => {
   it('correctly maps screen to world coordinates', () => {
@@ -480,6 +480,56 @@ describe('Canvas Engine Utilities', () => {
     assert.strictEqual(filledCount, 3, 'Renders exactly 3 filled wedges for filled: 3');
     assert.ok(textRendered.includes('3/8'), 'Hub renders 3/8 fraction indicator');
     assert.ok(textRendered.includes('Alert Level'), 'Renders clock label');
+  });
+
+  it('renders custom image spray decals and hazard overlays (OB-134)', () => {
+    const sprayMarker = {
+      id: 'spray-1',
+      type: 'spray' as const,
+      userId: 'user-1',
+      userName: 'GM',
+      color: '#f59e0b',
+      x: 150,
+      y: 150,
+      radius: 80,
+      rotation: 45,
+      imageUrl: 'hazard',
+      label: 'Hazard Warning Zone',
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+
+    let textRendered = '';
+    let rotatedAngle = 0;
+    const mockCtx: any = {
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      clip: () => {},
+      fill: () => {},
+      stroke: () => {},
+      setLineDash: () => {},
+      translate: () => {},
+      rotate: (rad: number) => {
+        rotatedAngle = Math.round((rad * 180) / Math.PI);
+      },
+      fillText: (text: string) => {
+        textRendered += text;
+      },
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      roundRect: () => {},
+      rect: () => {},
+    };
+
+    renderSpray(mockCtx, sprayMarker, true, {}, 50, 5);
+    assert.strictEqual(rotatedAngle, 45, 'Rotates canvas context by marker rotation angle (45°)');
+    assert.ok(textRendered.includes('Hazard Warning Zone'), 'Renders decal label pill');
+    assert.ok(textRendered.includes('16 ft'), 'Renders diameter measurement');
   });
 });
 

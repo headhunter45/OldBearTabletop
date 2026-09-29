@@ -37,6 +37,7 @@ export type ActiveTool =
   | 'rectangle'
   | 'cone'
   | 'tether'
+  | 'spray'
   | 'measure'
   | 'fog-reveal'
   | 'fog-hide';
@@ -81,7 +82,8 @@ export class CanvasEngine {
   persistMarkersMode: boolean = false;
   selectedMarkerId: string | null = null;
   draggingMarker: ScreenMarker | null = null;
-  draggingMarkerHandle: { marker: ScreenMarker; handle: 'spread' } | null = null;
+  draggingMarkerHandle: { marker: ScreenMarker; handle: 'spread' | 'rotate' } | null = null;
+  activeSprayImage?: string;
 
   // Shape drawing state (for markers & fog)
   isDrawing: boolean = false;
@@ -374,6 +376,50 @@ export class CanvasEngine {
       // Show live radius badge
       const radiusFt = Math.round((radius / gridSize) * scaleFtPerCell);
       this.drawMeasurementBadge(ctx, `${radiusFt} ft radius`, (x1 + x2) / 2, (y1 + y2) / 2 - 14, color);
+    } else if (this.activeTool === 'spray') {
+      const radius = Math.hypot(x2 - x1, y2 - y1);
+      const diameterFt = Math.round(((radius * 2) / gridSize) * scaleFtPerCell);
+      const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+
+      ctx.save();
+      // Outer circular guide
+      ctx.beginPath();
+      ctx.arc(x1, y1, radius, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(color, 0.2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+
+      // Drag line indicating angle and radius
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+
+      // Center point
+      ctx.beginPath();
+      ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Arrow head at cursor
+      const headLen = 10;
+      const headAngle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(headAngle - Math.PI / 6), y2 - headLen * Math.sin(headAngle - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(headAngle + Math.PI / 6), y2 - headLen * Math.sin(headAngle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+
+      // Live distance & diameter preview badge
+      this.drawMeasurementBadge(ctx, `⌀ ${diameterFt} ft (${Math.round((angle + 360) % 360)}°)`, (x1 + x2) / 2, (y1 + y2) / 2 - 16, color);
     } else if (this.activeTool === 'cone') {
       const radius = Math.hypot(x2 - x1, y2 - y1);
       const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
@@ -748,6 +794,23 @@ export class CanvasEngine {
             this.draggingMarkerHandle = { marker: selMarker, handle: 'spread' };
             return;
           }
+        } else if (
+          selMarker &&
+          selMarker.type === 'spray' &&
+          selMarker.persist &&
+          (isGm || selMarker.userId === localId) &&
+          !selMarker.locked
+        ) {
+          const rad = selMarker.radius || 50;
+          const theta = ((selMarker.rotation ?? selMarker.angle ?? 0) * Math.PI) / 180;
+          const h = {
+            x: selMarker.x + rad * Math.cos(theta),
+            y: selMarker.y + rad * Math.sin(theta),
+          };
+          if (Math.hypot(worldPos.x - h.x, worldPos.y - h.y) <= 18) {
+            this.draggingMarkerHandle = { marker: selMarker, handle: 'rotate' };
+            return;
+          }
         }
       }
 
@@ -806,9 +869,18 @@ export class CanvasEngine {
 
     const worldPos = this.viewport.screenToWorld(e.clientX, e.clientY);
 
-    // Cone spread angle handle dragging (Task #118)
+    // Cone spread angle or Spray rotation handle dragging
     if (this.draggingMarkerHandle) {
       const m = this.draggingMarkerHandle.marker;
+      if (this.draggingMarkerHandle.handle === 'rotate') {
+        const currAngleDeg = (Math.atan2(worldPos.y - m.y, worldPos.x - m.x) * 180) / Math.PI;
+        const newRot = Math.round((currAngleDeg + 360) % 360);
+        m.rotation = newRot;
+        m.angle = newRot;
+        this.callbacks.onMarkerUpdate?.(m.id, { rotation: newRot, angle: newRot });
+        this.callbacks.onMarkerSelect?.({ ...m });
+        return;
+      }
       const currAngleDeg = (Math.atan2(worldPos.y - m.y, worldPos.x - m.x) * 180) / Math.PI;
       const centerAngleDeg = m.angle ?? 0;
       const diff = Math.abs(((currAngleDeg - centerAngleDeg + 540) % 360) - 180);
@@ -995,11 +1067,16 @@ export class CanvasEngine {
       });
     }
 
-    // Finish Cone Handle Drag (Task #118)
+    // Finish Marker Handle Drag (Cone spread / Spray rotate)
     if (this.draggingMarkerHandle) {
       const m = this.draggingMarkerHandle.marker;
+      const handleType = this.draggingMarkerHandle.handle;
       this.draggingMarkerHandle = null;
-      this.callbacks.onMarkerUpdate?.(m.id, { spreadAngle: m.spreadAngle });
+      if (handleType === 'rotate') {
+        this.callbacks.onMarkerUpdate?.(m.id, { rotation: m.rotation, angle: m.angle });
+      } else {
+        this.callbacks.onMarkerUpdate?.(m.id, { spreadAngle: m.spreadAngle });
+      }
       this.callbacks.onMarkerSelect?.({ ...m });
     }
 
@@ -1162,6 +1239,28 @@ export class CanvasEngine {
           createdAt: Date.now(),
         });
       }
+    } else if (this.activeTool === 'spray') {
+      const radius = Math.hypot(x2 - x1, y2 - y1);
+      if (radius > 5) {
+        const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+        const isPersistent = this.persistMarkersMode ? !(e && e.shiftKey) : Boolean(e && e.shiftKey);
+        this.broadcastMarker({
+          id: crypto.randomUUID(),
+          type: 'spray',
+          userId: this.localPlayer.id,
+          userName: this.localPlayer.name,
+          color: this.localPlayer.color,
+          x: x1,
+          y: y1,
+          radius,
+          rotation: Math.round((angle + 360) % 360),
+          imageUrl: this.activeSprayImage || undefined,
+          mapId: currentMap?.id,
+          persist: isPersistent,
+          durationMs: isPersistent ? 0 : 8000,
+          createdAt: Date.now(),
+        });
+      }
     } else if (this.activeTool === 'crosshair') {
       const dist = Math.hypot(x2 - x1, y2 - y1);
       const minSize = 18;
@@ -1319,6 +1418,9 @@ export class CanvasEngine {
         if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       } else if (m.type === 'clock') {
         const rad = m.radius || 60;
+        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
+      } else if (m.type === 'spray') {
+        const rad = m.radius || 50;
         if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       }
     }

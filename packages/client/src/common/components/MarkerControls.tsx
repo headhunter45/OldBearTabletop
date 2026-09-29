@@ -16,6 +16,8 @@ import {
   Anchor,
   Unlink,
   PieChart,
+  Stamp,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { RotationCompass } from './TokenControls.js';
 import { AVAILABLE_COLORS } from '../config/colors.js';
@@ -64,6 +66,8 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
       ? 'Token Tether'
       : marker.type === 'clock'
       ? 'Progress Clock'
+      : marker.type === 'spray'
+      ? 'Spray Decal / Hazard'
       : 'Drawing Shape';
 
   const renderIcon = () => {
@@ -82,6 +86,8 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
         return <Link size={16} color={marker.color} />;
       case 'clock':
         return <PieChart size={16} color={marker.color} />;
+      case 'spray':
+        return <Stamp size={16} color={marker.color} />;
       default:
         return <Sparkles size={16} color={marker.color} />;
     }
@@ -216,8 +222,8 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
         )}
       </div>
 
-      {/* Radius Controls (for Circle, Cone, Crosshair) */}
-      {(marker.type === 'circle' || marker.type === 'cone' || marker.type === 'crosshair') && onUpdate && (
+      {/* Radius Controls (for Circle, Cone, Crosshair, Spray) */}
+      {(marker.type === 'circle' || marker.type === 'cone' || marker.type === 'crosshair' || marker.type === 'spray') && onUpdate && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Radius:</span>
           <button
@@ -392,6 +398,101 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
             >
               ↻ +15°
             </button>
+          </div>
+        </>
+      )}
+
+      {/* Spray Indicator Rotation & Decal Presets (OB-134) */}
+      {marker.type === 'spray' && onUpdate && (
+        <>
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+          {/* Rotation Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Rotate:</span>
+            <RotationCompass
+              rotation={marker.rotation ?? marker.angle ?? 0}
+              onChange={(deg) => onUpdate(marker.id, { rotation: deg, angle: deg })}
+            />
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
+              onClick={() => {
+                const cur = marker.rotation ?? marker.angle ?? 0;
+                const next = (cur - 15 + 360) % 360;
+                onUpdate(marker.id, { rotation: next, angle: next });
+              }}
+              title="Rotate Left 15°"
+            >
+              ↺ -15°
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem' }}
+              onClick={() => {
+                const cur = marker.rotation ?? marker.angle ?? 0;
+                const next = (cur + 15) % 360;
+                onUpdate(marker.id, { rotation: next, angle: next });
+              }}
+              title="Rotate Right 15°"
+            >
+              ↻ +15°
+            </button>
+          </div>
+
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+
+          {/* Preset Decals Chips */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Preset:</span>
+            {[
+              { id: 'hazard', label: '⚠️ Hazard' },
+              { id: 'biohazard', label: '☣️ Bio' },
+              { id: 'radiation', label: '☢️ Rad' },
+              { id: 'objective', label: '🎯 Target' },
+              { id: 'fire', label: '🔥 Fire' },
+              { id: 'magic', label: '🔯 Arcane' },
+            ].map((p) => {
+              const isActive = (marker.imageUrl || 'hazard').toLowerCase() === p.id;
+              return (
+                <button
+                  key={p.id}
+                  className={`btn ${isActive ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    padding: '0.2rem 0.4rem',
+                    fontSize: '0.7rem',
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                  onClick={() => onUpdate(marker.id, { imageUrl: p.id })}
+                  title={`Use ${p.label} decal overlay`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+
+          {/* Custom Image URL Input */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <ImageIcon size={14} color="var(--text-muted)" />
+            <input
+              type="text"
+              className="input"
+              value={marker.imageUrl ?? ''}
+              placeholder="Custom image URL..."
+              onChange={(e) => onUpdate(marker.id, { imageUrl: e.target.value })}
+              title="Custom Image Decal URL (PNG/SVG/JPG/WebP) or preset ID"
+              style={{
+                width: '130px',
+                padding: '0.2rem 0.4rem',
+                fontSize: '0.75rem',
+                background: 'rgba(0,0,0,0.3)',
+                borderRadius: '4px',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-main)',
+              }}
+            />
           </div>
         </>
       )}

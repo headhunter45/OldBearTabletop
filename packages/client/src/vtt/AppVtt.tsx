@@ -1641,6 +1641,11 @@ export const AppVtt: React.FC = () => {
         setActiveTool('tether');
         return;
       }
+      if (e.key === '8') {
+        e.preventDefault();
+        setActiveTool('spray');
+        return;
+      }
 
       const key = e.key.toLowerCase();
       if (key === 'g') {

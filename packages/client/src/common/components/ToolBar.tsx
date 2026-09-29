@@ -18,6 +18,7 @@ import {
   Pin,
   Zap,
   Link,
+  Stamp,
 } from 'lucide-react';
 import { ActiveTool } from '../engine/CanvasEngine.js';
 
@@ -69,7 +70,7 @@ export const ToolBar: React.FC<ToolBarProps> = ({
   const gridMenuRef = useRef<HTMLDivElement>(null);
 
   const isSelectTool = ['select', 'box-select', 'pan'].includes(activeTool);
-  const isHighlightTool = ['laser', 'arrow', 'crosshair', 'circle', 'rectangle', 'cone'].includes(activeTool);
+  const isHighlightTool = ['laser', 'arrow', 'crosshair', 'circle', 'rectangle', 'cone', 'tether', 'spray'].includes(activeTool);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -226,6 +227,8 @@ export const ToolBar: React.FC<ToolBarProps> = ({
             <Triangle size={18} />
           ) : activeTool === 'tether' ? (
             <Link size={18} />
+          ) : activeTool === 'spray' ? (
+            <Stamp size={18} />
           ) : (
             <Sparkles size={18} />
           )}
@@ -385,6 +388,26 @@ export const ToolBar: React.FC<ToolBarProps> = ({
             >
               <Link size={16} />
               <span>Token Tether (7)</span>
+            </button>
+
+            <button
+              className={`btn btn-secondary ${activeTool === 'spray' ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.35rem 0.6rem',
+                fontSize: '0.8rem',
+                justifyContent: 'flex-start',
+              }}
+              onClick={() => {
+                onSelectTool('spray');
+                setShowHighlightMenu(false);
+              }}
+              title="Custom Image Spray Decal / Hazard (8)"
+            >
+              <Stamp size={16} />
+              <span>Spray Decal (8)</span>
             </button>
 
             <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.2rem 0' }} />

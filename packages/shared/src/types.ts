@@ -135,7 +135,7 @@ export interface FogState {
   shapes: FogShape[];
 }
 
-export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone' | 'tether' | 'clock';
+export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone' | 'tether' | 'clock' | 'spray';
 
 export interface ScreenMarker {
   id: string;
@@ -158,13 +158,15 @@ export interface ScreenMarker {
   points?: FogPoint[]; // for laser trails
   targetX?: number; // for arrow / tether
   targetY?: number;
-  radius?: number; // for circle, cone, or clock
+  radius?: number; // for circle, cone, clock, or spray
   width?: number; // for rectangle
   height?: number;
   angle?: number; // for cone / directional angle
   spreadAngle?: number; // for cone spread angle in degrees
   segments?: number; // for clock: number of pie wedges (default 8)
   filled?: number; // for clock: number of active/filled wedges
+  imageUrl?: string; // for spray: custom image decal, hazard overlay, or objective marker asset (OB-134)
+  rotation?: number; // for spray: rotation angle in degrees (OB-134)
   persist?: boolean; // stays on map until deleted
   locked?: boolean; // locked from accidental movement
   mapId?: string; // associated map
