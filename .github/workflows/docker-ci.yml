@@ -5,9 +5,12 @@ on:
     branches:
       - main
       - develop
-      - tasks/*
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
   workflow_dispatch:
     inputs:
       registry:
