@@ -4,20 +4,47 @@ import { getDB, StoredAsset } from './db.js';
 export const BINDER_SCHEMA_ID = 'https://schemas.ttrpgwith.me/v1/binder.json';
 export const BINDER_JSON_SCHEMA = 'https://json-schema.org/draft/2020-12/schema';
 export const BINDER_SCHEMA_VERSION = 1;
+export const CARD_SCHEMA_ID = 'https://schemas.ttrpgwith.me/v1/card.json';
 
-export interface BinderCollectionCard {
-  id?: string;
+/**
+ * Standard MonsterCard conforming to docs/schema/card.json (OB-174).
+ */
+export interface MonsterCard {
+  $schema?: string;
+  schemaVersion: number;
+  id: string;
   name: string;
+  size?: string;
   type?: string;
-  description?: string;
+  subtype?: string;
+  alignment?: string;
+  strengthScore?: number;
+  dexterityScore?: number;
+  constitutionScore?: number;
+  intelligenceScore?: number;
+  wisdomScore?: number;
+  charismaScore?: number;
+  hitDice?: number;
+  walkSpeed?: number;
+  burrowSpeed?: number;
+  climbSpeed?: number;
+  flySpeed?: number;
+  swimSpeed?: number;
+  abilities?: Array<{ name: string; description: string; [key: string]: any }>;
+  actions?: Array<{ name: string; description: string; [key: string]: any }>;
+  reactions?: Array<{ name: string; description: string; [key: string]: any }>;
+  legendaryActions?: Array<{ name: string; description: string; [key: string]: any }>;
   imageUrl?: string;
-  data?: any;
   [key: string]: any;
 }
 
+export type BinderCollectionCard = MonsterCard;
+
 export interface BinderCollection {
+  id?: string;
   name: string;
-  cards: BinderCollectionCard[];
+  description?: string;
+  cards: MonsterCard[];
   [key: string]: any;
 }
 
@@ -62,6 +89,7 @@ export interface BinderExportOptions {
   includeLocalStorage?: boolean;
   brawlData?: OldBearBrawlModuleData;
   customCollections?: BinderCollection[];
+  rawBinder?: BinderData; // To preserve third-party collections/dashboard during round-trip
 }
 
 export interface BinderImportResult {
@@ -92,12 +120,131 @@ export function isBinderData(data: unknown): data is BinderData {
 }
 
 /**
+ * Maps a StoredAsset or creature data to a standard MonsterCard conforming to docs/schema/card.json (OB-174).
+ */
+export function mapAssetToCard(asset: StoredAsset, instanceId?: string): MonsterCard {
+  const mData = asset.monsterData || {};
+  const char = asset.character || {};
+
+  // Size string mapping
+  let sizeStr = mData.size || char.size;
+  if (!sizeStr && typeof asset.size === 'number') {
+    if (asset.size <= 0.5) sizeStr = 'Tiny';
+    else if (asset.size <= 0.8) sizeStr = 'Small';
+    else if (asset.size <= 1.2) sizeStr = 'Medium';
+    else if (asset.size <= 2.2) sizeStr = 'Large';
+    else if (asset.size <= 3.2) sizeStr = 'Huge';
+    else sizeStr = 'Gargantuan';
+  }
+
+  // Speed
+  const walkSpeed =
+    typeof mData.speed === 'number'
+      ? mData.speed
+      : typeof asset.speed === 'number'
+      ? asset.speed
+      : typeof char.speed === 'number'
+      ? char.speed
+      : 30;
+
+  // Abilities
+  const rawAbilities = Array.isArray(mData.specialAbilities)
+    ? mData.specialAbilities
+    : Array.isArray(mData.abilities)
+    ? mData.abilities
+    : Array.isArray(char.abilities)
+    ? char.abilities
+    : [];
+
+  const abilities = rawAbilities.map((a: any) => ({
+    name: a.name || 'Ability',
+    description: a.desc || a.description || '',
+  }));
+
+  // Actions
+  const rawActions = Array.isArray(mData.actions)
+    ? mData.actions
+    : Array.isArray(char.actions)
+    ? char.actions
+    : [];
+
+  const actions = rawActions.map((a: any) => ({
+    name: a.name || 'Action',
+    description: a.desc || a.description || '',
+  }));
+
+  // Reactions
+  const rawReactions = Array.isArray(mData.reactions) ? mData.reactions : [];
+  const reactions = rawReactions.map((r: any) => ({
+    name: r.name || 'Reaction',
+    description: r.desc || r.description || '',
+  }));
+
+  // Legendary actions
+  const rawLegendary = Array.isArray(mData.legendaryActions) ? mData.legendaryActions : [];
+  const legendaryActions = rawLegendary.map((l: any) => ({
+    name: l.name || 'Legendary Action',
+    description: l.desc || l.description || '',
+  }));
+
+  // Ability stats
+  const stats = char.stats || {};
+  const strengthScore = Number(mData.strPoints ?? mData.str ?? stats.str ?? 10);
+  const dexterityScore = Number(mData.dexPoints ?? mData.dex ?? stats.dex ?? 10);
+  const constitutionScore = Number(mData.conPoints ?? mData.con ?? stats.con ?? 10);
+  const intelligenceScore = Number(mData.intPoints ?? mData.int ?? stats.int ?? 10);
+  const wisdomScore = Number(mData.wisPoints ?? mData.wis ?? stats.wis ?? 10);
+  const charismaScore = Number(mData.chaPoints ?? mData.cha ?? stats.cha ?? 10);
+
+  // Hit dice
+  let hitDice: number | undefined;
+  if (typeof mData.hitDice === 'number') {
+    hitDice = mData.hitDice;
+  } else if (typeof mData.hit_dice === 'string') {
+    const parsed = parseInt(mData.hit_dice, 10);
+    if (!isNaN(parsed)) hitDice = parsed;
+  } else if (typeof char.level === 'number') {
+    hitDice = char.level;
+  }
+
+  const card: MonsterCard = {
+    $schema: CARD_SCHEMA_ID,
+    schemaVersion: 1,
+    id: instanceId || asset.id || crypto.randomUUID(),
+    name: asset.name,
+    size: sizeStr || 'Medium',
+    type: mData.type || (asset.monsterData ? 'monster' : asset.character ? 'character' : 'token'),
+    subtype: mData.subtype || '',
+    alignment: mData.alignment || char.alignment || 'any alignment',
+    strengthScore,
+    dexterityScore,
+    constitutionScore,
+    intelligenceScore,
+    wisdomScore,
+    charismaScore,
+    hitDice,
+    walkSpeed,
+    burrowSpeed: mData.burrowSpeed ?? 0,
+    climbSpeed: mData.climbSpeed ?? 0,
+    flySpeed: mData.flySpeed ?? 0,
+    swimSpeed: mData.swimSpeed ?? 0,
+    abilities,
+    actions,
+    reactions,
+    legendaryActions,
+    imageUrl: asset.dataUrl || undefined,
+  };
+
+  return card;
+}
+
+/**
  * Constructs a fully compliant .binder document according to docs/schema/binder.json
  */
 export async function createBinderPayload(
   options: BinderExportOptions = {}
 ): Promise<BinderData> {
-  const { session = null, includeAssets = true, includeLocalStorage = true, brawlData, customCollections } = options;
+  const { session = null, includeAssets = true, includeLocalStorage = true, brawlData, customCollections, rawBinder } = options;
 
   let assets: StoredAsset[] = [];
   if (includeAssets) {
@@ -127,25 +274,29 @@ export async function createBinderPayload(
     }
   }
 
-  // Generate external app compatible collections (e.g. MonsterCards cards format)
-  const collections: BinderCollection[] = customCollections ? [...customCollections] : [];
+  // Preserve third-party collections or user custom collections (OB-174)
+  const collections: BinderCollection[] = [];
+  if (rawBinder?.collections && Array.isArray(rawBinder.collections)) {
+    collections.push(...rawBinder.collections);
+  }
+  if (customCollections) {
+    collections.push(...customCollections);
+  }
 
-  // Convert saved characters/monsters into compatible cards so third-party card apps can read them
-  const cards: BinderCollectionCard[] = [];
+  // Convert saved assets/characters/monsters into standard MonsterCard objects conforming to docs/schema/card.json
+  const cards: MonsterCard[] = [];
   for (const asset of assets) {
     if (asset.type === 'token' || asset.monsterData || asset.character) {
-      cards.push({
-        id: asset.id,
-        name: asset.name,
-        type: asset.monsterData ? 'monster' : asset.character ? 'character' : 'token',
-        imageUrl: asset.dataUrl,
-        data: asset.monsterData || asset.character || {},
-      });
+      // Each card instance gets a unique ID so monsters can be included multiple times in a collection
+      cards.push(mapAssetToCard(asset, crypto.randomUUID()));
     }
   }
+
   if (cards.length > 0 && !collections.some((c) => c.name === 'Tokens & Creatures')) {
     collections.push({
+      id: crypto.randomUUID(),
       name: 'Tokens & Creatures',
+      description: 'Exported tokens and creatures from OldBear VTT',
       cards,
     });
   }
@@ -166,7 +317,7 @@ export async function createBinderPayload(
     $id: BINDER_SCHEMA_ID,
     schemaVersion: BINDER_SCHEMA_VERSION,
     collections,
-    dashboard: [],
+    dashboard: rawBinder?.dashboard || [],
     _oldbear: {
       vtt: vttModule,
       brawl: brawlModule,
@@ -233,6 +384,8 @@ export async function downloadBinderFile(blob: Blob, customName?: string): Promi
 
 /**
  * Imports a .binder document, restoring VTT and Brawl modules while preserving third-party data.
+ * Note: Per OB-174, importing from collections or dashboard is disabled; OldBear imports exclusively
+ * from the native _oldbear extension block while preserving third-party data in rawBinder.
  */
 export async function importBinderData(jsonStringOrObject: string | object): Promise<BinderImportResult> {
   let binder: any;
@@ -313,35 +466,8 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
     }
   }
 
-  // 3. Fallback: If no _oldbear but collections exist (external app .binder file)
-  if (!binder._oldbear && Array.isArray(binder.collections) && typeof indexedDB !== 'undefined') {
-    // Check if there are cards we can convert into assets
-    try {
-      const db = await getDB();
-      const tx = db.transaction('assets', 'readwrite');
-      for (const col of binder.collections) {
-        if (Array.isArray(col.cards)) {
-          for (const card of col.cards) {
-            if (card && card.name) {
-              const asset: StoredAsset = {
-                id: card.id || `binder-card-${crypto.randomUUID()}`,
-                name: card.name,
-                type: 'token',
-                dataUrl: card.imageUrl || '',
-                character: card.data,
-                createdAt: Date.now(),
-              };
-              await tx.store.put(asset);
-              assetCount++;
-            }
-          }
-        }
-      }
-      await tx.done;
-    } catch (e) {
-      console.warn('Failed importing external cards into assets:', e);
-    }
-  }
+  // 3. Fallback importing from collections / dashboard is disabled (OB-174).
+  // OldBear imports exclusively from the native _oldbear extension block.
 
   return {
     schemaVersion: binder.schemaVersion,

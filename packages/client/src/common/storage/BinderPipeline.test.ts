@@ -4,6 +4,8 @@ import {
   isBinderData,
   createBinderPayload,
   importBinderData,
+  mapAssetToCard,
+  CARD_SCHEMA_ID,
   BINDER_SCHEMA_VERSION,
   BINDER_SCHEMA_ID,
   BINDER_JSON_SCHEMA,
@@ -11,7 +13,7 @@ import {
 } from './BinderPipeline.js';
 import { GameSession } from '@oldbear/shared';
 
-describe('Universal .binder Export/Import Pipeline (OB-135)', () => {
+describe('Universal .binder Export/Import Pipeline (OB-135, OB-174)', () => {
   it('validates binder schema data and recognizes valid binder structure', () => {
     assert.strictEqual(isBinderData(null), false);
     assert.strictEqual(isBinderData({}), false);
@@ -214,5 +216,135 @@ describe('Universal .binder Export/Import Pipeline (OB-135)', () => {
     assert.strictEqual(cancelled, false);
 
     delete (globalThis as any).window;
+  });
+
+  it('maps assets to MonsterCards conforming to docs/schema/card.json (OB-174)', () => {
+    const mockAsset: any = {
+      id: 'asset-goblin-boss',
+      name: 'Goblin Boss',
+      type: 'token',
+      dataUrl: 'data:image/png;base64,goblin',
+      speed: 30,
+      monsterData: {
+        size: 'Small',
+        type: 'humanoid',
+        subtype: 'goblinoid',
+        alignment: 'neutral evil',
+        str: 10,
+        dex: 14,
+        con: 10,
+        int: 10,
+        wis: 8,
+        cha: 10,
+        hitDice: 5,
+        actions: [
+          { name: 'Multiattack', desc: 'The goblin makes two attacks.' },
+          { name: 'Scimitar', desc: '+4 to hit, reach 5 ft., 5 (1d6 + 2) slashing damage.' },
+        ],
+        reactions: [
+          { name: 'Redirect Attack', desc: 'When a creature hits the goblin with an attack...' },
+        ],
+      },
+    };
+
+    const card = mapAssetToCard(mockAsset, 'instance-card-1');
+
+    assert.strictEqual(card.$schema, CARD_SCHEMA_ID);
+    assert.strictEqual(card.schemaVersion, 1);
+    assert.strictEqual(card.id, 'instance-card-1');
+    assert.strictEqual(card.name, 'Goblin Boss');
+    assert.strictEqual(card.size, 'Small');
+    assert.strictEqual(card.type, 'humanoid');
+    assert.strictEqual(card.subtype, 'goblinoid');
+    assert.strictEqual(card.alignment, 'neutral evil');
+    assert.strictEqual(card.strengthScore, 10);
+    assert.strictEqual(card.dexterityScore, 14);
+    assert.strictEqual(card.constitutionScore, 10);
+    assert.strictEqual(card.intelligenceScore, 10);
+    assert.strictEqual(card.wisdomScore, 8);
+    assert.strictEqual(card.charismaScore, 10);
+    assert.strictEqual(card.hitDice, 5);
+    assert.strictEqual(card.walkSpeed, 30);
+    assert.strictEqual(card.actions?.length, 2);
+    assert.strictEqual(card.actions?.[0].name, 'Multiattack');
+    assert.strictEqual(card.reactions?.length, 1);
+  });
+
+  it('supports multiple duplicate instances of the same monster with unique card IDs (OB-174)', () => {
+    const mockAsset: any = {
+      id: 'asset-goblin',
+      name: 'Goblin Minion',
+      type: 'token',
+      monsterData: { size: 'Small', type: 'humanoid', dex: 14 },
+    };
+
+    // Creating three duplicate instances of the same goblin
+    const card1 = mapAssetToCard(mockAsset, 'card-instance-1');
+    const card2 = mapAssetToCard(mockAsset, 'card-instance-2');
+    const card3 = mapAssetToCard(mockAsset, 'card-instance-3');
+
+    assert.strictEqual(card1.name, 'Goblin Minion');
+    assert.strictEqual(card2.name, 'Goblin Minion');
+    assert.strictEqual(card3.name, 'Goblin Minion');
+    assert.notStrictEqual(card1.id, card2.id);
+    assert.notStrictEqual(card2.id, card3.id);
+  });
+
+  it('preserves third-party collections and dashboard non-destructively during export (OB-174)', async () => {
+    const thirdPartyDoc: any = {
+      $schema: BINDER_JSON_SCHEMA,
+      schemaVersion: 1,
+      collections: [
+        {
+          id: 'col-external-1',
+          name: 'MonsterCards Bestiary',
+          description: 'Custom cards imported from MonsterCards',
+          cards: [
+            { id: 'ext-card-1', name: 'Acolyte', schemaVersion: 1, strengthScore: 10 },
+          ],
+        },
+      ],
+      dashboard: [
+        { id: 'dash-tab-1', title: 'Encounter 1' },
+      ],
+    };
+
+    const exported = await createBinderPayload({
+      includeAssets: false,
+      includeLocalStorage: false,
+      rawBinder: thirdPartyDoc,
+    });
+
+    assert.strictEqual(exported.collections?.length, 1);
+    assert.strictEqual(exported.collections?.[0].id, 'col-external-1');
+    assert.strictEqual(exported.collections?.[0].name, 'MonsterCards Bestiary');
+    assert.strictEqual(exported.collections?.[0].cards[0].name, 'Acolyte');
+    assert.strictEqual(exported.dashboard?.length, 1);
+    assert.strictEqual((exported.dashboard?.[0] as any).title, 'Encounter 1');
+  });
+
+  it('disables importing from collections and dashboard directly into assets (OB-174)', async () => {
+    const externalDoc = {
+      $schema: BINDER_JSON_SCHEMA,
+      schemaVersion: 1,
+      collections: [
+        {
+          id: 'col-1',
+          name: 'Baddies Collection',
+          description: 'A test collection',
+          cards: [
+            { id: 'card-1', name: 'Orc Warrior', schemaVersion: 1, strengthScore: 16 },
+          ],
+        },
+      ],
+      dashboard: [],
+    };
+
+    const result = await importBinderData(externalDoc);
+
+    // Asset count must be 0 because collection fallback import is disabled per OB-174
+    assert.strictEqual(result.assetCount, 0);
+    assert.strictEqual(result.collectionsCount, 1);
+    assert.strictEqual(result.rawBinder.collections?.[0].name, 'Baddies Collection');
   });
 });
