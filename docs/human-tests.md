@@ -387,8 +387,44 @@ All tasks in your requested sequence have been implemented, tested, and individu
 | **OB-175** | `da8725c` | Added automatic chat logging with timer badge when round timers expire in [AppVtt.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/vtt/AppVtt.tsx) and [timerUtils.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/timer/timerUtils.ts). |
 | **OB-173** | `0f6cde3` | Overhauled progress clocks into floating screen widgets ([ClockWidget.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ClockWidget.tsx)), bottom interaction bar ([ClockWidgetBar.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ClockWidgetBar.tsx)), standardized "steps" terminology, live session sync, and cross-scene persistence in [ProgressClockModal.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ProgressClockModal.tsx). |
 | **OB-174** | `61f60a1` | Aligned `.binder` collection card exports with [card.json](file:///Users/tom/Projects/OldBearVTT/docs/schema/card.json), supported duplicate card instances with unique IDs, preserved third-party collections/dashboards non-destructively, and disabled collections fallback import in [BinderPipeline.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/storage/BinderPipeline.ts). |
+| **OB-179** | Pending | Added Up/Down arrow key message and command history cycling in [ChatPanel.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ChatPanel.tsx) with draft preservation in [useChatHistory.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/useChatHistory.ts). |
+| **OB-140** | Pending | Universal drag-and-drop listener with auto-routing for D&D Beyond ([dndBeyondParser.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/vtt/utils/dndBeyondParser.ts)), Pathbuilder, TetraCube, MonsterCards, and [ImportConfirmationModal.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ImportConfirmationModal.tsx) for large packages (>250KB) and .binder bundles. |
 
 ---
+
+### How to Test OB-179 and OB-140 in the UI
+
+#### 1. OB-179 — Chat Input Message History Navigation (Up/Down Arrow Keys)
+- **Where to find it:** The chat input box in the **Table Chat & Dice** drawer (bottom-left chat icon or hotkey).
+- **How to test:**
+  1. Open the Chat Drawer and type a command like `/roll 1d20+5 adv`, then press **Enter**.
+  2. Type another message or command, e.g. `/attack 1`, and press **Enter**.
+  3. Now type a draft with an intentional typo, e.g. `/roll 1d20+5 avd` (do NOT press Enter).
+  4. Move the cursor to the beginning (or backspace to empty) and press **Up Arrow**:
+     - It loads the most recently sent command (`/attack 1`) with the cursor placed at the end for instant editing.
+     - Your draft `/roll 1d20+5 avd` is preserved in memory.
+  5. Press **Up Arrow** again: it navigates back to `/roll 1d20+5 adv`.
+  6. Press **Down Arrow** to cycle forward back to `/attack 1`.
+  7. Press **Down Arrow** again to reach the bottom: your unsubmitted draft `/roll 1d20+5 avd` is restored!
+  8. Backspace `avd` to `adv` and press **Enter** to execute the corrected command.
+
+#### 2. OB-140 — Universal Drag-and-Drop Ingestion with Confirmation Modal
+- **Where to find it:** Drag and drop any file directly onto the VTT canvas or application window.
+- **How to test:**
+  1. **Direct Character / Monster Drop (<250 KB):**
+     - Drag a D&D Beyond character JSON file or Pathbuilder 2e JSON file or TetraCube `.monster` file onto the active battlemap.
+     - Notice it auto-routes without confirmation: parses the statblock, spawns a ready-to-fight token on the battlemap at the mouse position, saves the character to local storage, and highlights the token.
+  2. **Direct Audio Drop:**
+     - Drag an audio file (`.mp3`, `.wav`, `.ogg`) onto the window.
+     - It is automatically ingested into the Soundboard audio asset library and toasts confirmation.
+  3. **Large / Complex Bundle Drop (>250 KB or `.binder` / `.backup`):**
+     - Drag a `.binder` file, OldBear full backup `.json`, or a file larger than 250 KB onto the screen.
+     - Notice the **Import Confirmation Modal** appears with:
+       - Summary: `"Universal .binder package (X MB)"` or `"OldBear Backup Archive (X KB)"`.
+       - Itemized contents breakdown: `NPC / Monster Cards`, `Player Characters`, `Map Assets`, and `Audio Tracks`.
+       - Buttons: `[Cancel]` and `[Import All (X items)]`.
+     - Clicking `[Cancel]` closes the modal without applying changes.
+     - Clicking `[Import All]` imports all contents into IndexedDB and storage, restoring the session and displaying a toast notification.
 
 ### How to Test OB-128, OB-130, and OB-131 in the UI
 

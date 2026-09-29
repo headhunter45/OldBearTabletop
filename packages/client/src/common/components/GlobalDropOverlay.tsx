@@ -14,7 +14,10 @@ import {
 import { GameMap, Token } from '@oldbear/shared';
 import { saveAsset, StoredAsset } from '../storage/db.js';
 import { importAllData } from '../storage/BackupManager.js';
+import { importBinderData } from '../storage/BinderPipeline.js';
 import { TOAST_DURATION_MS } from '../config/toast.js';
+import { inspectImportFile, ImportInspectionResult } from '../utils/importDetector.js';
+import { ImportConfirmationModal } from './ImportConfirmationModal.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -87,6 +90,11 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
   const [dropPosition, setDropPosition] = useState<{ x: number; y: number }>({ x: 400, y: 400 });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState<{
+    inspection: ImportInspectionResult;
+    text: string;
+    file: File;
+  } | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -286,43 +294,48 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
       const files = Array.from(e.dataTransfer.files);
       setDropPosition({ x: mouseX, y: mouseY });
 
-      // 1. Custom / Domain specific file handling (e.g. .monster in VTT or .rosz in Brawl)
-      if (onDropCustomFile) {
-        let customHandled = false;
-        for (const file of files) {
-          if (
-            file.name.toLowerCase().endsWith('.monster') ||
-            file.name.toLowerCase().endsWith('.binder') ||
-            file.name.toLowerCase().endsWith('.json') ||
-            file.name.toLowerCase().endsWith('.rosz')
-          ) {
-            try {
-              const text = await file.text();
-              const handled = await onDropCustomFile(file, text, worldPos, existingList);
-              if (handled) {
-                customHandled = true;
-              }
-            } catch {
-              // Proceed to next handler
-            }
-          }
-        }
-        if (customHandled) {
-          return;
-        }
-      }
+      // 1. Data files (.json, .binder, .monster, .card, .rosz, etc.)
+      const dataFiles = files.filter(
+        (f) =>
+          f.name.toLowerCase().endsWith('.monster') ||
+          f.name.toLowerCase().endsWith('.binder') ||
+          f.name.toLowerCase().endsWith('.json') ||
+          f.name.toLowerCase().endsWith('.card') ||
+          f.name.toLowerCase().endsWith('.rosz')
+      );
 
-      // 2. .binder and JSON files (Backups & Universal Interchange)
-      const dataFiles = files.filter((f) => f.name.endsWith('.json') || f.name.endsWith('.binder'));
       if (dataFiles.length > 0) {
         for (const dataFile of dataFiles) {
           try {
             const text = await dataFile.text();
-            const res = await importAllData(text);
-            const isBinder = dataFile.name.endsWith('.binder') || text.includes('schemaVersion');
-            showToast(`Restored ${isBinder ? '.binder collection' : 'backup'} with ${res.assetCount} asset(s)!`);
-            onDataRestored?.();
-            return;
+            const inspection = inspectImportFile(dataFile, text);
+
+            // Large bundle or complex multi-item archive requiring user confirmation (OB-140)
+            if (inspection.requiresConfirmation) {
+              setPendingConfirmation({ inspection, text, file: dataFile });
+              return;
+            }
+
+            // Custom domain handler (e.g. D&D Beyond, Pathbuilder, TetraCube, MonsterCard in VTT)
+            if (onDropCustomFile) {
+              const handled = await onDropCustomFile(dataFile, text, worldPos, existingList);
+              if (handled) return;
+            }
+
+            // Universal .binder or Backup restore
+            if (inspection.category === 'binder') {
+              const res = await importBinderData(text);
+              showToast(`Restored .binder collection with ${res.assetCount} asset(s)!`);
+              onDataRestored?.();
+              return;
+            }
+
+            if (inspection.category === 'backup') {
+              const res = await importAllData(text);
+              showToast(`Restored backup with ${res.assetCount} asset(s)!`);
+              onDataRestored?.();
+              return;
+            }
           } catch (err: any) {
             showToast(`Import error: ${err.message}`);
           }
@@ -401,6 +414,28 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
   };
 
   // ── import logic ──────────────────────────────────────────────────────────
+
+  const handleConfirmImport = async () => {
+    if (!pendingConfirmation) return;
+    setIsImporting(true);
+    try {
+      const { inspection, text } = pendingConfirmation;
+      if (inspection.category === 'binder') {
+        const res = await importBinderData(text);
+        showToast(`Restored .binder collection with ${res.assetCount} asset(s)!`);
+      } else {
+        const res = await importAllData(text);
+        const isBinder = text.includes('schemaVersion');
+        showToast(`Restored ${isBinder ? '.binder collection' : 'backup'} with ${res.assetCount} asset(s)!`);
+      }
+      onDataRestored?.();
+    } catch (err: any) {
+      showToast(`Import error: ${err.message}`);
+    } finally {
+      setIsImporting(false);
+      setPendingConfirmation(null);
+    }
+  };
 
   const handleImport = async () => {
     if (!pendingEntries) return;
@@ -610,6 +645,16 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Large / Complex Bundle Import Confirmation Modal (OB-140) ── */}
+      {pendingConfirmation && (
+        <ImportConfirmationModal
+          inspection={pendingConfirmation.inspection}
+          isImporting={isImporting}
+          onConfirm={handleConfirmImport}
+          onCancel={() => !isImporting && setPendingConfirmation(null)}
+        />
       )}
 
       {/* ── Multi-file Image Import Modal (Bug #74) ── */}

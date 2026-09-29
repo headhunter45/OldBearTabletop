@@ -38,6 +38,15 @@ import {
   parsePathbuilderExport,
   createPathbuilderToken,
 } from './utils/pathbuilderParser.js';
+import {
+  isDnDBeyondExport,
+  parseDnDBeyondCharacter,
+  createDnDBeyondToken,
+} from './utils/dndBeyondParser.js';
+import {
+  isMonsterCard,
+  createTokenFromMonsterCard,
+} from '../common/utils/importDetector.js';
 import { MapManagerModal } from '../common/components/MapManagerModal.js';
 import { SoundboardModal } from '../common/components/SoundboardModal.js';
 import { MobileDrawer } from '../common/components/MobileDrawer.js';
@@ -2502,6 +2511,51 @@ export const AppVtt: React.FC = () => {
             showToast(`Spawned "${newToken.name}" (PF2e) on battlemap & saved character!`);
             return true;
           }
+          if (isDnDBeyondExport(text)) {
+            const char = parseDnDBeyondCharacter(text);
+            saveCharacterToStorage(char, isGm);
+            const newToken = createDnDBeyondToken(
+              char,
+              currentMap?.id || session?.activeMapId || '',
+              worldPos.x,
+              worldPos.y
+            );
+            setSession((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                tokens: { ...prev.tokens, [newToken.id]: newToken },
+              };
+            });
+            networkRef.current?.send({ type: 'token-add', token: newToken });
+            engineRef.current?.selectToken(newToken.id);
+            existingList.push(newToken);
+            showToast(`Spawned "${newToken.name}" (D&D Beyond) on battlemap & saved character!`);
+            return true;
+          }
+          try {
+            const parsed = JSON.parse(text);
+            if (isMonsterCard(parsed)) {
+              const newToken = createTokenFromMonsterCard(
+                parsed,
+                currentMap?.id || session?.activeMapId || '',
+                worldPos.x,
+                worldPos.y
+              );
+              setSession((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  tokens: { ...prev.tokens, [newToken.id]: newToken },
+                };
+              });
+              networkRef.current?.send({ type: 'token-add', token: newToken });
+              engineRef.current?.selectToken(newToken.id);
+              existingList.push(newToken);
+              showToast(`Spawned "${newToken.name}" card on battlemap!`);
+              return true;
+            }
+          } catch {}
           return false;
         }}
         onAddMap={handleAddMap}
