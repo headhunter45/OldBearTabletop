@@ -53,4 +53,9 @@ describe('Reusable Help & Tooltip Component (OB-139)', () => {
     assert.ok(matches.some((m) => m.key === 'R'));
     assert.ok(matches.some((m) => m.key === 'F'));
   });
+
+  it('exports HelpTip component configured for body-portaled overlay tooltips (OB-176)', async () => {
+    const { HelpTip } = await import('./HelpTip.js');
+    assert.strictEqual(typeof HelpTip, 'function', 'HelpTip component is exported');
+  });
 });

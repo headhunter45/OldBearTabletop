@@ -1,4 +1,5 @@
-import React, { useState, useRef, useId } from 'react';
+import React, { useState, useRef, useId, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HelpCircle } from 'lucide-react';
 
 export interface HelpTipProps {
@@ -28,94 +29,97 @@ export const HelpTip: React.FC<HelpTipProps> = ({
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tooltipId = useId();
 
+  useEffect(() => {
+    if (!isOpen || !triggerRef.current || typeof window === 'undefined') return;
+
+    const updatePosition = () => {
+      if (!triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      let top = rect.top;
+      let left = rect.left;
+
+      switch (placement) {
+        case 'bottom':
+          top = rect.bottom + 8;
+          left = rect.left + rect.width / 2;
+          break;
+        case 'left':
+          top = rect.top + rect.height / 2;
+          left = rect.left - 8;
+          break;
+        case 'right':
+          top = rect.top + rect.height / 2;
+          left = rect.right + 8;
+          break;
+        case 'top':
+        default:
+          top = rect.top - 8;
+          left = rect.left + rect.width / 2;
+          break;
+      }
+      setCoords({ top, left });
+    };
+
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, placement]);
+
   if (!text) return null;
 
-  // Placement positioning style
+  // Placement positioning style using fixed coordinates (floats above all windows without clipping - OB-176)
   const getPlacementStyle = (): React.CSSProperties => {
     switch (placement) {
       case 'bottom':
         return {
-          top: 'calc(100% + 8px)',
-          left: '50%',
+          position: 'fixed',
+          top: `${coords?.top ?? 0}px`,
+          left: `${coords?.left ?? 0}px`,
           transform: 'translateX(-50%)',
         };
       case 'left':
         return {
-          top: '50%',
-          right: 'calc(100% + 8px)',
-          transform: 'translateY(-50%)',
+          position: 'fixed',
+          top: `${coords?.top ?? 0}px`,
+          left: `${coords?.left ?? 0}px`,
+          transform: 'translate(-100%, -50%)',
         };
       case 'right':
         return {
-          top: '50%',
-          left: 'calc(100% + 8px)',
+          position: 'fixed',
+          top: `${coords?.top ?? 0}px`,
+          left: `${coords?.left ?? 0}px`,
           transform: 'translateY(-50%)',
         };
       case 'top':
       default:
         return {
-          bottom: 'calc(100% + 8px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          position: 'fixed',
+          top: `${coords?.top ?? 0}px`,
+          left: `${coords?.left ?? 0}px`,
+          transform: 'translate(-50%, -100%)',
         };
     }
   };
 
-  return (
-    <span
-      className={`help-tip-wrapper ${className}`}
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        verticalAlign: 'middle',
-      }}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
-    >
-      <button
-        ref={triggerRef}
-        type="button"
-        className="help-tip-trigger btn-icon"
-        aria-describedby={isOpen ? tooltipId : undefined}
-        aria-label={ariaLabel || (title ? `Help: ${title}` : 'Help information')}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen((prev) => !prev);
-        }}
-        onFocus={() => setIsOpen(true)}
-        onBlur={() => setIsOpen(false)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          padding: '2px',
-          margin: '0 2px',
-          color: 'var(--text-muted, #94a3b8)',
-          cursor: 'help',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '50%',
-          transition: 'color 0.15s ease, opacity 0.15s ease',
-          opacity: 0.75,
-        }}
-      >
-        <HelpCircle size={size} />
-      </button>
-
-      {isOpen && (
+  const tooltipPortal =
+    isOpen && coords && typeof document !== 'undefined' ? (
+      createPortal(
         <div
           id={tooltipId}
           role="tooltip"
           className="help-tip-balloon glass-panel"
           style={{
-            position: 'absolute',
             ...getPlacementStyle(),
-            zIndex: 1000,
+            zIndex: 999999, // Float above all draggable windows
             minWidth: '160px',
             maxWidth: '260px',
             padding: '0.5rem 0.75rem',
@@ -171,8 +175,55 @@ export const HelpTip: React.FC<HelpTipProps> = ({
               </kbd>
             </div>
           )}
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    ) : null;
+
+  return (
+    <span
+      className={`help-tip-wrapper ${className}`}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        verticalAlign: 'middle',
+      }}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        className="help-tip-trigger btn-icon"
+        aria-describedby={isOpen ? tooltipId : undefined}
+        aria-label={ariaLabel || (title ? `Help: ${title}` : 'Help information')}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen((prev) => !prev);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setIsOpen(false)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          padding: '2px',
+          margin: '0 2px',
+          color: 'var(--text-muted, #94a3b8)',
+          cursor: 'help',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          transition: 'color 0.15s ease, opacity 0.15s ease',
+          opacity: 0.75,
+        }}
+      >
+        <HelpCircle size={size} />
+      </button>
+
+      {tooltipPortal}
     </span>
   );
 };
