@@ -1,14 +1,21 @@
 import http from 'node:http';
+import path from 'node:path';
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import { WebSocketServer } from 'ws';
 import { createSession, getSession, getAllSessions, initSessionsFromDb } from './session.js';
 import { setupWebSocket } from './signaling.js';
 import { fetchDnDCharacter } from './dndbeyond.js';
 import { initDb, isDbConnected, getDbPool } from './db.js';
 
+// Load environment variables from root workspace and local directory
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const PORT = parseInt(process.env.PORT || process.env.SERVER_PORT || '3001', 10);
 
 app.use(cors());
 app.use(express.json());
