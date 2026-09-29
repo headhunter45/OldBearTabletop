@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, X, Clock, Bell } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock, Bell } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { formatTimer, playTimerChime } from '../timer/timerUtils.js';
+import { DraggableWindow, DraggableWindowTitleBar } from './DraggableWindow.js';
 
 export interface TimerHUDProps {
   initialDuration: number; // in seconds
@@ -22,9 +23,10 @@ export const TimerHUD: React.FC<TimerHUDProps> = ({
   const [remaining, setRemaining] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { windowRef, position, zIndex, handleMouseDown, bringToFront } = useDraggableWindow({
+  const { windowRef, position, zIndex, isDragging, handleMouseDown, bringToFront } = useDraggableWindow({
     initialX: typeof window !== 'undefined' ? window.innerWidth / 2 - 120 : 300,
     initialY: 70,
     storageKey: 'obr_timer_hud_pos',
@@ -70,167 +72,186 @@ export const TimerHUD: React.FC<TimerHUDProps> = ({
   const isUrgent = remaining <= 10 && remaining > 0;
 
   return (
-    <div
-      ref={windowRef}
-      onMouseDown={bringToFront}
+    <DraggableWindow
+      windowRef={windowRef}
+      position={position}
+      zIndex={zIndex ?? 60}
+      isDragging={isDragging}
+      isMinimized={isMinimized}
+      width="280px"
+      minWidth="240px"
+      maxWidth="320px"
+      onMouseDownCapture={bringToFront}
       style={{
-        position: 'fixed',
-        left: position ? `${position.x}px` : 'calc(50% - 120px)',
-        top: position ? `${position.y}px` : '70px',
-        zIndex,
-        minWidth: '240px',
-        maxWidth: '300px',
-        userSelect: 'none',
-      }}
-      className={`glass-panel animate-fade-in shadow-2xl rounded-2xl p-3 border ${
-        isFinished
-          ? 'border-red-500/80 bg-red-950/70 shadow-red-500/20'
+        border: isFinished
+          ? '1px solid #ef4444'
           : isUrgent
-          ? 'border-amber-500/80 bg-slate-900/90 shadow-amber-500/20'
-          : 'border-slate-700/60 bg-slate-900/85'
-      }`}
+          ? '1px solid #f59e0b'
+          : '1px solid var(--border-subtle)',
+      }}
     >
-      {/* Draggable Header */}
-      <div
+      {/* Unified Draggable Title Bar (OB-178) */}
+      <DraggableWindowTitleBar
         onMouseDown={handleMouseDown}
-        style={{
-          cursor: 'grab',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '0.4rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          {isFinished ? (
-            <Bell size={16} className="text-red-400 animate-bounce" />
+        isDragging={isDragging}
+        icon={
+          isFinished ? (
+            <Bell size={16} color="#ef4444" className="animate-bounce" />
           ) : (
-            <Clock size={16} className={isRunning ? 'text-indigo-400' : 'text-slate-400'} />
-          )}
+            <Clock size={16} color={isRunning ? 'var(--accent-primary, #6366f1)' : 'var(--text-muted, #94a3b8)'} />
+          )
+        }
+        title={label}
+        subtitle={
           <span
             style={{
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              color: isFinished ? '#f87171' : '#cbd5e1',
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              color: isFinished ? '#ef4444' : isUrgent ? '#f59e0b' : 'var(--accent-primary, #6366f1)',
+              marginLeft: '0.25rem',
             }}
           >
-            {label}
+            [{formatTimer(remaining)}]
           </span>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md"
-          title="Close Timer"
-        >
-          <X size={15} />
-        </button>
-      </div>
+        }
+        actions={
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isFinished) {
+                setRemaining(totalSeconds);
+                setIsFinished(false);
+                setIsRunning(true);
+              } else {
+                setIsRunning(!isRunning);
+              }
+            }}
+            title={isRunning ? 'Pause Timer' : isFinished ? 'Restart' : 'Resume'}
+            style={{ width: '24px', height: '24px' }}
+          >
+            {isRunning ? <Pause size={13} /> : <Play size={13} />}
+          </button>
+        }
+        isMinimized={isMinimized}
+        onToggleMinimize={() => setIsMinimized((v) => !v)}
+        onClose={onClose}
+      />
 
-      {/* Timer Display & Circular / Bar Progress */}
-      <div style={{ textAlign: 'center', margin: '0.5rem 0' }}>
-        <div
-          style={{
-            fontFamily: 'monospace, Inter, sans-serif',
-            fontSize: '2rem',
-            fontWeight: 700,
-            letterSpacing: '0.05em',
-            color: isFinished ? '#ef4444' : isUrgent ? '#f59e0b' : '#f8fafc',
-            textShadow: isFinished ? '0 0 12px rgba(239, 68, 68, 0.6)' : 'none',
-          }}
-        >
-          {formatTimer(remaining)}
-        </div>
+      {/* Timer Body (hidden when minimized) */}
+      {!isMinimized && (
+        <div style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          {/* Large Countdown Display */}
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontFamily: 'monospace, Inter, sans-serif',
+                fontSize: '2.25rem',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                lineHeight: 1.1,
+                color: isFinished ? '#ef4444' : isUrgent ? '#f59e0b' : 'var(--text-main, #f8fafc)',
+                textShadow: isFinished ? '0 0 12px rgba(239, 68, 68, 0.6)' : 'none',
+              }}
+            >
+              {formatTimer(remaining)}
+            </div>
 
-        {/* Progress Bar */}
-        <div
-          style={{
-            width: '100%',
-            height: '4px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '999px',
-            overflow: 'hidden',
-            marginTop: '0.35rem',
-          }}
-        >
+            {/* Progress Bar */}
+            <div
+              style={{
+                width: '100%',
+                height: '5px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '999px',
+                overflow: 'hidden',
+                marginTop: '0.5rem',
+              }}
+            >
+              <div
+                style={{
+                  width: `${progressPercent}%`,
+                  height: '100%',
+                  backgroundColor: isFinished
+                    ? '#ef4444'
+                    : isUrgent
+                    ? '#f59e0b'
+                    : 'var(--accent-primary, #6366f1)',
+                  transition: 'width 1s linear, background-color 0.3s ease',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
           <div
             style={{
-              width: `${progressPercent}%`,
-              height: '100%',
-              backgroundColor: isFinished
-                ? '#ef4444'
-                : isUrgent
-                ? '#f59e0b'
-                : '#6366f1',
-              transition: 'width 1s linear, background-color 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginTop: '0.2rem',
             }}
-          />
+          >
+            <button
+              type="button"
+              className={`btn ${isRunning ? 'btn-secondary' : 'btn-primary'}`}
+              style={{
+                padding: '0.35rem 0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.8rem',
+                borderRadius: '0.375rem',
+              }}
+              onClick={() => {
+                if (isFinished) {
+                  setRemaining(totalSeconds);
+                  setIsFinished(false);
+                  setIsRunning(true);
+                } else {
+                  setIsRunning(!isRunning);
+                }
+              }}
+            >
+              {isRunning ? (
+                <>
+                  <Pause size={14} />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play size={14} />
+                  <span>{isFinished ? 'Restart' : 'Resume'}</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{
+                padding: '0.35rem 0.65rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.8rem',
+                borderRadius: '0.375rem',
+              }}
+              onClick={() => {
+                setRemaining(totalSeconds);
+                setIsFinished(false);
+                setIsRunning(false);
+              }}
+              title="Reset Timer"
+            >
+              <RotateCcw size={14} />
+              <span>Reset</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Controls */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.6rem',
-          marginTop: '0.4rem',
-        }}
-      >
-        <button
-          className={`btn ${isRunning ? 'btn-secondary' : 'btn-primary'}`}
-          style={{
-            padding: '0.35rem 0.85rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            fontSize: '0.8rem',
-            borderRadius: '0.5rem',
-          }}
-          onClick={() => {
-            if (isFinished) {
-              setRemaining(totalSeconds);
-              setIsFinished(false);
-              setIsRunning(true);
-            } else {
-              setIsRunning(!isRunning);
-            }
-          }}
-        >
-          {isRunning ? (
-            <>
-              <Pause size={14} />
-              <span>Pause</span>
-            </>
-          ) : (
-            <>
-              <Play size={14} />
-              <span>{isFinished ? 'Restart' : 'Resume'}</span>
-            </>
-          )}
-        </button>
-
-        <button
-          className="btn btn-secondary"
-          style={{
-            padding: '0.35rem 0.6rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            fontSize: '0.8rem',
-            borderRadius: '0.5rem',
-          }}
-          onClick={() => {
-            setRemaining(totalSeconds);
-            setIsFinished(false);
-            setIsRunning(false);
-          }}
-          title="Reset Timer"
-        >
-          <RotateCcw size={14} />
-          <span>Reset</span>
-        </button>
-      </div>
-    </div>
+      )}
+    </DraggableWindow>
   );
 };
