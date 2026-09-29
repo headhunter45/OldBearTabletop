@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev -w @oldbear/server\" \"npm run dev -w @oldbear/client\"",
     "build": "npm run build -w @oldbear/shared && npm run build -w @oldbear/server && npm run build -w @oldbear/client",
-    "test": "npm run test -w @oldbear/shared && npm run test -w @oldbear/server && npm run test -w @oldbear/client",
+    "test": "npm run build -w @oldbear/shared && npm run test -w @oldbear/shared && npm run test -w @oldbear/server && npm run test -w @oldbear/client",
     "docker:build": "bash scripts/ci-build.sh",
     "docker:push": "bash scripts/ci-build.sh --push",
     "oldbearchat": "python3 ./bin/oldbearchat"
