@@ -48,6 +48,7 @@ import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { MarkerControls } from '../common/components/MarkerControls.js';
 import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
+import { resolveStatusDefinitions, processTurnTransition } from '../common/status/StatusManager.js';
 
 export const AppVtt: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -592,6 +593,8 @@ export const AppVtt: React.FC = () => {
       prevInitTurnRef.current.index !== init.currentTurnIndex ||
       prevInitTurnRef.current.id !== currentItem.id
     ) {
+      const prevCombatantId = prevInitTurnRef.current.id;
+      const prevCombatant = init.items.find((i) => i.id === prevCombatantId);
       prevInitTurnRef.current = { round: init.round, index: init.currentTurnIndex, id: currentItem.id };
       setActiveTurnAnnouncement({ combatant: currentItem, round: init.round });
 
@@ -606,9 +609,55 @@ export const AppVtt: React.FC = () => {
         };
         networkRef.current?.send({ type: 'chat-send', message: turnMsg });
         setChatMessages((prev) => [...prev, turnMsg]);
+
+        // Evaluate status lifecycle transitions (OB-131)
+        if (session.tokens) {
+          const currentMap = session.maps.find((m) => m.id === session.activeMapId) || session.maps[0];
+          const definitions = resolveStatusDefinitions(currentMap);
+          const { updatedTokens, auditMessages } = processTurnTransition(
+            session.tokens,
+            prevCombatant?.tokenId,
+            currentItem.tokenId,
+            definitions
+          );
+
+          for (const [tId, updatedToken] of Object.entries(updatedTokens)) {
+            networkRef.current?.send({
+              type: 'token-update',
+              id: tId,
+              updates: {
+                conditions: updatedToken.conditions,
+                statusCounters: updatedToken.statusCounters,
+              },
+            });
+            setSession((s) => {
+              if (!s) return s;
+              return {
+                ...s,
+                tokens: {
+                  ...s.tokens,
+                  [tId]: updatedToken,
+                },
+              };
+            });
+          }
+
+          for (const audit of auditMessages) {
+            const auditMsg: ChatMessage = {
+              id: crypto.randomUUID(),
+              senderId: 'system',
+              senderName: 'Status Lifecycle',
+              senderColor: '#ec4899',
+              text: audit,
+              timestamp: Date.now(),
+            };
+            networkRef.current?.send({ type: 'chat-send', message: auditMsg });
+            setChatMessages((prev) => [...prev, auditMsg]);
+          }
+        }
       }
     }
-  }, [session?.initiative, isGm]);
+  }, [session?.initiative, session?.tokens, session?.maps, session?.activeMapId, isGm]);
 
   const handleToggleMute = () => {
     voiceManagerRef.current?.toggleMute();

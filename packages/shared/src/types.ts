@@ -37,6 +37,7 @@ export interface GameMap {
   backgroundColor?: string;
   baseMapId?: string; // ID of the underlying map asset/image when used across multiple scenes
   baseMapName?: string; // Display name of base map asset
+  customStatuses?: Record<string, CustomStatusDefinition>; // Per-scene status overrides (OB-131)
 }
 
 export interface Scene extends GameMap {
@@ -92,6 +93,27 @@ export interface Token {
   propWidth?: number; // custom decimal width in grid units (e.g. 1.5)
   propHeight?: number; // custom decimal height in grid units (e.g. 3.24)
   locked?: boolean; // locked tokens/props can be selected but not moved
+  statusCounters?: Record<string, number>; // current numeric counters for conditions (OB-131)
+}
+
+export interface StatusCounterConfig {
+  start: number;
+  update: number; // delta per trigger (+1 or -1)
+  max?: number;
+  min?: number;
+}
+
+export type StatusTurnTrigger = 'beginning_of_turn' | 'end_of_turn' | 'never';
+
+export interface CustomStatusDefinition {
+  id?: string;
+  label: string;
+  description?: string;
+  color: string;
+  counter?: StatusCounterConfig;
+  showOnToken?: boolean;
+  clearWhen?: StatusTurnTrigger;
+  updates?: StatusTurnTrigger;
 }
 
 export interface FogPoint {

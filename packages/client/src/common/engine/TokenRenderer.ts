@@ -326,11 +326,13 @@ function renderConditionBadges(ctx: CanvasRenderingContext2D, conditions: string
   const angleStep = Math.PI / 6;
 
   conditions.forEach((cond, i) => {
-    const style = CONDITION_STYLES[cond] || {
+    const [label, countStr] = cond.split(':');
+    const style = CONDITION_STYLES[label] || {
       bg: '#6366f1',
       text: '#ffffff',
-      code: cond.slice(0, 2).toUpperCase(),
+      code: label.slice(0, 2).toUpperCase(),
     };
+    const displayCode = countStr !== undefined ? `${style.code.slice(0, 1)}${countStr}` : style.code;
 
     const angle = startAngle + i * angleStep;
     const bx = Math.cos(angle) * (radius - 2);
@@ -349,7 +351,7 @@ function renderConditionBadges(ctx: CanvasRenderingContext2D, conditions: string
     ctx.font = `bold ${Math.max(9, badgeRadius * 0.95)}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(style.code, bx, by);
+    ctx.fillText(displayCode, bx, by);
     ctx.restore();
   });
 }
