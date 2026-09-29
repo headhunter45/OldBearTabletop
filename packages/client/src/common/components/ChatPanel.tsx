@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Player, ChatMessage, DiceRollResult, DnDCharacter, DieType, DnDAction, DnDSpell, Token, getActivationCategory } from '@oldbear/shared';
 import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { DraggableWindowTitleBar } from './DraggableWindow.js';
 import { parseTimerDuration, formatTimer } from '../timer/timerUtils.js';
 import {
   isAdvancedDiceExpression,
@@ -900,43 +901,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           }}
         >
           {/* Header */}
-          <div
+          <DraggableWindowTitleBar
             onMouseDown={handleMouseDown}
-            style={{
-              padding: '0.75rem 1rem',
-              borderBottom: isMinimized ? 'none' : '1px solid var(--border-subtle)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: 'var(--bg-surface)',
-              cursor: isDragging ? 'grabbing' : 'grab',
-              userSelect: 'none',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MessageSquare size={16} color="var(--accent-primary)" />
-              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Table Chat & Dice</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <button
-                className="btn-icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMinimized((v) => !v);
-                }}
-                title={isMinimized ? 'Expand Chat' : 'Minimize Chat'}
-                style={{ width: '24px', height: '24px' }}
-              >
-                <ChevronDown
-                  size={16}
-                  className={`chevron-minimize ${isMinimized ? 'minimized' : ''}`}
-                />
-              </button>
-              <button className="btn-icon" onClick={onToggleOpen} style={{ width: '24px', height: '24px' }}>
-                <X size={15} />
-              </button>
-            </div>
-          </div>
+            isDragging={isDragging}
+            icon={<MessageSquare size={16} color="var(--accent-primary)" />}
+            title="Table Chat & Dice"
+            isMinimized={isMinimized}
+            onToggleMinimize={() => setIsMinimized((v) => !v)}
+            onClose={onToggleOpen}
+          />
 
           <div
             className={`draggable-window-body ${isMinimized ? 'minimized' : ''}`}

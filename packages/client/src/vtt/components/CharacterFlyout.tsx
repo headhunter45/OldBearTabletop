@@ -25,6 +25,7 @@ import {
   SAMPLE_PATHBUILDER_VALEROS,
 } from '../utils/pathbuilderParser.js';
 import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
+import { DraggableWindowTitleBar } from '../../common/components/DraggableWindow.js';
 import {
   SavedCharacterRecord,
   getSavedCharacters,
@@ -287,8 +288,8 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
         right: position ? 'auto' : '1rem',
         display: 'flex',
         flexDirection: 'column',
-        height: isMinimized ? '52px' : '100%',
-        maxHeight: isMinimized ? '52px' : 'calc(100vh - 6rem)',
+        height: isMinimized ? '46px' : '100%',
+        maxHeight: isMinimized ? '46px' : 'calc(100vh - 6rem)',
         width: '420px',
         maxWidth: 'calc(100vw - 1.5rem)',
         zIndex: zIndex ?? 50,
@@ -300,50 +301,22 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
       }}
     >
       {/* Header */}
-      <div
+      <DraggableWindowTitleBar
         onMouseDown={handleMouseDown}
-        style={{
-          padding: '0.85rem 1.15rem',
-          borderBottom: isMinimized ? 'none' : '1px solid var(--border-subtle)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: isDragging ? 'grabbing' : 'grab',
-          userSelect: 'none',
-          backgroundColor: 'var(--bg-surface)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <User size={20} color="var(--accent-primary)" />
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>
-            {character ? character.name : 'Character Sheet'}
-          </h2>
-          {character && character.level && (
+        isDragging={isDragging}
+        icon={<User size={18} color="var(--accent-primary)" />}
+        title={character ? character.name : 'Character Sheet'}
+        subtitle={
+          character && character.level ? (
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
               (Lv {character.level})
             </span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <button
-            className="btn-icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMinimized((v) => !v);
-            }}
-            title={isMinimized ? 'Expand window' : 'Minimize window'}
-            style={{ width: '26px', height: '26px' }}
-          >
-            <ChevronDown
-              size={16}
-              className={`chevron-minimize ${isMinimized ? 'minimized' : ''}`}
-            />
-          </button>
-          <button className="btn-icon" onClick={onClose} style={{ width: '26px', height: '26px' }}>
-            <X size={16} />
-          </button>
-        </div>
-      </div>
+          ) : undefined
+        }
+        isMinimized={isMinimized}
+        onToggleMinimize={() => setIsMinimized((v) => !v)}
+        onClose={onClose}
+      />
 
       <div
         className={`draggable-window-body ${isMinimized ? 'minimized' : ''}`}
