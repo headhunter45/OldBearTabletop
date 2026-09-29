@@ -69,6 +69,11 @@ export async function initDb(maxRetries = 5, retryDelayMs = 2000): Promise<boole
       }
     } catch (err: any) {
       console.warn(`[Database] Connection attempt ${attempt} failed: ${err.message}`);
+      // If hostname is completely unresolvable (e.g. Docker container host 'postgres' when running locally), fail fast
+      if (err.code === 'ENOTFOUND') {
+        console.log('[Database] Hostname not resolvable. Falling back immediately to in-memory mode.');
+        break;
+      }
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
       }

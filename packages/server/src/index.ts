@@ -129,21 +129,23 @@ const wss = new WebSocketServer({ server });
 setupWebSocket(wss);
 
 async function start() {
-  // Attempt PostgreSQL initialization if configured
-  try {
-    const connected = await initDb(5, 2000);
-    if (connected) {
-      await initSessionsFromDb();
-    }
-  } catch (err: any) {
-    console.warn('[OldBear Server] Database initialization notice:', err.message);
-  }
-
+  // Start HTTP and WebSocket server immediately so clients and proxies can connect without delay
   server.listen(PORT, () => {
     console.log(`[OldBear Server] Running on http://localhost:${PORT}`);
     console.log(`[OldBear Server] WebSocket listening on ws://localhost:${PORT}`);
     console.log(`[OldBear Server] Database mode: ${isDbConnected() ? 'PostgreSQL (Persistent)' : 'In-Memory'}`);
   });
+
+  // Attempt PostgreSQL initialization if configured
+  try {
+    const connected = await initDb(5, 2000);
+    if (connected) {
+      await initSessionsFromDb();
+      console.log('[OldBear Server] Sessions loaded from PostgreSQL.');
+    }
+  } catch (err: any) {
+    console.warn('[OldBear Server] Database initialization notice:', err.message);
+  }
 }
 
 start();
