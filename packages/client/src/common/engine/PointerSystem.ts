@@ -190,6 +190,124 @@ export function duplicateAttachedMarkers(
   }));
 }
 
+/**
+ * Sorts tokens by visual z-index elevation (OB-126/OB-127):
+ * 1. Base layer order: map layer (0) < props (1) < character tokens (2).
+ * 2. Within each layer, elevated by interaction: unselected (0) < selected (1) < dragging (2).
+ * 3. Preserves stable relative ordering among peers at the same elevation rank.
+ */
+export function sortTokensByZIndex(
+  tokens: Token[],
+  selectedTokenIds: string[] = [],
+  draggingTokenId?: string | null
+): Token[] {
+  const selectedSet = new Set(selectedTokenIds);
+  return tokens
+    .map((token, index) => ({ token, index }))
+    .sort((a, b) => {
+      // Layer rank
+      const getLayerRank = (t: Token) => (t.layer === 'map' ? 0 : t.isProp || t.layer === 'prop' ? 1 : 2);
+      const layerDiff = getLayerRank(a.token) - getLayerRank(b.token);
+      if (layerDiff !== 0) return layerDiff;
+
+      // Status rank within layer: dragging (2) > selected (1) > normal (0)
+      const getStatusRank = (t: Token) => {
+        if (draggingTokenId && t.id === draggingTokenId) return 2;
+        if (selectedSet.has(t.id)) return 1;
+        return 0;
+      };
+      const statusDiff = getStatusRank(a.token) - getStatusRank(b.token);
+      if (statusDiff !== 0) return statusDiff;
+
+      return a.index - b.index;
+    })
+    .map((item) => item.token);
+}
+
+/**
+ * Sorts persistent indicators by visual z-index elevation (OB-126/OB-127):
+ * - Rank 0: Unselected indicators (and indicators attached to unselected tokens).
+ * - Rank 1: Indicators attached to a selected or dragged token (comes forward above other indicators).
+ * - Rank 2: The actively selected indicator (comes forward above attached and unselected indicators).
+ * - Rank 3: The actively dragged indicator (comes forward on top of all indicators).
+ * - Preserves stable relative ordering among peers at the same elevation rank.
+ */
+export function sortMarkersByZIndex(
+  markers: ScreenMarker[],
+  options: {
+    selectedMarkerId?: string | null;
+    draggingMarkerId?: string | null;
+    selectedTokenIds?: string[];
+    draggingTokenId?: string | null;
+  } = {}
+): ScreenMarker[] {
+  const {
+    selectedMarkerId,
+    draggingMarkerId,
+    selectedTokenIds = [],
+    draggingTokenId,
+  } = options;
+
+  const relevantTokenIds = new Set<string>();
+  for (const id of selectedTokenIds) {
+    if (id) relevantTokenIds.add(id);
+  }
+  if (draggingTokenId) relevantTokenIds.add(draggingTokenId);
+
+  const getMarkerRank = (m: ScreenMarker): number => {
+    // Rank 3: Actively dragged marker
+    if (draggingMarkerId && m.id === draggingMarkerId) return 3;
+    // Rank 2: Actively selected marker
+    if (selectedMarkerId && m.id === selectedMarkerId) return 2;
+    // Rank 1: Attached to a selected or dragged token (start token or tether target)
+    if (
+      (m.attachedTokenId && relevantTokenIds.has(m.attachedTokenId)) ||
+      (m.tetherTargetId && relevantTokenIds.has(m.tetherTargetId))
+    ) {
+      return 1;
+    }
+    // Rank 0: Unselected / unattached marker
+    return 0;
+  };
+
+  return markers
+    .map((marker, index) => ({ marker, index }))
+    .sort((a, b) => {
+      const rankDiff = getMarkerRank(a.marker) - getMarkerRank(b.marker);
+      if (rankDiff !== 0) return rankDiff;
+      return a.index - b.index;
+    })
+    .map((item) => item.marker);
+}
+
+/**
+ * Reorders a Record<string, Token> so the specified token ID is at the end (highest insertion order).
+ */
+export function bringTokenToFront(
+  tokens: Record<string, Token>,
+  tokenId: string
+): Record<string, Token> {
+  if (!tokens[tokenId]) return tokens;
+  const token = tokens[tokenId];
+  const next = { ...tokens };
+  delete next[tokenId];
+  next[tokenId] = token;
+  return next;
+}
+
+/**
+ * Reorders a ScreenMarker array so the specified marker ID is moved towards the end (top of draw order).
+ */
+export function bringMarkerToFront(
+  markers: ScreenMarker[],
+  markerId: string
+): ScreenMarker[] {
+  const index = markers.findIndex((m) => m.id === markerId);
+  if (index === -1 || index === markers.length - 1) return markers;
+  const target = markers[index];
+  return [...markers.slice(0, index), ...markers.slice(index + 1), target];
+}
+
 export function renderTether(
   ctx: CanvasRenderingContext2D,
   marker: ScreenMarker,

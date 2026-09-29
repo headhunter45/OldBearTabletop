@@ -10,7 +10,16 @@ import { Viewport, Point } from './Viewport.js';
 import { renderGrid, snapToGrid } from './GridRenderer.js';
 import { renderToken, getCachedImage } from './TokenRenderer.js';
 import { FogRenderer } from './FogRenderer.js';
-import { renderMarkers, hexToRgba, getContrastingAccentColor, getMarkerAnchorPosition } from './PointerSystem.js';
+import {
+  renderMarkers,
+  hexToRgba,
+  getContrastingAccentColor,
+  getMarkerAnchorPosition,
+  sortTokensByZIndex,
+  sortMarkersByZIndex,
+  bringTokenToFront,
+  bringMarkerToFront,
+} from './PointerSystem.js';
 import { drawRuler, measureDistance, RulerMeasurement } from './Ruler.js';
 import { renderSubmap } from './SubmapManager.js';
 import { snapTileEdgeToEdge, TileRect } from './ModularTileManager.js';
@@ -183,9 +192,16 @@ export class CanvasEngine {
       (m) => m.persist && (!m.mapId || m.mapId === currentMap.id)
     );
     if (persistentMarkers.length > 0) {
+      const activeDraggingMarkerId = this.draggingMarker?.id || this.draggingMarkerHandle?.marker.id;
+      const sortedMarkers = sortMarkersByZIndex(persistentMarkers, {
+        selectedMarkerId: this.selectedMarkerId,
+        draggingMarkerId: activeDraggingMarkerId,
+        selectedTokenIds: this.selectedTokenIds,
+        draggingTokenId: this.draggingToken?.id,
+      });
       renderMarkers(
         ctx,
-        persistentMarkers,
+        sortedMarkers,
         now,
         currentMap.gridSize,
         currentMap.scaleFtPerCell,
@@ -195,13 +211,19 @@ export class CanvasEngine {
     }
 
     // 4. Render Tokens and Props
-    const tokens = Object.values(this.session.tokens).filter(
+    const rawTokens = Object.values(this.session.tokens).filter(
       (t) => t.mapId === currentMap.id
     );
 
+    const sortedTokens = sortTokensByZIndex(
+      rawTokens,
+      this.selectedTokenIds,
+      this.draggingToken?.id
+    );
+
     // Render props first, then tokens
-    const props = tokens.filter((t) => t.isProp);
-    const characters = tokens.filter((t) => !t.isProp);
+    const props = sortedTokens.filter((t) => t.isProp);
+    const characters = sortedTokens.filter((t) => !t.isProp);
 
     for (const prop of props) {
       const isSelected = this.selectedTokenIds.includes(prop.id) || prop.id === this.selectedTokenId;
@@ -677,8 +699,13 @@ export class CanvasEngine {
 
   private findMatchingTokens(worldPos: Point, currentMap: GameMap): Token[] {
     if (!this.session) return [];
-    const tokens = Object.values(this.session.tokens).filter(
+    const rawTokens = Object.values(this.session.tokens).filter(
       (t) => t.mapId === currentMap.id
+    );
+    const tokens = sortTokensByZIndex(
+      rawTokens,
+      this.selectedTokenIds,
+      this.draggingToken?.id
     );
     const matchingTokens: Token[] = [];
     for (let i = tokens.length - 1; i >= 0; i--) {
@@ -748,6 +775,9 @@ export class CanvasEngine {
     if (clickedToken) {
       this.selectedMarkerId = null;
       this.callbacks.onMarkerSelect?.(null);
+
+      // Bring clicked token to front in data
+      this.session.tokens = bringTokenToFront(this.session.tokens, clickedToken.id);
 
       if (!this.selectedTokenIds.includes(clickedToken.id)) {
         this.selectedTokenId = clickedToken.id;
@@ -869,6 +899,9 @@ export class CanvasEngine {
       if (clickedMarker && (isGm || clickedMarker.userId === localId)) {
         this.selectedMarkerId = clickedMarker.id;
         this.callbacks.onMarkerSelect?.(clickedMarker);
+
+        // Bring clicked marker to front in data
+        this.session.markers = bringMarkerToFront(this.session.markers, clickedMarker.id);
 
         if (!clickedMarker.locked) {
           this.draggingMarker = clickedMarker;
@@ -1500,9 +1533,16 @@ export class CanvasEngine {
 
   private findMatchingPersistentMarker(worldPos: Point, map: GameMap): ScreenMarker | null {
     if (!this.session?.markers) return null;
-    const candidates = this.session.markers.filter(
+    const rawCandidates = this.session.markers.filter(
       (m) => m.persist && (!m.mapId || m.mapId === map.id)
     );
+    const activeDraggingMarkerId = this.draggingMarker?.id || this.draggingMarkerHandle?.marker.id;
+    const candidates = sortMarkersByZIndex(rawCandidates, {
+      selectedMarkerId: this.selectedMarkerId,
+      draggingMarkerId: activeDraggingMarkerId,
+      selectedTokenIds: this.selectedTokenIds,
+      draggingTokenId: this.draggingToken?.id,
+    });
     for (let i = candidates.length - 1; i >= 0; i--) {
       const m = candidates[i];
       const { x: mx, y: my, baseRadius, isAttached } = getMarkerAnchorPosition(m, this.session.tokens, map.gridSize);

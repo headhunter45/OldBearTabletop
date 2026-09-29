@@ -4,7 +4,15 @@ import { Viewport } from './Viewport.js';
 import { measureDistance } from './Ruler.js';
 import { snapToGrid } from './GridRenderer.js';
 import { TRACKPAD_PAN_SENSITIVITY, TRACKPAD_ZOOM_SENSITIVITY, MOUSE_WHEEL_ZOOM_SENSITIVITY } from './CanvasEngine.js';
-import { getContrastingAccentColor, renderClock, renderSpray } from './PointerSystem.js';
+import {
+  getContrastingAccentColor,
+  renderClock,
+  renderSpray,
+  sortTokensByZIndex,
+  sortMarkersByZIndex,
+  bringTokenToFront,
+  bringMarkerToFront,
+} from './PointerSystem.js';
 
 describe('Canvas Engine Utilities', () => {
   it('correctly maps screen to world coordinates', () => {
@@ -672,6 +680,134 @@ describe('Canvas Engine Utilities', () => {
     tether = { ...tether, ...reattachEndUpdate };
     assert.strictEqual(tether.attachedTokenId, 'tok-3', 'Start endpoint remains attached to Cleric');
     assert.strictEqual(tether.tetherTargetId, 'tok-1', 'Target endpoint successfully reattached to Warrior');
+  });
+
+  it('elevates selected and dragged tokens above other tokens while keeping tokens above props (OB-126/OB-127)', () => {
+    const prop1 = { id: 'p1', name: 'Chest', isProp: true, layer: 'prop' } as Token;
+    const prop2 = { id: 'p2', name: 'Barrel', isProp: true, layer: 'prop' } as Token;
+    const char1 = { id: 'c1', name: 'Rogue', isProp: false, layer: 'token' } as Token;
+    const char2 = { id: 'c2', name: 'Fighter', isProp: false, layer: 'token' } as Token;
+    const char3 = { id: 'c3', name: 'Wizard', isProp: false, layer: 'token' } as Token;
+
+    const initialTokens = [prop1, char1, prop2, char2, char3];
+
+    // 1. By default, props render before characters; within layer, stable order preserved
+    const defaultSorted = sortTokensByZIndex(initialTokens, []);
+    assert.deepStrictEqual(
+      defaultSorted.map((t) => t.id),
+      ['p1', 'p2', 'c1', 'c2', 'c3'],
+      'Props render before character tokens'
+    );
+
+    // 2. Select c1: c1 should be elevated above unselected characters c2 and c3
+    const selectC1 = sortTokensByZIndex(initialTokens, ['c1']);
+    assert.deepStrictEqual(
+      selectC1.map((t) => t.id),
+      ['p1', 'p2', 'c2', 'c3', 'c1'],
+      'Selected character c1 comes forward above other characters'
+    );
+
+    // 3. Drag c2 while c1 is selected: actively dragged c2 comes forward to the very top
+    const dragC2 = sortTokensByZIndex(initialTokens, ['c1'], 'c2');
+    assert.deepStrictEqual(
+      dragC2.map((t) => t.id),
+      ['p1', 'p2', 'c3', 'c1', 'c2'],
+      'Dragged character c2 comes forward above selected and unselected characters'
+    );
+
+    // 4. Select prop p1: p1 is elevated above p2, but remains beneath all characters
+    const selectP1 = sortTokensByZIndex(initialTokens, ['p1']);
+    assert.deepStrictEqual(
+      selectP1.map((t) => t.id),
+      ['p2', 'p1', 'c1', 'c2', 'c3'],
+      'Selected prop p1 is elevated above unselected props but remains below characters'
+    );
+  });
+
+  it('elevates attached indicators of selected/dragged tokens, and elevates selected/dragged indicators to the top (OB-126/OB-127)', () => {
+    const aura1 = { id: 'm1', type: 'circle', persist: true } as ScreenMarker; // unattached
+    const auraPaladin = { id: 'm2', type: 'circle', persist: true, attachedTokenId: 'tok-paladin' } as ScreenMarker;
+    const tether = { id: 'm3', type: 'tether', persist: true, attachedTokenId: 'tok-cleric', tetherTargetId: 'tok-paladin' } as ScreenMarker;
+    const zone = { id: 'm4', type: 'rectangle', persist: true } as ScreenMarker; // unattached
+
+    const allMarkers = [aura1, auraPaladin, tether, zone];
+
+    // 1. Initially, no selection: relative order preserved
+    const defaultSorted = sortMarkersByZIndex(allMarkers, {});
+    assert.deepStrictEqual(
+      defaultSorted.map((m) => m.id),
+      ['m1', 'm2', 'm3', 'm4'],
+      'Default order preserved when nothing is selected'
+    );
+
+    // 2. Select tok-paladin: both auraPaladin and tether (connected to paladin) come forward in front of other indicators
+    const selectPaladin = sortMarkersByZIndex(allMarkers, { selectedTokenIds: ['tok-paladin'] });
+    assert.deepStrictEqual(
+      selectPaladin.map((m) => m.id),
+      ['m1', 'm4', 'm2', 'm3'],
+      'Indicators attached to selected token come forward in front of unselected indicators'
+    );
+
+    // 3. Drag tok-paladin: attached indicators also come forward in front of other indicators
+    const dragPaladin = sortMarkersByZIndex(allMarkers, { draggingTokenId: 'tok-paladin' });
+    assert.deepStrictEqual(
+      dragPaladin.map((m) => m.id),
+      ['m1', 'm4', 'm2', 'm3'],
+      'Indicators attached to dragged token come forward in front of other indicators'
+    );
+
+    // 4. While tok-paladin is selected, user selects unattached indicator m1: m1 comes forward above paladin attached indicators
+    const selectM1WithPaladin = sortMarkersByZIndex(allMarkers, {
+      selectedTokenIds: ['tok-paladin'],
+      selectedMarkerId: 'm1',
+    });
+    assert.deepStrictEqual(
+      selectM1WithPaladin.map((m) => m.id),
+      ['m4', 'm2', 'm3', 'm1'],
+      'Selected indicator m1 comes forward above attached indicators'
+    );
+
+    // 5. Dragging indicator m4: dragged indicator comes forward to the absolute top of all indicators
+    const dragM4 = sortMarkersByZIndex(allMarkers, {
+      selectedTokenIds: ['tok-paladin'],
+      selectedMarkerId: 'm1',
+      draggingMarkerId: 'm4',
+    });
+    assert.deepStrictEqual(
+      dragM4.map((m) => m.id),
+      ['m2', 'm3', 'm1', 'm4'],
+      'Dragged indicator m4 comes forward on top of all indicators'
+    );
+  });
+
+  it('updates session data order with bringTokenToFront and bringMarkerToFront (OB-126/OB-127)', () => {
+    // Tokens Map
+    const tokens: Record<string, Token> = {
+      't1': { id: 't1', name: 'Token 1' } as Token,
+      't2': { id: 't2', name: 'Token 2' } as Token,
+      't3': { id: 't3', name: 'Token 3' } as Token,
+    };
+
+    const elevatedTokens = bringTokenToFront(tokens, 't1');
+    assert.deepStrictEqual(
+      Object.keys(elevatedTokens),
+      ['t2', 't3', 't1'],
+      'Token t1 moved to the end of map keys (highest insertion order)'
+    );
+
+    // Markers List
+    const markers: ScreenMarker[] = [
+      { id: 'm1', type: 'circle' } as ScreenMarker,
+      { id: 'm2', type: 'cone' } as ScreenMarker,
+      { id: 'm3', type: 'rectangle' } as ScreenMarker,
+    ];
+
+    const elevatedMarkers = bringMarkerToFront(markers, 'm1');
+    assert.deepStrictEqual(
+      elevatedMarkers.map((m) => m.id),
+      ['m2', 'm3', 'm1'],
+      'Marker m1 moved to the end of list (top draw order)'
+    );
   });
 });
 

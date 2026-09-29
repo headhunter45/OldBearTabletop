@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.ttrpgwith.me/v1/card.json",
+  "title": "MonsterCard",
+  "description": "JSON Schema for MonsterCards .card files",
+  "type": "object",
+  "required": [
+    "name",
+    "schemaVersion"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "subtype": {
+      "type": "string"
+    },
+    "alignment": {
+      "type": "string"
+    },
+    "strengthScore": {
+      "type": "integer"
+    },
+    "dexterityScore": {
+      "type": "integer"
+    },
+    "constitutionScore": {
+      "type": "integer"
+    },
+    "intelligenceScore": {
+      "type": "integer"
+    },
+    "wisdomScore": {
+      "type": "integer"
+    },
+    "charismaScore": {
+      "type": "integer"
+    },
+    "hitDice": {
+      "type": "integer"
+    },
+    "walkSpeed": {
+      "type": "integer"
+    },
+    "burrowSpeed": {
+      "type": "integer"
+    },
+    "climbSpeed": {
+      "type": "integer"
+    },
+    "flySpeed": {
+      "type": "integer"
+    },
+    "swimSpeed": {
+      "type": "integer"
+    },
+    "abilities": {
+      "type": "array"
+    },
+    "actions": {
+      "type": "array"
+    },
+    "reactions": {
+      "type": "array"
+    },
+    "legendaryActions": {
+      "type": "array"
+    }
+  }
+}
