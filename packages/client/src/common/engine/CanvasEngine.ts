@@ -1317,6 +1317,9 @@ export class CanvasEngine {
       } else if (m.type === 'crosshair') {
         const rad = Math.max(30, m.radius || 18);
         if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
+      } else if (m.type === 'clock') {
+        const rad = m.radius || 60;
+        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       }
     }
     return null;

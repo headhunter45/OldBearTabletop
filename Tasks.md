@@ -132,7 +132,7 @@
 | OB-129 | Done     | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
 | OB-130 | Pending  | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Done     | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
-| OB-132 | Ready    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
+| OB-132 | Done     | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
 | OB-133 | Ready    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
 | OB-134 | Ready    | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
 | OB-135 | Pending  | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
@@ -405,7 +405,7 @@ System-agnostic token status conditions with automatic numeric counters and turn
 
 ## OB-132 - Timers & Segmented Pie-Wedge Progress Clocks
 
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

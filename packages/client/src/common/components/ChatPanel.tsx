@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Player, ChatMessage, DiceRollResult, DnDCharacter, DieType, DnDAction, DnDSpell, Token, getActivationCategory } from '@oldbear/shared';
 import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { parseTimerDuration, formatTimer } from '../timer/timerUtils.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -14,6 +15,8 @@ export interface ChatPanelProps {
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
   fetchCharacterFn?: (charIdOrUrl: string) => Promise<DnDCharacter>;
   onConfigureDiscordWebhook?: (webhookUrl?: string) => void;
+  onStartTimer?: (durationSeconds: number, label?: string) => void;
+  onOpenClocks?: () => void;
   isOpen: boolean;
   onToggleOpen: () => void;
 }
@@ -71,6 +74,8 @@ export interface ProcessSlashCommandContext {
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
   fetchCharacterFn?: (charIdOrUrl: string) => Promise<DnDCharacter>;
   onConfigureDiscordWebhook?: (webhookUrl?: string) => void;
+  onStartTimer?: (durationSeconds: number, label?: string) => void;
+  onOpenClocks?: () => void;
 }
 
 export function processSlashCommand(
@@ -103,12 +108,54 @@ export function processSlashCommand(
   // 1. /help
   if (cmd === 'help') {
     sendPrivateSystemMessage(
-      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet (e.g. /attack 1 or /attack Longsword)\n• /skill [skill or index] [adv|dis] - Roll a character skill check (e.g. /skill 1 or /skill Stealth dis)\n• /spell [spell or index] [adv|dis] - Roll a spell attack from character sheet (e.g. /spell 1)\n• /item [item or index] - Use/inspect item from inventory (e.g. /item 1)\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
+      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s, /timer 2.5m)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet (e.g. /attack 1 or /attack Longsword)\n• /skill [skill or index] [adv|dis] - Roll a character skill check (e.g. /skill 1 or /skill Stealth dis)\n• /spell [spell or index] [adv|dis] - Roll a spell attack from character sheet (e.g. /spell 1)\n• /item [item or index] - Use/inspect item from inventory (e.g. /item 1)\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
     );
     return true;
   }
 
-  // 1b. /discord
+  // 1a. /timer
+  if (cmd === 'timer') {
+    const durationStr = args.join(' ').trim();
+    if (!durationStr) {
+      sendPrivateSystemMessage(
+        'Usage: `/timer <duration>`\nExamples:\n• `/timer 10 min`\n• `/timer 30s`\n• `/timer 2.5m`\n• `/timer 1m 30s`',
+        'Round Timer',
+        '#6366f1'
+      );
+      return true;
+    }
+
+    const seconds = parseTimerDuration(durationStr);
+    if (!seconds) {
+      sendPrivateSystemMessage(
+        `⚠️ Invalid timer duration "${durationStr}". Examples: \`/timer 5m\`, \`/timer 30s\`, \`/timer 2.5m\`.`,
+        'Round Timer',
+        '#f43f5e'
+      );
+      return true;
+    }
+
+    context.onStartTimer?.(seconds, `Timer (${durationStr})`);
+    sendPrivateSystemMessage(
+      `⏱️ Round timer started for **${formatTimer(seconds)}** (${durationStr}).`,
+      'Round Timer',
+      '#10b981'
+    );
+    return true;
+  }
+
+  // 1b. /clock or /clocks
+  if (cmd === 'clock' || cmd === 'clocks') {
+    context.onOpenClocks?.();
+    sendPrivateSystemMessage(
+      '🕒 Opened Progress Clocks manager.',
+      'Progress Clocks',
+      '#8b5cf6'
+    );
+    return true;
+  }
+
+  // 1c. /discord
   if (cmd === 'discord') {
     if (player.role !== 'gm') {
       sendPrivateSystemMessage(
@@ -724,6 +771,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onUpdatePlayerChar,
   fetchCharacterFn,
   onConfigureDiscordWebhook,
+  onStartTimer,
+  onOpenClocks,
   isOpen,
   onToggleOpen,
 }) => {
@@ -756,6 +805,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         onUpdatePlayerChar,
         fetchCharacterFn,
         onConfigureDiscordWebhook,
+        onStartTimer,
+        onOpenClocks,
       });
       return;
     }

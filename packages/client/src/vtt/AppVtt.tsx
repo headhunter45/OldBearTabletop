@@ -9,6 +9,7 @@ import {
   InitiativeItem,
   DnDCharacter,
   ScreenMarker,
+  ProgressClock,
   ChatMessage,
   generateRandomName,
 } from '@oldbear/shared';
@@ -49,6 +50,8 @@ import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-rea
 import { MarkerControls } from '../common/components/MarkerControls.js';
 import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
 import { resolveStatusDefinitions, processTurnTransition } from '../common/status/StatusManager.js';
+import { TimerHUD } from '../common/components/TimerHUD.js';
+import { ProgressClockModal } from '../common/components/ProgressClockModal.js';
 
 export const AppVtt: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -123,6 +126,12 @@ export const AppVtt: React.FC = () => {
   const prevInitTurnRef = useRef<{ round: number; index: number; id?: string } | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  // Timers & Progress Clocks State (OB-132)
+  const [timerDuration, setTimerDuration] = useState<number>(60);
+  const [timerLabel, setTimerLabel] = useState<string>('Round Timer');
+  const [isTimerOpen, setIsTimerOpen] = useState<boolean>(false);
+  const [isClocksModalOpen, setIsClocksModalOpen] = useState<boolean>(false);
 
   // GM Preview Map vs Player Active Map
   const [gmPreviewMapId, setGmPreviewMapId] = useState<string>('');
@@ -854,6 +863,52 @@ export const AppVtt: React.FC = () => {
     if (selectedMarker?.id === id) {
       setSelectedMarker((prev) => (prev ? { ...prev, ...updates } : null));
     }
+  };
+
+  const handleStartTimer = (durationSeconds: number, label?: string) => {
+    setTimerDuration(durationSeconds);
+    if (label) setTimerLabel(label);
+    setIsTimerOpen(true);
+  };
+
+  const handleOpenClocks = () => {
+    setIsClocksModalOpen(true);
+  };
+
+  const handlePlaceClockOnCanvas = (clock: ProgressClock) => {
+    if (!session || !localPlayer) return;
+    const currentMapId = session.activeMapId;
+    const centerPos = engineRef.current
+      ? engineRef.current.screenToWorld(window.innerWidth / 2, window.innerHeight / 2)
+      : { x: 400, y: 400 };
+
+    const clockMarker: ScreenMarker = {
+      id: crypto.randomUUID(),
+      type: 'clock',
+      userId: localPlayer.id,
+      userName: localPlayer.name,
+      color: clock.color,
+      x: centerPos.x,
+      y: centerPos.y,
+      radius: 60,
+      segments: clock.segments,
+      filled: clock.filled,
+      label: clock.name,
+      persist: true,
+      durationMs: 0,
+      mapId: currentMapId,
+      createdAt: Date.now(),
+    };
+
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        markers: [...(prev.markers || []), clockMarker],
+      };
+    });
+    networkRef.current?.send({ type: 'marker-add', marker: clockMarker });
+    showToast(`Placed clock "${clock.name}" on canvas map.`);
   };
 
   const handleTogglePersistMarkers = (persist: boolean) => {
@@ -1662,6 +1717,8 @@ export const AppVtt: React.FC = () => {
             networkRef.current?.send({ type: 'dice-roll', roll: r });
             setActiveRollAnnouncement(r);
           }}
+          onStartTimer={handleStartTimer}
+          onOpenClocks={handleOpenClocks}
           isOpen={isChatOpen}
           onToggleOpen={() => {
             setIsChatOpen((v) => {
@@ -1671,6 +1728,27 @@ export const AppVtt: React.FC = () => {
           }}
         />
       )}
+
+      {/* Round Timer HUD (OB-132) */}
+      <TimerHUD
+        initialDuration={timerDuration}
+        label={timerLabel}
+        isOpen={isTimerOpen}
+        onClose={() => setIsTimerOpen(false)}
+        onComplete={() => {
+          showToast(`⏰ Timer "${timerLabel}" completed!`);
+        }}
+      />
+
+      {/* Progress Clocks Modal (OB-132) */}
+      <ProgressClockModal
+        isOpen={isClocksModalOpen}
+        onClose={() => setIsClocksModalOpen(false)}
+        onPlaceOnCanvas={handlePlaceClockOnCanvas}
+        canvasMarkers={session?.markers}
+        onUpdateMarker={handleUpdateMarker}
+        onDeleteMarker={handleDeleteMarker}
+      />
 
       {/* Left Floating Tools */}
       <ToolBar
@@ -2119,6 +2197,7 @@ export const AppVtt: React.FC = () => {
           setShowBackupModal(true);
         }}
         onOpenSoundboard={() => setShowSoundboard(true)}
+        onOpenClocks={handleOpenClocks}
         onOpenBackup={() => {
           setBackupModalTab('tokens');
           setShowBackupModal(true);

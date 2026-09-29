@@ -15,6 +15,7 @@ import {
   Palette,
   Anchor,
   Unlink,
+  PieChart,
 } from 'lucide-react';
 import { RotationCompass } from './TokenControls.js';
 import { AVAILABLE_COLORS } from '../config/colors.js';
@@ -61,6 +62,8 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
       ? 'Target Ping'
       : marker.type === 'tether'
       ? 'Token Tether'
+      : marker.type === 'clock'
+      ? 'Progress Clock'
       : 'Drawing Shape';
 
   const renderIcon = () => {
@@ -77,6 +80,8 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
         return <Crosshair size={16} color={marker.color} />;
       case 'tether':
         return <Link size={16} color={marker.color} />;
+      case 'clock':
+        return <PieChart size={16} color={marker.color} />;
       default:
         return <Sparkles size={16} color={marker.color} />;
     }
@@ -250,6 +255,67 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
             +5'
           </button>
         </div>
+      )}
+
+      {/* Clock Controls: Fill/Dim Wedges and Segments (OB-132) */}
+      {marker.type === 'clock' && onUpdate && (
+        <>
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.2rem 0.55rem', fontWeight: 'bold' }}
+              onClick={() => {
+                const cur = marker.filled ?? 0;
+                onUpdate(marker.id, { filled: Math.max(0, cur - 1) });
+              }}
+              title="Dim clockwise wedge (-)"
+            >
+              -
+            </button>
+            <span
+              style={{
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                color: marker.color,
+                minWidth: '42px',
+                textAlign: 'center',
+              }}
+            >
+              {marker.filled ?? 0} / {marker.segments ?? 8}
+            </span>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '0.2rem 0.55rem', fontWeight: 'bold' }}
+              onClick={() => {
+                const seg = marker.segments ?? 8;
+                const cur = marker.filled ?? 0;
+                onUpdate(marker.id, { filled: Math.min(seg, cur + 1) });
+              }}
+              title="Light up next clockwise wedge (+)"
+            >
+              +
+            </button>
+          </div>
+
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Wedges:</span>
+            {[4, 6, 8, 10, 12].map((s) => {
+              const isActive = (marker.segments ?? 8) === s;
+              return (
+                <button
+                  key={s}
+                  className={`btn ${isActive ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', fontWeight: isActive ? 600 : 400 }}
+                  onClick={() => onUpdate(marker.id, { segments: s, filled: Math.min(s, marker.filled ?? 0) })}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Anchor Toggle: Center vs Base Edge (OB-129) */}

@@ -17,6 +17,7 @@ import {
   MessageSquare,
   MessageSquareHeart,
   Plus,
+  PieChart,
 } from 'lucide-react';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../network/VoiceManager.js';
@@ -37,6 +38,7 @@ interface MobileDrawerProps {
   onOpenMaps: () => void;
   onOpenSoundboard: () => void;
   onOpenBackup?: () => void;
+  onOpenClocks?: () => void;
   onToggleChat?: () => void;
   isChatOpen?: boolean;
   unreadChatCount?: number;
@@ -62,6 +64,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onOpenMaps,
   onOpenSoundboard,
   onOpenBackup,
+  onOpenClocks,
   onToggleChat,
   isChatOpen,
   unreadChatCount,
@@ -340,6 +343,20 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
           >
             <Volume2 size={18} color="var(--accent-emerald)" /> Soundboard
           </button>
+
+          {/* 6b. Progress Clocks (OB-132) */}
+          {onOpenClocks && (
+            <button
+              className="btn btn-secondary"
+              style={{ justifyContent: 'flex-start', padding: '0.65rem' }}
+              onClick={() => {
+                onClose();
+                onOpenClocks();
+              }}
+            >
+              <PieChart size={18} color="var(--accent-indigo)" /> Progress Clocks
+            </button>
+          )}
 
           {/* 7. Asset Manager (renamed from Backup & Transfer Data, incorporates Scene Manager) */}
           {onOpenBackup && (

@@ -4,7 +4,7 @@ import { Viewport } from './Viewport.js';
 import { measureDistance } from './Ruler.js';
 import { snapToGrid } from './GridRenderer.js';
 import { TRACKPAD_PAN_SENSITIVITY, TRACKPAD_ZOOM_SENSITIVITY, MOUSE_WHEEL_ZOOM_SENSITIVITY } from './CanvasEngine.js';
-import { getContrastingAccentColor } from './PointerSystem.js';
+import { getContrastingAccentColor, renderClock } from './PointerSystem.js';
 
 describe('Canvas Engine Utilities', () => {
   it('correctly maps screen to world coordinates', () => {
@@ -433,6 +433,53 @@ describe('Canvas Engine Utilities', () => {
     assert.strictEqual(dupMarkers[0].attachedTokenId, duplicatedToken.id);
     assert.strictEqual(dupMarkers[0].label, 'Aura of Protection');
     assert.strictEqual(dupMarkers[0].anchor, 'edge');
+  });
+
+  it('renders segmented pie-wedge progress clocks with filled slices (OB-132)', () => {
+    const clockMarker = {
+      id: 'clock-1',
+      type: 'clock' as const,
+      userId: 'user-1',
+      userName: 'GM',
+      color: '#ef4444',
+      x: 100,
+      y: 100,
+      radius: 60,
+      segments: 8,
+      filled: 3,
+      label: 'Alert Level',
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+
+    let filledCount = 0;
+    let textRendered = '';
+    const mockCtx: any = {
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      fill: () => {
+        if (mockCtx.fillStyle === clockMarker.color) filledCount++;
+      },
+      stroke: () => {},
+      setLineDash: () => {},
+      fillText: (text: string) => {
+        textRendered += text;
+      },
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      roundRect: () => {},
+      rect: () => {},
+    };
+
+    renderClock(mockCtx, clockMarker, false);
+    assert.strictEqual(filledCount, 3, 'Renders exactly 3 filled wedges for filled: 3');
+    assert.ok(textRendered.includes('3/8'), 'Hub renders 3/8 fraction indicator');
+    assert.ok(textRendered.includes('Alert Level'), 'Renders clock label');
   });
 });
 

@@ -135,7 +135,7 @@ export interface FogState {
   shapes: FogShape[];
 }
 
-export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone' | 'tether';
+export type MarkerType = 'laser' | 'arrow' | 'crosshair' | 'circle' | 'rectangle' | 'cone' | 'tether' | 'clock';
 
 export interface ScreenMarker {
   id: string;
@@ -145,7 +145,7 @@ export interface ScreenMarker {
   color: string;
   x: number;
   y: number;
-  label?: string; // Custom name / label (e.g. "Spirit Guardians", "Threat Range")
+  label?: string; // Custom name / label (e.g. "Spirit Guardians", "Threat Range", "Clock Name")
   opacity?: number; // 0.05 to 1.0
   anchor?: 'center' | 'edge'; // Measure aura from token center vs base edge perimeter
   attachedTokenId?: string; // ID of token this aura/indicator is attached to
@@ -158,16 +158,39 @@ export interface ScreenMarker {
   points?: FogPoint[]; // for laser trails
   targetX?: number; // for arrow / tether
   targetY?: number;
-  radius?: number; // for circle or cone
+  radius?: number; // for circle, cone, or clock
   width?: number; // for rectangle
   height?: number;
   angle?: number; // for cone / directional angle
   spreadAngle?: number; // for cone spread angle in degrees
+  segments?: number; // for clock: number of pie wedges (default 8)
+  filled?: number; // for clock: number of active/filled wedges
   persist?: boolean; // stays on map until deleted
   locked?: boolean; // locked from accidental movement
   mapId?: string; // associated map
   durationMs: number; // how long it stays on screen (if not persist)
   createdAt: number; // epoch ms
+}
+
+export interface ProgressClock {
+  id: string;
+  name: string;
+  segments: number; // e.g. 4, 6, 8, 12
+  filled: number; // 0 to segments
+  color: string;
+  placedOnCanvas?: boolean;
+  x?: number;
+  y?: number;
+  radius?: number;
+}
+
+export interface TimerState {
+  id: string;
+  totalDurationSeconds: number;
+  remainingSeconds: number;
+  isRunning: boolean;
+  label?: string;
+  lastUpdated?: number;
 }
 
 export type DieType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';

@@ -50,6 +50,9 @@ export function renderMarkers(
       case 'tether':
         renderTether(ctx, marker, tokens, gridSize, scaleFtPerCell, isSelected);
         break;
+      case 'clock':
+        renderClock(ctx, marker, isSelected);
+        break;
     }
 
     ctx.restore();
@@ -635,5 +638,130 @@ export function renderCone(
   const midLabelX = x + (radius * 0.5) * Math.cos(thetaRad);
   const midLabelY = y + (radius * 0.5) * Math.sin(thetaRad) - 12;
   renderUserLabel(ctx, `${labelPrefix}${labelText}`, midLabelX, midLabelY, color);
+}
+
+export function renderClock(
+  ctx: CanvasRenderingContext2D,
+  marker: ScreenMarker,
+  isSelected?: boolean
+) {
+  const x = marker.x;
+  const y = marker.y;
+  const radius = marker.radius || 60;
+  const segments = marker.segments && marker.segments > 1 ? marker.segments : 8;
+  const filled = Math.max(0, Math.min(segments, marker.filled ?? 0));
+  const color = marker.color || '#3b82f6';
+  const startAngle = -Math.PI / 2; // 12 o'clock
+  const step = (Math.PI * 2) / segments;
+
+  ctx.save();
+
+  // Shadow
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = 12;
+
+  // Background disk
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+
+  // Draw slices
+  for (let i = 0; i < segments; i++) {
+    const a1 = startAngle + i * step;
+    const a2 = startAngle + (i + 1) * step;
+    const isWedgeFilled = i < filled;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.arc(x, y, radius, a1, a2);
+    ctx.closePath();
+
+    if (isWedgeFilled) {
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fill();
+    }
+
+    // Radial divider line
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + radius * Math.cos(a1), y + radius * Math.sin(a1));
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Outer border
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = isSelected ? '#38bdf8' : 'rgba(255, 255, 255, 0.7)';
+  ctx.lineWidth = isSelected ? 3 : 2;
+  if (isSelected) {
+    ctx.setLineDash([4, 4]);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Center hub circle
+  const hubRadius = radius * 0.28;
+  ctx.beginPath();
+  ctx.arc(x, y, hubRadius, 0, Math.PI * 2);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Fraction text in hub
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.max(10, Math.round(hubRadius * 0.85))}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${filled}/${segments}`, x, y);
+
+  // Label pill
+  if (marker.label) {
+    ctx.font = 'bold 12px Inter, sans-serif';
+    const textWidth = ctx.measureText(marker.label).width;
+    const paddingX = 10;
+    const paddingY = 4;
+    const pillY = y + radius + 14;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(
+        x - textWidth / 2 - paddingX,
+        pillY - 8 - paddingY,
+        textWidth + paddingX * 2,
+        16 + paddingY * 2,
+        6
+      );
+    } else {
+      ctx.rect(
+        x - textWidth / 2 - paddingX,
+        pillY - 8 - paddingY,
+        textWidth + paddingX * 2,
+        16 + paddingY * 2
+      );
+    }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(marker.label, x, pillY);
+  }
+
+  ctx.restore();
 }
 
