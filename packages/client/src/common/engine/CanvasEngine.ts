@@ -84,7 +84,7 @@ export class CanvasEngine {
   persistMarkersMode: boolean = false;
   selectedMarkerId: string | null = null;
   draggingMarker: ScreenMarker | null = null;
-  draggingMarkerHandle: { marker: ScreenMarker; handle: 'spread' | 'rotate' } | null = null;
+  draggingMarkerHandle: { marker: ScreenMarker; handle: 'spread' | 'rotate' | 'start' | 'end' } | null = null;
   activeSprayImage?: string;
 
   // Shape drawing state (for markers & fog)
@@ -820,6 +820,42 @@ export class CanvasEngine {
             this.draggingMarkerHandle = { marker: selMarker, handle: 'rotate' };
             return;
           }
+        } else if (
+          selMarker &&
+          selMarker.type === 'tether' &&
+          selMarker.persist &&
+          (isGm || selMarker.userId === localId) &&
+          !selMarker.locked &&
+          currentMap
+        ) {
+          let x1 = selMarker.x;
+          let y1 = selMarker.y;
+          if (selMarker.attachedTokenId && this.session.tokens[selMarker.attachedTokenId]) {
+            const t1 = this.session.tokens[selMarker.attachedTokenId];
+            const isProp = Boolean(t1.isProp);
+            const w = (isProp && t1.propWidth !== undefined ? t1.propWidth : t1.size) * currentMap.gridSize;
+            const h = (isProp && t1.propHeight !== undefined ? t1.propHeight : t1.size) * currentMap.gridSize;
+            x1 = t1.x + w / 2;
+            y1 = t1.y + h / 2;
+          }
+          let x2 = selMarker.targetX ?? selMarker.x;
+          let y2 = selMarker.targetY ?? selMarker.y;
+          if (selMarker.tetherTargetId && this.session.tokens[selMarker.tetherTargetId]) {
+            const t2 = this.session.tokens[selMarker.tetherTargetId];
+            const isProp = Boolean(t2.isProp);
+            const w = (isProp && t2.propWidth !== undefined ? t2.propWidth : t2.size) * currentMap.gridSize;
+            const h = (isProp && t2.propHeight !== undefined ? t2.propHeight : t2.size) * currentMap.gridSize;
+            x2 = t2.x + w / 2;
+            y2 = t2.y + h / 2;
+          }
+          if (Math.hypot(worldPos.x - x1, worldPos.y - y1) <= 20) {
+            this.draggingMarkerHandle = { marker: selMarker, handle: 'start' };
+            return;
+          }
+          if (Math.hypot(worldPos.x - x2, worldPos.y - y2) <= 20) {
+            this.draggingMarkerHandle = { marker: selMarker, handle: 'end' };
+            return;
+          }
         }
       }
 
@@ -890,15 +926,29 @@ export class CanvasEngine {
         this.callbacks.onMarkerSelect?.({ ...m });
         return;
       }
-      const currAngleDeg = (Math.atan2(worldPos.y - m.y, worldPos.x - m.x) * 180) / Math.PI;
-      const centerAngleDeg = m.angle ?? 0;
-      const diff = Math.abs(((currAngleDeg - centerAngleDeg + 540) % 360) - 180);
-      let newSpread = Math.round(diff * 2);
-      newSpread = Math.max(15, Math.min(180, newSpread));
-      m.spreadAngle = newSpread;
-      this.callbacks.onMarkerUpdate?.(m.id, { spreadAngle: newSpread });
-      this.callbacks.onMarkerSelect?.({ ...m });
-      return;
+      if (this.draggingMarkerHandle.handle === 'spread') {
+        const currAngleDeg = (Math.atan2(worldPos.y - m.y, worldPos.x - m.x) * 180) / Math.PI;
+        const centerAngleDeg = m.angle ?? 0;
+        const diff = Math.abs(((currAngleDeg - centerAngleDeg + 540) % 360) - 180);
+        let newSpread = Math.round(diff * 2);
+        newSpread = Math.max(15, Math.min(180, newSpread));
+        m.spreadAngle = newSpread;
+        this.callbacks.onMarkerUpdate?.(m.id, { spreadAngle: newSpread });
+        this.callbacks.onMarkerSelect?.({ ...m });
+        return;
+      }
+      if (this.draggingMarkerHandle.handle === 'start') {
+        m.x = worldPos.x;
+        m.y = worldPos.y;
+        this.callbacks.onMarkerSelect?.({ ...m });
+        return;
+      }
+      if (this.draggingMarkerHandle.handle === 'end') {
+        m.targetX = worldPos.x;
+        m.targetY = worldPos.y;
+        this.callbacks.onMarkerSelect?.({ ...m });
+        return;
+      }
     }
 
     // Pan with mouse drag or pan tool
@@ -920,10 +970,14 @@ export class CanvasEngine {
     if (this.draggingMarker && this.dragCurrentPos && !this.draggingMarker.locked) {
       const dx = worldPos.x - this.dragCurrentPos.x;
       const dy = worldPos.y - this.dragCurrentPos.y;
-      this.draggingMarker.x += dx;
-      this.draggingMarker.y += dy;
-      if (this.draggingMarker.targetX !== undefined) this.draggingMarker.targetX += dx;
-      if (this.draggingMarker.targetY !== undefined) this.draggingMarker.targetY += dy;
+      if (!this.draggingMarker.attachedTokenId) {
+        this.draggingMarker.x += dx;
+        this.draggingMarker.y += dy;
+      }
+      if (!this.draggingMarker.tetherTargetId) {
+        if (this.draggingMarker.targetX !== undefined) this.draggingMarker.targetX += dx;
+        if (this.draggingMarker.targetY !== undefined) this.draggingMarker.targetY += dy;
+      }
       this.dragCurrentPos = worldPos;
       return;
     }
@@ -1099,15 +1153,49 @@ export class CanvasEngine {
       });
     }
 
-    // Finish Marker Handle Drag (Cone spread / Spray rotate)
+    // Finish Marker Handle Drag (Cone spread / Spray rotate / Tether endpoints)
     if (this.draggingMarkerHandle) {
       const m = this.draggingMarkerHandle.marker;
       const handleType = this.draggingMarkerHandle.handle;
       this.draggingMarkerHandle = null;
       if (handleType === 'rotate') {
         this.callbacks.onMarkerUpdate?.(m.id, { rotation: m.rotation, angle: m.angle });
-      } else {
+      } else if (handleType === 'spread') {
         this.callbacks.onMarkerUpdate?.(m.id, { spreadAngle: m.spreadAngle });
+      } else if (handleType === 'start' && currentMap) {
+        const matching = this.findMatchingTokens(worldPos, currentMap);
+        const tok = matching.find((t) => t.id !== m.tetherTargetId);
+        if (tok) {
+          const isProp = Boolean(tok.isProp);
+          const w = (isProp && tok.propWidth !== undefined ? tok.propWidth : tok.size) * currentMap.gridSize;
+          const h = (isProp && tok.propHeight !== undefined ? tok.propHeight : tok.size) * currentMap.gridSize;
+          m.attachedTokenId = tok.id;
+          m.x = tok.x + w / 2;
+          m.y = tok.y + h / 2;
+          this.callbacks.onMarkerUpdate?.(m.id, { attachedTokenId: tok.id, x: m.x, y: m.y });
+        } else {
+          m.attachedTokenId = undefined;
+          m.x = worldPos.x;
+          m.y = worldPos.y;
+          this.callbacks.onMarkerUpdate?.(m.id, { attachedTokenId: null as any, x: m.x, y: m.y });
+        }
+      } else if (handleType === 'end' && currentMap) {
+        const matching = this.findMatchingTokens(worldPos, currentMap);
+        const tok = matching.find((t) => t.id !== m.attachedTokenId);
+        if (tok) {
+          const isProp = Boolean(tok.isProp);
+          const w = (isProp && tok.propWidth !== undefined ? tok.propWidth : tok.size) * currentMap.gridSize;
+          const h = (isProp && tok.propHeight !== undefined ? tok.propHeight : tok.size) * currentMap.gridSize;
+          m.tetherTargetId = tok.id;
+          m.targetX = tok.x + w / 2;
+          m.targetY = tok.y + h / 2;
+          this.callbacks.onMarkerUpdate?.(m.id, { tetherTargetId: tok.id, targetX: m.targetX, targetY: m.targetY });
+        } else {
+          m.tetherTargetId = undefined;
+          m.targetX = worldPos.x;
+          m.targetY = worldPos.y;
+          this.callbacks.onMarkerUpdate?.(m.id, { tetherTargetId: null as any, targetX: m.targetX, targetY: m.targetY });
+        }
       }
       this.callbacks.onMarkerSelect?.({ ...m });
     }
@@ -1332,16 +1420,23 @@ export class CanvasEngine {
 
         // Tether must only be usable between things like tokens and props (OB-165)
         if (startToken && endToken && startToken.id !== endToken.id) {
+          const isProp1 = Boolean(startToken.isProp);
+          const w1 = (isProp1 && startToken.propWidth !== undefined ? startToken.propWidth : startToken.size) * currentMap.gridSize;
+          const h1 = (isProp1 && startToken.propHeight !== undefined ? startToken.propHeight : startToken.size) * currentMap.gridSize;
+          const isProp2 = Boolean(endToken.isProp);
+          const w2 = (isProp2 && endToken.propWidth !== undefined ? endToken.propWidth : endToken.size) * currentMap.gridSize;
+          const h2 = (isProp2 && endToken.propHeight !== undefined ? endToken.propHeight : endToken.size) * currentMap.gridSize;
+
           this.broadcastMarker({
             id: crypto.randomUUID(),
             type: 'tether',
             userId: this.localPlayer.id,
             userName: this.localPlayer.name,
             color: this.localPlayer.color,
-            x: x1,
-            y: y1,
-            targetX: x2,
-            targetY: y2,
+            x: startToken.x + w1 / 2,
+            y: startToken.y + h1 / 2,
+            targetX: endToken.x + w2 / 2,
+            targetY: endToken.y + h2 / 2,
             attachedTokenId: startToken.id,
             tetherTargetId: endToken.id,
             tetherStyle: 'straight',

@@ -94,7 +94,84 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
   };
 
   const attachedToken = marker.attachedTokenId ? tokens[marker.attachedTokenId] : null;
+  const targetToken = marker.tetherTargetId ? tokens[marker.tetherTargetId] : null;
+  const tokensList = Object.values(tokens);
   const currentRadiusFt = Math.round(((marker.radius ?? 50) / gridSize) * scaleFtPerCell);
+
+  const handleStartChange = (tokenId: string) => {
+    if (!onUpdate) return;
+    if (!tokenId) {
+      let curX = marker.x;
+      let curY = marker.y;
+      if (marker.attachedTokenId && tokens[marker.attachedTokenId]) {
+        const t = tokens[marker.attachedTokenId];
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        curX = t.x + w / 2;
+        curY = t.y + h / 2;
+      }
+      onUpdate(marker.id, { attachedTokenId: null as any, x: curX, y: curY });
+    } else {
+      const t = tokens[tokenId];
+      if (t) {
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        onUpdate(marker.id, { attachedTokenId: t.id, x: t.x + w / 2, y: t.y + h / 2 });
+      }
+    }
+  };
+
+  const handleEndChange = (tokenId: string) => {
+    if (!onUpdate) return;
+    if (!tokenId) {
+      let curX = marker.targetX ?? marker.x;
+      let curY = marker.targetY ?? marker.y;
+      if (marker.tetherTargetId && tokens[marker.tetherTargetId]) {
+        const t = tokens[marker.tetherTargetId];
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        curX = t.x + w / 2;
+        curY = t.y + h / 2;
+      }
+      onUpdate(marker.id, { tetherTargetId: null as any, targetX: curX, targetY: curY });
+    } else {
+      const t = tokens[tokenId];
+      if (t) {
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        onUpdate(marker.id, { tetherTargetId: t.id, targetX: t.x + w / 2, targetY: t.y + h / 2 });
+      }
+    }
+  };
+
+  const handleGeneralAttachChange = (tokenId: string) => {
+    if (!onUpdate) return;
+    if (!tokenId) {
+      let curX = marker.x;
+      let curY = marker.y;
+      if (marker.attachedTokenId && tokens[marker.attachedTokenId]) {
+        const t = tokens[marker.attachedTokenId];
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        curX = t.x + w / 2;
+        curY = t.y + h / 2;
+      }
+      onUpdate(marker.id, { attachedTokenId: null as any, x: curX, y: curY });
+    } else {
+      const t = tokens[tokenId];
+      if (t) {
+        const isProp = Boolean(t.isProp);
+        const w = (isProp && t.propWidth !== undefined ? t.propWidth : t.size) * gridSize;
+        const h = (isProp && t.propHeight !== undefined ? t.propHeight : t.size) * gridSize;
+        onUpdate(marker.id, { attachedTokenId: t.id, x: t.x + w / 2, y: t.y + h / 2 });
+      }
+    }
+  };
 
   const setRadiusFt = (ft: number) => {
     const clampedFt = Math.max(1, ft);
@@ -537,51 +614,132 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
         </>
       )}
 
-      {/* Attached Token Status / Attach Button (OB-129) */}
+      {/* Attached Token Controls (OB-129 / OB-165) */}
       {onUpdate && (
         <>
           <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
-          {attachedToken ? (
+          {marker.type === 'tether' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              {/* Start / From Endpoint */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From:</span>
+                <select
+                  className="input"
+                  value={marker.attachedTokenId || ''}
+                  onChange={(e) => handleStartChange(e.target.value)}
+                  title="Tether Start Endpoint: Select token/prop or detached point"
+                  style={{
+                    padding: '0.2rem 0.4rem',
+                    fontSize: '0.75rem',
+                    height: '26px',
+                    maxWidth: '120px',
+                    background: 'rgba(0,0,0,0.3)',
+                    color: 'var(--text-main)',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <option value="">(Detached Point)</option>
+                  {tokensList
+                    .filter((t) => t.id !== marker.tetherTargetId)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} {t.isProp ? '(Prop)' : ''}
+                      </option>
+                    ))}
+                </select>
+                {attachedToken && (
+                  <button
+                    className="btn-icon"
+                    onClick={() => handleStartChange('')}
+                    title={`Detach from ${attachedToken.name}`}
+                    style={{ padding: '0.2rem' }}
+                  >
+                    <Unlink size={13} />
+                  </button>
+                )}
+              </div>
+
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>➔</span>
+
+              {/* End / To Endpoint */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>To:</span>
+                <select
+                  className="input"
+                  value={marker.tetherTargetId || ''}
+                  onChange={(e) => handleEndChange(e.target.value)}
+                  title="Tether Target Endpoint: Select token/prop or detached point"
+                  style={{
+                    padding: '0.2rem 0.4rem',
+                    fontSize: '0.75rem',
+                    height: '26px',
+                    maxWidth: '120px',
+                    background: 'rgba(0,0,0,0.3)',
+                    color: 'var(--text-main)',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <option value="">(Detached Point)</option>
+                  {tokensList
+                    .filter((t) => t.id !== marker.attachedTokenId)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} {t.isProp ? '(Prop)' : ''}
+                      </option>
+                    ))}
+                </select>
+                {targetToken && (
+                  <button
+                    className="btn-icon"
+                    onClick={() => handleEndChange('')}
+                    title={`Detach from ${targetToken.name}`}
+                    style={{ padding: '0.2rem' }}
+                  >
+                    <Unlink size={13} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Attached:</span>
-              <span
+              <select
+                className="input"
+                value={marker.attachedTokenId || ''}
+                onChange={(e) => handleGeneralAttachChange(e.target.value)}
+                title="Attach indicator to token or prop"
                 style={{
+                  padding: '0.2rem 0.4rem',
                   fontSize: '0.75rem',
-                  fontWeight: 600,
-                  maxWidth: '100px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  height: '26px',
+                  maxWidth: '130px',
+                  background: 'rgba(0,0,0,0.3)',
+                  color: 'var(--text-main)',
+                  borderRadius: '4px',
+                  border: '1px solid var(--border-subtle)',
                 }}
               >
-                {attachedToken.name}
-              </span>
-              <button
-                className="btn-icon"
-                onClick={() => onUpdate(marker.id, { attachedTokenId: undefined })}
-                title="Detach from Token"
-                style={{ padding: '0.2rem' }}
-              >
-                <Unlink size={13} />
-              </button>
+                <option value="">(Detached / Map Pos)</option>
+                {tokensList.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} {t.isProp ? '(Prop)' : ''}
+                  </option>
+                ))}
+              </select>
+              {attachedToken && (
+                <button
+                  className="btn-icon"
+                  onClick={() => handleGeneralAttachChange('')}
+                  title={`Detach from ${attachedToken.name}`}
+                  style={{ padding: '0.2rem' }}
+                >
+                  <Unlink size={13} />
+                </button>
+              )}
             </div>
-          ) : selectedTokenId && tokens[selectedTokenId] ? (
-            <button
-              className="btn btn-secondary"
-              onClick={() => onUpdate(marker.id, { attachedTokenId: selectedTokenId })}
-              title={`Attach indicator to selected token "${tokens[selectedTokenId].name}"`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.75rem',
-              }}
-            >
-              <Link size={13} />
-              <span>Attach to {tokens[selectedTokenId].name}</span>
-            </button>
-          ) : null}
+          )}
         </>
       )}
 

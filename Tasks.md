@@ -165,9 +165,10 @@
 | OB-162 | Backlog | [Deployment Zones, Casualty Trays & Staging Submap Templates](#ob-162---deployment-zones-casualty-trays--staging-submap-templates)                                                                                                         |
 | OB-163 | Backlog | [Tournament Organizer (TO) Mode, Match Privacy & Spectator Controls](#ob-163---tournament-organizer-to-mode-match-privacy--spectator-controls)                                                                                             |
 | OB-164 | Done    | My persistent indicators disappear when I change to another type of tool and they change to a different type of indicator when I change to a different indicator tool.                                                                     |
-| OB-165 | Ready   | Token Tether is logically attached to two tokens, but is technically attached to one and pointing to the other. I can unattach it from one, but then can't attach it to another. I can't unattach it to the other token it is attached to. |
+| OB-165 | Done    | Token Tether is logically attached to two tokens, but is technically attached to one and pointing to the other. I can unattach it from one, but then can't attach it to another. I can't unattach it to the other token it is attached to. |
 | OB-166 | Ready   | My browser (Brave) prevented me from downloading the .binder file by default and required me to click keep to keep it.                                                                                                                     |
 | OB-167 | Ready   | The box to name/rename an indicator doesn't have a way to apply the value and it isn't realtime.                                                                                                                                           |
+| OB-168 | Ready   | Token bar is too spread out. Make things like HP, temp HP, and rotation stack their children vertically instead of horizontally, or take inspiration from the indicator bar for layout.                                                    |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
 

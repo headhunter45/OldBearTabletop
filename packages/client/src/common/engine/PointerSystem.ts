@@ -256,12 +256,32 @@ export function renderTether(
     ctx.stroke();
   }
 
-  // Endpoints dots
-  ctx.beginPath();
-  ctx.arc(x1, y1, 4.5, 0, Math.PI * 2);
-  ctx.arc(x2, y2, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
+  // Endpoints dots / selection handles
+  if (isSelected) {
+    // Start handle
+    ctx.beginPath();
+    ctx.arc(x1, y1, 8, 0, Math.PI * 2);
+    ctx.fillStyle = marker.attachedTokenId ? '#10b981' : color;
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // End handle
+    ctx.beginPath();
+    ctx.arc(x2, y2, 8, 0, Math.PI * 2);
+    ctx.fillStyle = marker.tetherTargetId ? '#10b981' : color;
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(x1, y1, 4.5, 0, Math.PI * 2);
+    ctx.arc(x2, y2, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
 
   const distFt = Math.round((dist / gridSize) * scaleFtPerCell);
   const midX = (x1 + x2) / 2;

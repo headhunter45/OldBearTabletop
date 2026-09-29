@@ -440,12 +440,22 @@ export const AppVtt: React.FC = () => {
             if (!prev) return prev;
             return {
               ...prev,
-              markers: prev.markers.map((m) =>
-                m.id === msg.id ? { ...m, ...msg.updates } : m
-              ),
+              markers: prev.markers.map((m) => {
+                if (m.id !== msg.id) return m;
+                const merged = { ...m, ...msg.updates };
+                if (msg.updates.attachedTokenId === null) delete (merged as any).attachedTokenId;
+                if (msg.updates.tetherTargetId === null) delete (merged as any).tetherTargetId;
+                return merged;
+              }),
             };
           });
-          setSelectedMarker((cur) => (cur?.id === msg.id ? { ...cur, ...msg.updates } : cur));
+          setSelectedMarker((cur) => {
+            if (cur?.id !== msg.id) return cur;
+            const merged = { ...cur, ...msg.updates };
+            if (msg.updates.attachedTokenId === null) delete (merged as any).attachedTokenId;
+            if (msg.updates.tetherTargetId === null) delete (merged as any).tetherTargetId;
+            return merged;
+          });
           break;
         }
 
@@ -872,8 +882,30 @@ export const AppVtt: React.FC = () => {
     setSession((prev) => {
       if (!prev) return prev;
       const copy = { ...prev.tokens };
+      const deletedToken = copy[id];
       delete copy[id];
-      return { ...prev, tokens: copy };
+
+      const updatedMarkers = prev.markers.map((m) => {
+        let changed = false;
+        let updates: Partial<ScreenMarker> = {};
+        if (m.attachedTokenId === id && deletedToken) {
+          const isProp = Boolean(deletedToken.isProp);
+          const w = (isProp && deletedToken.propWidth !== undefined ? deletedToken.propWidth : deletedToken.size) * (currentMap?.gridSize || 50);
+          const h = (isProp && deletedToken.propHeight !== undefined ? deletedToken.propHeight : deletedToken.size) * (currentMap?.gridSize || 50);
+          updates = { ...updates, attachedTokenId: undefined, x: deletedToken.x + w / 2, y: deletedToken.y + h / 2 };
+          changed = true;
+        }
+        if (m.tetherTargetId === id && deletedToken) {
+          const isProp = Boolean(deletedToken.isProp);
+          const w = (isProp && deletedToken.propWidth !== undefined ? deletedToken.propWidth : deletedToken.size) * (currentMap?.gridSize || 50);
+          const h = (isProp && deletedToken.propHeight !== undefined ? deletedToken.propHeight : deletedToken.size) * (currentMap?.gridSize || 50);
+          updates = { ...updates, tetherTargetId: undefined, targetX: deletedToken.x + w / 2, targetY: deletedToken.y + h / 2 };
+          changed = true;
+        }
+        return changed ? { ...m, ...updates } : m;
+      });
+
+      return { ...prev, tokens: copy, markers: updatedMarkers };
     });
     setSelectedToken((prev) => (prev?.id === id ? null : prev));
     networkRef.current?.send({
@@ -912,13 +944,23 @@ export const AppVtt: React.FC = () => {
       if (!prev) return prev;
       return {
         ...prev,
-        markers: prev.markers.map((m) =>
-          m.id === id ? { ...m, ...updates } : m
-        ),
+        markers: prev.markers.map((m) => {
+          if (m.id !== id) return m;
+          const merged = { ...m, ...updates };
+          if (updates.attachedTokenId === null) delete (merged as any).attachedTokenId;
+          if (updates.tetherTargetId === null) delete (merged as any).tetherTargetId;
+          return merged;
+        }),
       };
     });
     if (selectedMarker?.id === id) {
-      setSelectedMarker((prev) => (prev ? { ...prev, ...updates } : null));
+      setSelectedMarker((prev) => {
+        if (!prev) return null;
+        const merged = { ...prev, ...updates };
+        if (updates.attachedTokenId === null) delete (merged as any).attachedTokenId;
+        if (updates.tetherTargetId === null) delete (merged as any).tetherTargetId;
+        return merged;
+      });
     }
   };
 

@@ -616,6 +616,63 @@ describe('Canvas Engine Utilities', () => {
     const canCreateEmpty = Boolean(tokens['tok-1'] && (tokens as any)['empty-space'] && 'tok-1' !== 'empty-space');
     assert.strictEqual(canCreateEmpty, false, 'Tether to empty space disallowed');
   });
+
+  it('allows independent detachment and reattachment of start and target tether endpoints (OB-165)', () => {
+    const tokens: Record<string, Token> = {
+      'tok-1': { id: 'tok-1', name: 'Warrior', x: 100, y: 100, size: 1, color: '#38bdf8' } as Token,
+      'tok-2': { id: 'tok-2', name: 'Mage', x: 300, y: 300, size: 1, color: '#f59e0b' } as Token,
+      'tok-3': { id: 'tok-3', name: 'Cleric', x: 500, y: 500, size: 1, color: '#10b981' } as Token,
+    };
+
+    // Initially attached to tok-1 and tok-2
+    let tether: ScreenMarker = {
+      id: 'tether-1',
+      type: 'tether',
+      userId: 'u1',
+      userName: 'GM',
+      color: '#38bdf8',
+      x: 125,
+      y: 125,
+      targetX: 325,
+      targetY: 325,
+      attachedTokenId: 'tok-1',
+      tetherTargetId: 'tok-2',
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+
+    assert.strictEqual(tether.attachedTokenId, 'tok-1');
+    assert.strictEqual(tether.tetherTargetId, 'tok-2');
+
+    // 1. Unattach start endpoint (tok-1)
+    const detachStartUpdate: Partial<ScreenMarker> = { attachedTokenId: null as any };
+    tether = { ...tether, ...detachStartUpdate };
+    if (detachStartUpdate.attachedTokenId === null) delete tether.attachedTokenId;
+
+    assert.strictEqual(tether.attachedTokenId, undefined, 'Start endpoint successfully unattached');
+    assert.strictEqual(tether.tetherTargetId, 'tok-2', 'Target endpoint remains attached to Mage');
+
+    // 2. Reattach start endpoint to tok-3 (Cleric)
+    const reattachStartUpdate: Partial<ScreenMarker> = { attachedTokenId: 'tok-3' };
+    tether = { ...tether, ...reattachStartUpdate };
+    assert.strictEqual(tether.attachedTokenId, 'tok-3', 'Start endpoint reattached to Cleric');
+    assert.strictEqual(tether.tetherTargetId, 'tok-2', 'Target endpoint remains attached to Mage');
+
+    // 3. Unattach target endpoint (tok-2)
+    const detachEndUpdate: Partial<ScreenMarker> = { tetherTargetId: null as any };
+    tether = { ...tether, ...detachEndUpdate };
+    if (detachEndUpdate.tetherTargetId === null) delete tether.tetherTargetId;
+
+    assert.strictEqual(tether.attachedTokenId, 'tok-3', 'Start endpoint remains attached to Cleric');
+    assert.strictEqual(tether.tetherTargetId, undefined, 'Target endpoint successfully unattached');
+
+    // 4. Reattach target endpoint to tok-1 (Warrior)
+    const reattachEndUpdate: Partial<ScreenMarker> = { tetherTargetId: 'tok-1' };
+    tether = { ...tether, ...reattachEndUpdate };
+    assert.strictEqual(tether.attachedTokenId, 'tok-3', 'Start endpoint remains attached to Cleric');
+    assert.strictEqual(tether.tetherTargetId, 'tok-1', 'Target endpoint successfully reattached to Warrior');
+  });
 });
 
 

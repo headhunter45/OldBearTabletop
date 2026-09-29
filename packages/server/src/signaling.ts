@@ -436,7 +436,13 @@ function handleMessage(ws: ClientSocket, msg: ClientToServerMessage) {
       if (session) {
         const marker = session.markers.find((m) => m.id === msg.id);
         if (marker) {
-          Object.assign(marker, msg.updates);
+          for (const [k, v] of Object.entries(msg.updates)) {
+            if (v === null || v === undefined) {
+              delete (marker as any)[k];
+            } else {
+              (marker as any)[k] = v;
+            }
+          }
         }
       }
       broadcastToRoom(ws.roomId, { type: 'marker-updated', id: msg.id, updates: msg.updates });
