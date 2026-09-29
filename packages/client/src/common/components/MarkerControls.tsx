@@ -479,9 +479,31 @@ export const MarkerControls: React.FC<MarkerControlsProps> = ({
         </>
       )}
 
-      {/* Spray Indicator Rotation & Decal Presets (OB-134) */}
+      {/* Spray Indicator Rotation & Decal Presets (OB-134, OB-169) */}
       {marker.type === 'spray' && onUpdate && (
         <>
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+          {/* Shape Selector (Circle / Square) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Shape:</span>
+            <button
+              className={`btn ${(marker.sprayShape || 'circle') === 'circle' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              onClick={() => onUpdate(marker.id, { sprayShape: 'circle' })}
+              title="Circle Spray Decal"
+            >
+              <Circle size={12} /> Circle
+            </button>
+            <button
+              className={`btn ${marker.sprayShape === 'square' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.2rem 0.45rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              onClick={() => onUpdate(marker.id, { sprayShape: 'square' })}
+              title="Square Spray Decal"
+            >
+              <Square size={12} /> Square
+            </button>
+          </div>
+
           <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
           {/* Rotation Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

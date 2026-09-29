@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { Viewport } from './Viewport.js';
 import { measureDistance } from './Ruler.js';
 import { snapToGrid } from './GridRenderer.js';
-import { TRACKPAD_PAN_SENSITIVITY, TRACKPAD_ZOOM_SENSITIVITY, MOUSE_WHEEL_ZOOM_SENSITIVITY } from './CanvasEngine.js';
+import { CanvasEngine, TRACKPAD_PAN_SENSITIVITY, TRACKPAD_ZOOM_SENSITIVITY, MOUSE_WHEEL_ZOOM_SENSITIVITY } from './CanvasEngine.js';
 import {
   getContrastingAccentColor,
   renderClock,
@@ -12,6 +12,7 @@ import {
   sortMarkersByZIndex,
   bringTokenToFront,
   bringMarkerToFront,
+  isPointInMarker,
 } from './PointerSystem.js';
 
 describe('Canvas Engine Utilities', () => {
@@ -538,6 +539,78 @@ describe('Canvas Engine Utilities', () => {
     assert.strictEqual(rotatedAngle, 45, 'Rotates canvas context by marker rotation angle (45°)');
     assert.ok(textRendered.includes('Hazard Warning Zone'), 'Renders decal label pill');
     assert.ok(textRendered.includes('16 ft'), 'Renders diameter measurement');
+  });
+
+  it('renders and hit-tests square spray decals with rotation (OB-169)', () => {
+    const squareSpray: ScreenMarker = {
+      id: 'spray-square-1',
+      type: 'spray' as const,
+      sprayShape: 'square' as const,
+      userId: 'user-1',
+      userName: 'GM',
+      color: '#f59e0b',
+      x: 100,
+      y: 100,
+      radius: 50,
+      rotation: 0,
+      imageUrl: 'hazard',
+      label: 'Blast Pad',
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+
+    let rectCalls: number[][] = [];
+    let textRendered = '';
+    const mockCtx: any = {
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      rect: (x: number, y: number, w: number, h: number) => {
+        rectCalls.push([x, y, w, h]);
+      },
+      strokeRect: () => {},
+      fillRect: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      clip: () => {},
+      fill: () => {},
+      stroke: () => {},
+      setLineDash: () => {},
+      translate: () => {},
+      rotate: () => {},
+      fillText: (text: string) => {
+        textRendered += text;
+      },
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      roundRect: () => {},
+    };
+
+    renderSpray(mockCtx, squareSpray, false, {}, 50, 5);
+    assert.ok(rectCalls.length > 0, 'Uses rect for square decal clipping and bounds');
+    assert.ok(textRendered.includes('□'), 'Renders square symbol in label pill');
+    assert.ok(textRendered.includes('Blast Pad'), 'Renders label');
+
+    // Test square hit-testing with isPointInMarker
+    // Center is inside
+    assert.strictEqual(isPointInMarker({ x: 100, y: 100 }, squareSpray), true);
+    // Inside square boundary (x=140, y=140 is within radius 50: localX=40, localY=40 <= 50)
+    // Note: for a circle, hypot(40, 40) is ~56.57 > 50, so a circle would NOT hit here, but a square DOES hit!
+    assert.strictEqual(isPointInMarker({ x: 140, y: 140 }, squareSpray), true, 'Corner point inside square hits');
+    // Point outside square (x=160, y=100 -> dx=60 > 50)
+    assert.strictEqual(isPointInMarker({ x: 160, y: 100 }, squareSpray), false, 'Point outside square bounds misses');
+
+    // Square with 45 degree rotation
+    const rotatedSquare: ScreenMarker = {
+      ...squareSpray,
+      rotation: 45,
+    };
+    // At 45 deg, point (100, 160) -> distance is 60 along y-axis.
+    // In local space rotated -45 deg: localX = 60 * sin(45) ~ 42.4 <= 50, localY = 60 * cos(45) ~ 42.4 <= 50.
+    // So (100, 160) is INSIDE the rotated square (a diamond tip)!
+    assert.strictEqual(isPointInMarker({ x: 100, y: 160 }, rotatedSquare), true, 'Tip of 45-degree rotated square hits');
   });
 
   it('supports multiple coexisting persistent indicators without replacement across tool switches (OB-164)', () => {

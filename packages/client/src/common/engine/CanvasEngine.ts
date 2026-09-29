@@ -19,6 +19,7 @@ import {
   sortMarkersByZIndex,
   bringTokenToFront,
   bringMarkerToFront,
+  isPointInMarker,
 } from './PointerSystem.js';
 import { drawRuler, measureDistance, RulerMeasurement } from './Ruler.js';
 import { renderSubmap } from './SubmapManager.js';
@@ -95,6 +96,7 @@ export class CanvasEngine {
   draggingMarker: ScreenMarker | null = null;
   draggingMarkerHandle: { marker: ScreenMarker; handle: 'spread' | 'rotate' | 'start' | 'end' } | null = null;
   activeSprayImage?: string;
+  activeSprayShape: 'circle' | 'square' = 'circle';
 
   // Shape drawing state (for markers & fog)
   isDrawing: boolean = false;
@@ -413,15 +415,29 @@ export class CanvasEngine {
       const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
 
       ctx.save();
-      // Outer circular guide
+      // Outer guide (circle or square)
       ctx.beginPath();
-      ctx.arc(x1, y1, radius, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba(color, 0.2);
-      ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 6]);
-      ctx.stroke();
+      if (this.activeSprayShape === 'square') {
+        ctx.save();
+        ctx.translate(x1, y1);
+        ctx.rotate((angle * Math.PI) / 180);
+        ctx.rect(-radius, -radius, radius * 2, radius * 2);
+        ctx.fillStyle = hexToRgba(color, 0.2);
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.arc(x1, y1, radius, 0, Math.PI * 2);
+        ctx.fillStyle = hexToRgba(color, 0.2);
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+      }
 
       // Drag line indicating angle and radius
       ctx.beginPath();
@@ -1416,6 +1432,7 @@ export class CanvasEngine {
           x: x1,
           y: y1,
           radius,
+          sprayShape: this.activeSprayShape || 'circle',
           rotation: Math.round((angle + 360) % 360),
           imageUrl: this.activeSprayImage || undefined,
           mapId: currentMap?.id,
@@ -1545,72 +1562,8 @@ export class CanvasEngine {
     });
     for (let i = candidates.length - 1; i >= 0; i--) {
       const m = candidates[i];
-      const { x: mx, y: my, baseRadius, isAttached } = getMarkerAnchorPosition(m, this.session.tokens, map.gridSize);
-
-      if (m.type === 'circle') {
-        const rad = (m.radius || 50) + (m.anchor === 'edge' && isAttached ? baseRadius : 0);
-        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
-      } else if (m.type === 'rectangle') {
-        const w = m.width || 100;
-        const h = m.height || 100;
-        const minX = Math.min(mx, mx + w);
-        const maxX = Math.max(mx, mx + w);
-        const minY = Math.min(my, my + h);
-        const maxY = Math.max(my, my + h);
-        if (worldPos.x >= minX && worldPos.x <= maxX && worldPos.y >= minY && worldPos.y <= maxY) {
-          return m;
-        }
-      } else if (m.type === 'arrow') {
-        const tx = m.targetX ?? m.x;
-        const ty = m.targetY ?? m.y;
-        if (distToSegment(worldPos, { x: mx, y: my }, { x: tx, y: ty }) <= 20) {
-          return m;
-        }
-      } else if (m.type === 'tether') {
-        let tx = m.targetX ?? m.x;
-        let ty = m.targetY ?? m.y;
-        if (m.tetherTargetId && this.session.tokens[m.tetherTargetId]) {
-          const t2 = this.session.tokens[m.tetherTargetId];
-          const w2 = ((t2.isProp && t2.propWidth !== undefined ? t2.propWidth : t2.size) * map.gridSize) / 2;
-          const h2 = ((t2.isProp && t2.propHeight !== undefined ? t2.propHeight : t2.size) * map.gridSize) / 2;
-          tx = t2.x + w2;
-          ty = t2.y + h2;
-        }
-        if (distToSegment(worldPos, { x: mx, y: my }, { x: tx, y: ty }) <= 16) {
-          return m;
-        }
-      } else if (m.type === 'cone') {
-        const rad = (m.radius || 100) + (m.anchor === 'edge' && isAttached ? baseRadius : 0);
-        const dist = Math.hypot(worldPos.x - mx, worldPos.y - my);
-        if (dist <= 25) return m; // Caster origin
-        const thetaDeg = (Math.atan2(worldPos.y - my, worldPos.x - mx) * 180) / Math.PI;
-        const centerDeg = m.angle ?? 0;
-        const diff = Math.abs(((thetaDeg - centerDeg + 540) % 360) - 180);
-        const halfSpread = (m.spreadAngle ?? 60) / 2;
-        if (diff <= halfSpread) {
-          const diffRad = (diff * Math.PI) / 180;
-          if (dist <= rad || (dist * Math.cos(diffRad) <= rad && dist <= rad * 1.5)) {
-            return m;
-          }
-        }
-      } else if (m.type === 'crosshair') {
-        const rad = Math.max(30, m.radius || 18);
-        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
-      } else if (m.type === 'clock') {
-        const rad = m.radius || 60;
-        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
-      } else if (m.type === 'spray') {
-        const rad = m.radius || 50;
-        if (m.sprayShape === 'square') {
-          const rotRad = ((m.rotation ?? m.angle ?? 0) * Math.PI) / 180;
-          const dx = worldPos.x - mx;
-          const dy = worldPos.y - my;
-          const localX = Math.cos(-rotRad) * dx - Math.sin(-rotRad) * dy;
-          const localY = Math.sin(-rotRad) * dx + Math.cos(-rotRad) * dy;
-          if (Math.abs(localX) <= rad && Math.abs(localY) <= rad) return m;
-        } else {
-          if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
-        }
+      if (isPointInMarker(worldPos, m, this.session.tokens, map.gridSize)) {
+        return m;
       }
     }
     return null;

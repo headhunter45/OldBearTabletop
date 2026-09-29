@@ -308,6 +308,88 @@ export function bringMarkerToFront(
   return [...markers.slice(0, index), ...markers.slice(index + 1), target];
 }
 
+function distToSegment(p: { x: number; y: number }, v: { x: number; y: number }, w: { x: number; y: number }): number {
+  const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+/**
+ * Hit-testing helper for screen markers.
+ */
+export function isPointInMarker(
+  point: { x: number; y: number },
+  marker: ScreenMarker,
+  tokens: Record<string, Token> = {},
+  gridSize: number = 50
+): boolean {
+  const { x: mx, y: my, baseRadius, isAttached } = getMarkerAnchorPosition(marker, tokens, gridSize);
+
+  if (marker.type === 'circle') {
+    const rad = (marker.radius || 50) + (marker.anchor === 'edge' && isAttached ? baseRadius : 0);
+    return Math.hypot(point.x - mx, point.y - my) <= rad;
+  } else if (marker.type === 'rectangle') {
+    const w = marker.width || 100;
+    const h = marker.height || 100;
+    const minX = Math.min(mx, mx + w);
+    const maxX = Math.max(mx, mx + w);
+    const minY = Math.min(my, my + h);
+    const maxY = Math.max(my, my + h);
+    return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
+  } else if (marker.type === 'arrow') {
+    const tx = marker.targetX ?? marker.x;
+    const ty = marker.targetY ?? marker.y;
+    return distToSegment(point, { x: mx, y: my }, { x: tx, y: ty }) <= 20;
+  } else if (marker.type === 'tether') {
+    let tx = marker.targetX ?? marker.x;
+    let ty = marker.targetY ?? marker.y;
+    if (marker.tetherTargetId && tokens[marker.tetherTargetId]) {
+      const t2 = tokens[marker.tetherTargetId];
+      const w2 = ((t2.isProp && t2.propWidth !== undefined ? t2.propWidth : t2.size) * gridSize) / 2;
+      const h2 = ((t2.isProp && t2.propHeight !== undefined ? t2.propHeight : t2.size) * gridSize) / 2;
+      tx = t2.x + w2;
+      ty = t2.y + h2;
+    }
+    return distToSegment(point, { x: mx, y: my }, { x: tx, y: ty }) <= 16;
+  } else if (marker.type === 'cone') {
+    const rad = (marker.radius || 100) + (marker.anchor === 'edge' && isAttached ? baseRadius : 0);
+    const dist = Math.hypot(point.x - mx, point.y - my);
+    if (dist <= 25) return true; // Caster origin
+    const thetaDeg = (Math.atan2(point.y - my, point.x - mx) * 180) / Math.PI;
+    const centerDeg = marker.angle ?? 0;
+    const diff = Math.abs(((thetaDeg - centerDeg + 540) % 360) - 180);
+    const halfSpread = (marker.spreadAngle ?? 60) / 2;
+    if (diff <= halfSpread) {
+      const diffRad = (diff * Math.PI) / 180;
+      if (dist <= rad || (dist * Math.cos(diffRad) <= rad && dist <= rad * 1.5)) {
+        return true;
+      }
+    }
+    return false;
+  } else if (marker.type === 'crosshair') {
+    const rad = Math.max(30, marker.radius || 18);
+    return Math.hypot(point.x - mx, point.y - my) <= rad;
+  } else if (marker.type === 'clock') {
+    const rad = marker.radius || 60;
+    return Math.hypot(point.x - mx, point.y - my) <= rad;
+  } else if (marker.type === 'spray') {
+    const rad = marker.radius || 50;
+    if (marker.sprayShape === 'square') {
+      const rotRad = ((marker.rotation ?? marker.angle ?? 0) * Math.PI) / 180;
+      const dx = point.x - mx;
+      const dy = point.y - my;
+      const localX = Math.cos(-rotRad) * dx - Math.sin(-rotRad) * dy;
+      const localY = Math.sin(-rotRad) * dx + Math.cos(-rotRad) * dy;
+      return Math.abs(localX) <= rad && Math.abs(localY) <= rad;
+    } else {
+      return Math.hypot(point.x - mx, point.y - my) <= rad;
+    }
+  }
+  return false;
+}
+
 export function renderTether(
   ctx: CanvasRenderingContext2D,
   marker: ScreenMarker,
@@ -960,10 +1042,14 @@ function drawStar(
   ctx.stroke();
 }
 
-function renderHazardStripesDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+function renderHazardStripesDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
   ctx.save();
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.clip();
 
   // Dark caution base
@@ -984,18 +1070,26 @@ function renderHazardStripesDecal(ctx: CanvasRenderingContext2D, radius: number,
   }
   ctx.restore();
 
-  // Outer warning border ring
+  // Outer warning border
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.strokeStyle = color || '#f59e0b';
   ctx.lineWidth = Math.max(3, radius * 0.05);
   ctx.stroke();
 }
 
-function renderRadiationDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
-  // Background disk
+function renderRadiationDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
+  // Background disk / square
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.fillStyle = '#1e293b';
   ctx.fill();
   ctx.strokeStyle = color;
@@ -1028,10 +1122,14 @@ function renderRadiationDecal(ctx: CanvasRenderingContext2D, radius: number, col
   ctx.stroke();
 }
 
-function renderBiohazardDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
-  // Background disk
+function renderBiohazardDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
+  // Background disk / square
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.fillStyle = '#111827';
   ctx.fill();
   ctx.strokeStyle = color;
@@ -1068,24 +1166,36 @@ function renderBiohazardDecal(ctx: CanvasRenderingContext2D, radius: number, col
   ctx.fill();
 }
 
-function renderObjectiveDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
-  // Background disc with glass effect
+function renderObjectiveDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
+  // Background base with glass effect
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
   ctx.fill();
 
-  // Outer reticle ring
+  // Outer reticle border
   ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius * 0.9, -radius * 0.9, radius * 1.8, radius * 1.8);
+  } else {
+    ctx.arc(0, 0, radius * 0.9, 0, Math.PI * 2);
+  }
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Inner dashed targeting circle
+  // Inner dashed targeting shape
   ctx.save();
   ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius * 0.65, -radius * 0.65, radius * 1.3, radius * 1.3);
+  } else {
+    ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+  }
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 4]);
@@ -1108,12 +1218,17 @@ function renderObjectiveDecal(ctx: CanvasRenderingContext2D, radius: number, col
   drawStar(ctx, 0, 0, 5, radius * 0.38, radius * 0.18, color);
 }
 
-function renderFireBlastDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+function renderFireBlastDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
   const points = 16;
   ctx.save();
+  if (isSquare) {
+    ctx.beginPath();
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+    ctx.clip();
+  }
   ctx.beginPath();
   for (let i = 0; i < points * 2; i++) {
-    const r = i % 2 === 0 ? radius : radius * 0.62;
+    const r = i % 2 === 0 ? radius * (isSquare ? 1.25 : 1) : radius * 0.62;
     const a = (i * Math.PI) / points;
     const px = Math.cos(a) * r;
     const py = Math.sin(a) * r;
@@ -1133,20 +1248,34 @@ function renderFireBlastDecal(ctx: CanvasRenderingContext2D, radius: number, col
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
+
+  if (isSquare) {
+    ctx.strokeStyle = color || '#dc2626';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(-radius, -radius, radius * 2, radius * 2);
+  }
 }
 
-function renderMagicCircleDecal(ctx: CanvasRenderingContext2D, radius: number, color: string) {
+function renderMagicCircleDecal(ctx: CanvasRenderingContext2D, radius: number, color: string, isSquare = false) {
   ctx.save();
-  // Outer circle
+  // Outer perimeter
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius, -radius, radius * 2, radius * 2);
+  } else {
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  }
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Secondary ring
+  // Secondary ring / border
   ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.88, 0, Math.PI * 2);
+  if (isSquare) {
+    ctx.rect(-radius * 0.88, -radius * 0.88, radius * 1.76, radius * 1.76);
+  } else {
+    ctx.arc(0, 0, radius * 0.88, 0, Math.PI * 2);
+  }
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
   ctx.stroke();
@@ -1159,7 +1288,7 @@ function renderMagicCircleDecal(ctx: CanvasRenderingContext2D, radius: number, c
   ctx.stroke();
 
   // Octagram squares
-  const rSq = radius * 0.88;
+  const rSq = radius * (isSquare ? 0.75 : 0.88);
   for (let offset = 0; offset < 2; offset++) {
     const ang = (offset * Math.PI) / 4;
     ctx.beginPath();
@@ -1197,6 +1326,7 @@ export function renderSpray(
 ) {
   const { x, y } = getMarkerAnchorPosition(marker, tokens, gridSize);
   const radius = marker.radius || 50;
+  const isSquare = marker.sprayShape === 'square';
   const rotationDeg = marker.rotation ?? marker.angle ?? 0;
   const color = marker.color || '#f59e0b';
   const opacity = marker.opacity ?? 0.85;
@@ -1206,11 +1336,16 @@ export function renderSpray(
   ctx.translate(x, y);
   ctx.rotate((rotationDeg * Math.PI) / 180);
 
-  // If selected, draw outline selection ring and rotation handle dot
+  // If selected, draw outline selection ring/box and rotation handle dot
   if (isSelected) {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(0, 0, radius + 6, 0, Math.PI * 2);
+    if (isSquare) {
+      const s = radius + 6;
+      ctx.rect(-s, -s, s * 2, s * 2);
+    } else {
+      ctx.arc(0, 0, radius + 6, 0, Math.PI * 2);
+    }
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 3;
     ctx.setLineDash([6, 6]);
@@ -1245,25 +1380,37 @@ export function renderSpray(
   ctx.globalAlpha = (ctx.globalAlpha || 1) * opacity;
 
   if (customImg) {
-    // Custom user image: draw clipped to circle
+    // Custom user image: draw clipped to circle or square
     ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    if (isSquare) {
+      ctx.rect(-radius, -radius, radius * 2, radius * 2);
+    } else {
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    }
     ctx.clip();
     try {
       ctx.drawImage(customImg, -radius, -radius, radius * 2, radius * 2);
     } catch {
       // Fallback if drawImage fails
     }
-    // Perimeter ring
+    // Perimeter ring or square border
     ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    if (isSquare) {
+      ctx.rect(-radius, -radius, radius * 2, radius * 2);
+    } else {
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    }
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;
     ctx.stroke();
   } else if (!isPreset) {
     // Custom image URL is still loading or invalid
     ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    if (isSquare) {
+      ctx.rect(-radius, -radius, radius * 2, radius * 2);
+    } else {
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    }
     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
     ctx.fill();
     ctx.strokeStyle = color;
@@ -1279,17 +1426,17 @@ export function renderSpray(
     // Built-in presets
     const preset = imgUrl.toLowerCase();
     if (preset === 'hazard' || preset === 'hazard-stripes') {
-      renderHazardStripesDecal(ctx, radius, color);
+      renderHazardStripesDecal(ctx, radius, color, isSquare);
     } else if (preset === 'biohazard') {
-      renderBiohazardDecal(ctx, radius, color);
+      renderBiohazardDecal(ctx, radius, color, isSquare);
     } else if (preset === 'radiation') {
-      renderRadiationDecal(ctx, radius, color);
+      renderRadiationDecal(ctx, radius, color, isSquare);
     } else if (preset === 'objective') {
-      renderObjectiveDecal(ctx, radius, color);
+      renderObjectiveDecal(ctx, radius, color, isSquare);
     } else if (preset === 'fire') {
-      renderFireBlastDecal(ctx, radius, color);
+      renderFireBlastDecal(ctx, radius, color, isSquare);
     } else if (preset === 'magic') {
-      renderMagicCircleDecal(ctx, radius, color);
+      renderMagicCircleDecal(ctx, radius, color, isSquare);
     }
   }
 
@@ -1299,9 +1446,10 @@ export function renderSpray(
   // Label pill at bottom
   if (marker.label || marker.persist || isSelected) {
     const labelPrefix = marker.locked ? '🔒 ' : marker.persist ? '📌 ' : '';
+    const shapeSymbol = isSquare ? '□ ' : '⌀ ';
     const labelText = marker.label
-      ? `${labelPrefix}${marker.label} (⌀ ${diameterFt} ft)`
-      : `${labelPrefix}Spray Decal (⌀ ${diameterFt} ft, ${Math.round((rotationDeg + 360) % 360)}°)`;
+      ? `${labelPrefix}${marker.label} (${shapeSymbol}${diameterFt} ft)`
+      : `${labelPrefix}Spray Decal (${shapeSymbol}${diameterFt} ft, ${Math.round((rotationDeg + 360) % 360)}°)`;
 
     ctx.save();
     ctx.font = 'bold 12px Inter, sans-serif';
