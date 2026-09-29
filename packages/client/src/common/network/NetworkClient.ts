@@ -74,7 +74,12 @@ export class NetworkClient {
     this.ws.onopen = () => {
       console.log('[Network] Connected to signaling server');
       this.notifyStatus('connected');
-      const resolvedPlayerId = playerId || localStorage.getItem('oldbear_player_id') || undefined;
+      let resolvedPlayerId = playerId;
+      if (!resolvedPlayerId && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          resolvedPlayerId = window.localStorage.getItem('oldbear_player_id') || undefined;
+        } catch {}
+      }
       const joinMsg: ClientToServerMessage = {
         type: 'join',
         roomId,
@@ -149,8 +154,10 @@ export class NetworkClient {
       this.session = msg.session;
       this.isGm = msg.isGm;
       this.gmKey = msg.gmKey;
-      if (msg.player?.id) {
-        localStorage.setItem('oldbear_player_id', msg.player.id);
+      if (msg.player?.id && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem('oldbear_player_id', msg.player.id);
+        } catch {}
       }
     } else if (msg.type === 'peer-joined') {
       // Any existing peer in the room connects to newcomer for full mesh

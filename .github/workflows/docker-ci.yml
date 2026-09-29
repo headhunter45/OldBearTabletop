@@ -5,8 +5,13 @@ on:
     branches:
       - main
       - develop
+      - tasks/*
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
   workflow_dispatch:
     inputs:
       registry:
@@ -47,7 +52,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Container Registry (if credentials provided)
-        if: ${{ secrets.REGISTRY_PASSWORD != '' }}
+        if: env.REGISTRY_PASSWORD != ''
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.REGISTRY_URL || 'registry.tomusan.com' }}

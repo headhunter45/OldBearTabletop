@@ -37,36 +37,26 @@ import {
   findDuplicateAsset,
   ASSET_UPDATED_EVENT,
 } from '../storage/db.js';
-import {
-  isTetraCubeMonsterFile,
-  parseTetraCubeMonster,
-  createMonsterToken,
-} from '../utils/monsterParser.js';
-import {
-  getSavedCharacters,
-  saveCharacterToStorage,
-  SavedCharacterRecord,
-} from './CharacterFlyout.js';
+export interface SavedCharacterRecord {
+  id: string;
+  name: string;
+  classes?: string;
+  avatarUrl?: string;
+  charData?: any;
+  savedAt?: number;
+}
 
-function deleteSavedCharacter(id: string, isGm: boolean) {
-  try {
-    const LOCAL_STORAGE_KEY = 'oldbear_saved_characters';
-    const GM_STORAGE_KEY = 'oldbear_gm_saved_characters';
-    const userRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (userRaw) {
-      const list = JSON.parse(userRaw).filter((c: any) => c.id !== id);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
-    }
-    if (isGm) {
-      const gmRaw = localStorage.getItem(GM_STORAGE_KEY);
-      if (gmRaw) {
-        const gmList = JSON.parse(gmRaw).filter((c: any) => c.id !== id);
-        localStorage.setItem(GM_STORAGE_KEY, JSON.stringify(gmList));
-      }
-    }
-  } catch (e) {
-    console.error('Failed to delete character from localStorage:', e);
-  }
+export interface AssetManagerExtensions {
+  characterManagement?: {
+    getCharacters: (isGm: boolean) => SavedCharacterRecord[];
+    deleteCharacter: (id: string, isGm: boolean) => void;
+    saveCharacter: (char: any, isGm: boolean) => void;
+  };
+  monsterManagement?: {
+    isMonsterFile?: (text: string, filename: string) => boolean;
+    parseMonster: (text: string) => { asset: StoredAsset };
+    createMonsterToken: (asset: StoredAsset, mapId: string, x: number, y: number, existingTokens: Token[]) => Token;
+  };
 }
 
 import { MapManagerModal } from './MapManagerModal.js';
@@ -90,6 +80,7 @@ interface DataBackupModalProps {
   onSpawnToken?: (asset: StoredAsset) => void;
   onAddToken?: (token: Token) => void;
   onClose: () => void;
+  extensions?: AssetManagerExtensions;
 }
 
 export type AssetTab = 'tokens' | 'props' | 'monsters' | 'characters' | 'maps' | 'scenes' | 'audio';
@@ -113,6 +104,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
   onSpawnToken,
   onAddToken,
   onClose,
+  extensions,
 }) => {
   const [activeTab, setActiveTab] = useState<AssetTab>(initialTab || 'tokens');
   const [assets, setAssets] = useState<StoredAsset[]>([]);
@@ -178,7 +170,11 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     try {
       const all = await getAllAssets();
       setAssets(all);
-      setSavedCharacters(getSavedCharacters(isGm));
+      if (extensions?.characterManagement) {
+        setSavedCharacters(extensions.characterManagement.getCharacters(isGm));
+      } else {
+        setSavedCharacters([]);
+      }
     } catch (err) {
       console.warn('Failed to load assets:', err);
     }
@@ -199,7 +195,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
         audioPlayerRef.current = null;
       }
     };
-  }, [isGm]);
+  }, [isGm, extensions]);
 
   const handleDeployMonster = (asset: StoredAsset) => {
     if (!onAddToken) return;
@@ -211,7 +207,30 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     const mapId = activeMapId || session?.activeMapId || (session?.maps[0]?.id) || 'map-default';
     const spawnX = 400 + (existingList.length % 5) * 60;
     const spawnY = 400 + (existingList.length % 5) * 60;
-    const newToken = createMonsterToken(asset, mapId, spawnX, spawnY, existingList);
+    const newToken: Token = extensions?.monsterManagement?.createMonsterToken
+      ? extensions.monsterManagement.createMonsterToken(asset, mapId, spawnX, spawnY, existingList)
+      : {
+          id: `token-${crypto.randomUUID()}`,
+          name: asset.name,
+          imageUrl: asset.dataUrl,
+          x: Math.round(spawnX),
+          y: Math.round(spawnY),
+          size: 1,
+          rotation: 0,
+          ringColor: '#ef4444',
+          fillColor: '#7f1d1d',
+          clipCircle: true,
+          clipShape: 'circle',
+          mapId,
+          layer: 'token' as const,
+          currentHp: 20,
+          maxHp: 20,
+          tempHp: 0,
+          speed: 30,
+          conditions: [],
+          isProp: false,
+          initiativeBonus: 0,
+        };
     onAddToken(newToken);
     setResultMessage({
       type: 'success',
@@ -365,33 +384,40 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
       if (file.name.toLowerCase().endsWith('.monster') || (file.name.endsWith('.json') && !file.name.includes('backup'))) {
         try {
           const text = await file.text();
-          if (isTetraCubeMonsterFile(text, file.name)) {
-            const { asset } = parseTetraCubeMonster(text);
-            await saveAsset(asset);
-            await loadAssets();
-            setResultMessage({
-              type: 'success',
-              text: `Saved monster "${asset.name}" to Asset Manager library for encounter prep!`,
-            });
-            continue;
-          } else {
-            // Check for character or monster JSON
+          let handledCustom = false;
+          if (extensions?.monsterManagement) {
+            const isMonster = extensions.monsterManagement.isMonsterFile
+              ? extensions.monsterManagement.isMonsterFile(text, file.name)
+              : file.name.toLowerCase().endsWith('.monster');
+            if (isMonster) {
+              const { asset } = extensions.monsterManagement.parseMonster(text);
+              await saveAsset(asset);
+              await loadAssets();
+              setResultMessage({
+                type: 'success',
+                text: `Saved monster "${asset.name}" to Asset Manager library for encounter prep!`,
+              });
+              handledCustom = true;
+            }
+          }
+          if (!handledCustom && extensions?.characterManagement) {
             try {
               const parsed = JSON.parse(text);
               if (parsed && (parsed.classes || parsed.character || parsed.stats || activeTab === 'characters')) {
                 const char = parsed.character || parsed;
                 if (char && char.name) {
-                  saveCharacterToStorage(char, isGm);
+                  extensions.characterManagement.saveCharacter(char, isGm);
                   await loadAssets();
                   setResultMessage({
                     type: 'success',
                     text: `Imported character "${char.name}" to Asset Manager!`,
                   });
-                  continue;
+                  handledCustom = true;
                 }
               }
             } catch { }
           }
+          if (handledCustom) continue;
         } catch (err) {
           console.warn('Failed parsing JSON file:', err);
         }
@@ -445,15 +471,20 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
       if (file.name.toLowerCase().endsWith('.monster') || (file.name.endsWith('.json') && !file.name.includes('backup'))) {
         try {
           const text = await file.text();
-          if (isTetraCubeMonsterFile(text, file.name)) {
-            const { asset } = parseTetraCubeMonster(text);
-            await saveAsset(asset);
-            await loadAssets();
-            setResultMessage({
-              type: 'success',
-              text: `Saved monster "${asset.name}" to Asset Manager library!`,
-            });
-            continue;
+          if (extensions?.monsterManagement) {
+            const isMonster = extensions.monsterManagement.isMonsterFile
+              ? extensions.monsterManagement.isMonsterFile(text, file.name)
+              : file.name.toLowerCase().endsWith('.monster');
+            if (isMonster) {
+              const { asset } = extensions.monsterManagement.parseMonster(text);
+              await saveAsset(asset);
+              await loadAssets();
+              setResultMessage({
+                type: 'success',
+                text: `Saved monster "${asset.name}" to Asset Manager library!`,
+              });
+              continue;
+            }
           }
         } catch (err: any) {
           setResultMessage({ type: 'error', text: `Failed to import monster: ${err.message}` });
@@ -1111,8 +1142,10 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                           style={{ width: '28px', height: '28px', color: '#f43f5e' }}
                           onClick={() => {
                             if (confirm(`Delete character ${charRecord.name}?`)) {
-                              deleteSavedCharacter(charRecord.id, isGm);
-                              setSavedCharacters(getSavedCharacters(isGm));
+                              if (extensions?.characterManagement) {
+                                extensions.characterManagement.deleteCharacter(charRecord.id, isGm);
+                                setSavedCharacters(extensions.characterManagement.getCharacters(isGm));
+                              }
                             }
                           }}
                           title="Delete Character"

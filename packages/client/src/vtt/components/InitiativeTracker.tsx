@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { InitiativeState, InitiativeItem, Token, Player, DiceRollResult, ChatMessage } from '@oldbear/shared';
 import { Swords, Plus, ChevronRight, ChevronLeft, ArrowUpDown, Trash2, X, Dices, HelpCircle, ChevronDown, GripVertical, Pencil, Check } from 'lucide-react';
-import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 
 interface InitiativeTrackerProps {
   initiative: InitiativeState;

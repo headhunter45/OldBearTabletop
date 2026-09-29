@@ -15,11 +15,6 @@ import { GameMap, Token } from '@oldbear/shared';
 import { saveAsset, StoredAsset } from '../storage/db.js';
 import { importAllData } from '../storage/BackupManager.js';
 import { TOAST_DURATION_MS } from '../config/toast.js';
-import {
-  isTetraCubeMonsterFile,
-  parseTetraCubeMonster,
-  createMonsterToken,
-} from '../utils/monsterParser.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -43,6 +38,19 @@ interface GlobalDropOverlayProps {
   onAddMap: (map: GameMap) => void;
   onAddToken: (token: Token) => void;
   onDataRestored?: () => void;
+  onCreateMonsterToken?: (
+    asset: any,
+    activeMapId: string,
+    x: number,
+    y: number,
+    existingList: Token[]
+  ) => Token;
+  onDropCustomFile?: (
+    file: File,
+    text: string,
+    worldPos: { x: number; y: number },
+    existingList: Token[]
+  ) => Promise<boolean> | boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,6 +79,8 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
   onAddMap,
   onAddToken,
   onDataRestored,
+  onCreateMonsterToken,
+  onDropCustomFile,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PendingImageEntry[] | null>(null);
@@ -163,7 +173,30 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
                 locked: asset.locked,
               };
             } else if (asset.type === 'monster' || asset.monsterData) {
-              newToken = createMonsterToken(asset, activeMapId, worldPos.x, worldPos.y, existingList);
+              newToken = onCreateMonsterToken
+                ? onCreateMonsterToken(asset, activeMapId, worldPos.x, worldPos.y, existingList)
+                : {
+                    id: `token-${crypto.randomUUID()}`,
+                    name: asset.name || 'Monster',
+                    mapId: activeMapId,
+                    x: worldPos.x,
+                    y: worldPos.y,
+                    size: asset.size || 1,
+                    rotation: 0,
+                    imageUrl: asset.dataUrl || '',
+                    ringColor: '#ef4444',
+                    fillColor: '#7f1d1d',
+                    clipCircle: true,
+                    clipShape: 'circle',
+                    currentHp: asset.hp || 20,
+                    maxHp: asset.maxHp || asset.hp || 20,
+                    tempHp: 0,
+                    conditions: [],
+                    speed: asset.speed || 30,
+                    elevation: 0,
+                    isProp: false,
+                    layer: 'token',
+                  };
             } else if (asset.type === 'character' && asset.character) {
               const char = asset.character;
               newToken = {
@@ -227,49 +260,37 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
       const files = Array.from(e.dataTransfer.files);
       setDropPosition({ x: mouseX, y: mouseY });
 
-      // 1. TetraCube .monster files (Bug #73)
-      const monsterFiles = files.filter((f) => f.name.toLowerCase().endsWith('.monster'));
-      if (monsterFiles.length > 0) {
-        for (let i = 0; i < monsterFiles.length; i++) {
-          const file = monsterFiles[i];
-          try {
-            const text = await file.text();
-            const { asset } = parseTetraCubeMonster(text);
-            await saveAsset(asset);
-            const offset = i * gridSize;
-            const newToken = createMonsterToken(
-              asset,
-              activeMapId,
-              worldPos.x + offset,
-              worldPos.y,
-              existingList
-            );
-            onAddToken(newToken);
-            existingList.push(newToken);
-            showToast(`Spawned "${newToken.name}" on battlemap & saved to Asset Manager!`);
-          } catch (err: any) {
-            showToast(`Error importing monster: ${err.message}`);
+      // 1. Custom / Domain specific file handling (e.g. .monster in VTT or .rosz in Brawl)
+      if (onDropCustomFile) {
+        let customHandled = false;
+        for (const file of files) {
+          if (
+            file.name.toLowerCase().endsWith('.monster') ||
+            file.name.toLowerCase().endsWith('.json') ||
+            file.name.toLowerCase().endsWith('.rosz')
+          ) {
+            try {
+              const text = await file.text();
+              const handled = await onDropCustomFile(file, text, worldPos, existingList);
+              if (handled) {
+                customHandled = true;
+              }
+            } catch {
+              // Proceed to next handler
+            }
           }
         }
-        return;
+        if (customHandled) {
+          return;
+        }
       }
 
-      // 2. JSON files (Backups or Monster JSON)
+      // 2. JSON files (Backups)
       const jsonFiles = files.filter((f) => f.name.endsWith('.json'));
       if (jsonFiles.length > 0) {
         for (const jsonFile of jsonFiles) {
           try {
             const text = await jsonFile.text();
-            if (isTetraCubeMonsterFile(text, jsonFile.name)) {
-              const { asset } = parseTetraCubeMonster(text);
-              await saveAsset(asset);
-              const newToken = createMonsterToken(asset, activeMapId, worldPos.x, worldPos.y, existingList);
-              onAddToken(newToken);
-              existingList.push(newToken);
-              showToast(`Spawned "${newToken.name}" on battlemap & saved to Asset Manager!`);
-              return;
-            }
-
             const res = await importAllData(text);
             showToast(`Restored backup with ${res.assetCount} asset(s)!`);
             onDataRestored?.();
