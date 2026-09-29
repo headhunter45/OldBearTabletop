@@ -517,20 +517,24 @@ npm run dev -w @oldbear/client
 
 ---
 
-### Full Data Backup & Browser Migration
+### Full Data Backup & Universal `.binder` Pipeline
 To switch computers or browsers without losing maps, audio, tokens, or characters:
 1. Click the **Database** icon in the top bar (or "Backup & Transfer Data" in the mobile drawer).
-2. Click **Export to File** to download `oldbear-rodeo-backup-YYYY-MM-DD.json`.
-3. On your new computer or browser, open Old Bear Rodeo, click **Import from File**, and select your `.json` backup file (or simply drag and drop the backup `.json` file onto the window).
-4. All maps, tokens, custom sound tracks, characters, and session state are instantly restored into IndexedDB and LocalStorage!
+2. **Export Universal `.binder` File**: Click **"Export .binder File"** to export an open, cross-platform tabletop collection document (`.binder`) conforming to the schema draft (`https://schemas.ttrpgwith.me/v1/binder.json`).
+   - Includes private application state in `_oldbear.vtt` (scenes, tokens, custom statuses, audio, fog) and `_oldbear.brawl` (army rosters, units, points).
+   - Generates third-party compatible card collections (`collections`) so tools like MonsterCards can read tokens and statblocks without losing application metadata.
+   - User-Generated Content (UGC): Fully user-owned and free of hardcoded copyrighted material.
+3. **Export Standard JSON**: Click **"Export JSON Backup"** to download a standard `oldbear-rodeo-backup-YYYY-MM-DD.json` file.
+4. **Importing**: Select any `.binder` or `.json` file via **"Import .binder / JSON"** (or simply drag and drop the `.binder` or `.json` file onto the window). All scenes, tokens, sound tracks, characters, and rosters are restored automatically!
 
 ---
 
 ### Global Drag and Drop
 You can drag and drop files from your desktop directly onto the Old Bear Rodeo window at any time:
+- **Universal `.binder` Files (`.binder`)**: Restores tabletop campaign state, tokens, scenes, and rosters immediately.
 - **Images (`.png`, `.jpg`, `.webp`)**: GMs are prompted to add them either as Creature Tokens or as Battlemaps; players have them added as Tokens at the drop position.
 - **Audio (`.mp3`, `.wav`, `.ogg`)**: Added directly to the Soundboard library.
-- **JSON (`.json`)**: Recognized as an Old Bear Rodeo backup and restored immediately.
+- **JSON (`.json`)**: Recognized as an Old Bear Rodeo backup or character/monster export and restored immediately.
 
 ---
 

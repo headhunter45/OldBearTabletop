@@ -34,6 +34,7 @@ import {
   drawRandomTile,
   createModularTileToken,
 } from '../engine/ModularTileManager.js';
+import { exportToBinderBlob, downloadBinderFile } from '../storage/BinderPipeline.js';
 import {
   StoredAsset,
   getAllAssets,
@@ -658,11 +659,31 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     }
   };
 
-  const handleProcessFile = async (file: File) => {
-    if (!file.name.endsWith('.json')) {
+  const handleExportBinder = async () => {
+    setExporting(true);
+    setResultMessage(null);
+    try {
+      const blob = await exportToBinderBlob({ session });
+      downloadBinderFile(blob);
+      setResultMessage({
+        type: 'success',
+        text: 'Universal .binder interchange file successfully exported and downloaded!',
+      });
+    } catch (err: any) {
       setResultMessage({
         type: 'error',
-        text: 'Please select a valid .json Old Bear Rodeo backup file.',
+        text: `.binder export failed: ${err.message || 'Unknown error'}`,
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleProcessFile = async (file: File) => {
+    if (!file.name.endsWith('.json') && !file.name.endsWith('.binder')) {
+      setResultMessage({
+        type: 'error',
+        text: 'Please select a valid .binder or .json Old Bear Rodeo backup file.',
       });
       return;
     }
@@ -673,10 +694,11 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     try {
       const text = await file.text();
       const result = await importAllData(text);
+      const isBinder = file.name.endsWith('.binder') || text.includes('schemaVersion');
 
       setResultMessage({
         type: 'success',
-        text: `Import complete! Restored ${result.assetCount} asset(s) and character data.`,
+        text: `Import complete! Restored ${result.assetCount} asset(s) and character data from ${isBinder ? '.binder collection' : 'backup'}.`,
       });
       await loadAssets();
 
@@ -1781,30 +1803,51 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
             <button
               className="btn btn-primary"
-              style={{ padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+              style={{
+                padding: '0.65rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                fontSize: '0.82rem',
+                backgroundColor: '#0284c7',
+              }}
               disabled={exporting}
-              onClick={handleExport}
+              onClick={handleExportBinder}
+              title="Export campaign, assets, and rosters to universal .binder interchange file"
             >
               {exporting ? <RefreshCw size={15} className="animate-spin" /> : <Download size={15} />}
-              {exporting ? 'Exporting...' : 'Export All Data to File'}
+              {exporting ? 'Exporting...' : 'Export .binder File'}
             </button>
 
             <button
               className="btn btn-secondary"
-              style={{ padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+              style={{ padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.82rem' }}
+              disabled={exporting}
+              onClick={handleExport}
+              title="Export complete session and local assets to standard JSON backup"
+            >
+              {exporting ? <RefreshCw size={15} className="animate-spin" /> : <Download size={15} />}
+              {exporting ? 'Exporting...' : 'Export JSON Backup'}
+            </button>
+
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.82rem' }}
               disabled={importing}
               onClick={() => fileInputRef.current?.click()}
+              title="Import from .binder or .json backup file"
             >
               {importing ? <RefreshCw size={15} className="animate-spin" /> : <Upload size={15} />}
-              {importing ? 'Importing...' : 'Import Data from File'}
+              {importing ? 'Importing...' : 'Import .binder / JSON'}
             </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json"
+              accept=".json,.binder"
               style={{ display: 'none' }}
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {

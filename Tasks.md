@@ -135,7 +135,7 @@
 | OB-132 | Done    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
 | OB-133 | Done    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
 | OB-134 | Done    | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
-| OB-135 | Ready   | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
+| OB-135 | Done    | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
 | OB-136 | Done    | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
 | OB-137 | Backlog | [Mobile Touch Hit-Box & Finger Offset Calibration](#ob-137---mobile-touch-hit-box--finger-offset-calibration)                                                                  |
 | OB-138 | Backlog | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                |
@@ -460,7 +460,7 @@ Deploy custom image decals, objective markers, and hazard overlays:
 
 ## OB-135 - Universal `.binder` Export/Import Pipeline
 
-**Status:** Pending  
+**Status:** Done  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

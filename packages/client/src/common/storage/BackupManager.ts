@@ -1,5 +1,6 @@
 import { getDB, StoredAsset } from './db.js';
 import { GameSession } from '@oldbear/shared';
+import { isBinderData, importBinderData } from './BinderPipeline.js';
 
 export interface BackupPayload {
   app: 'OldBearRodeo';
@@ -54,10 +55,27 @@ export function downloadBackupFile(blob: Blob, customName?: string) {
 export async function importAllData(
   jsonString: string
 ): Promise<{ assetCount: number; charCount: number; session?: GameSession | null }> {
-  const data = JSON.parse(jsonString) as BackupPayload;
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonString);
+  } catch (err: any) {
+    throw new Error(`Failed to parse backup or .binder file: ${err.message}`);
+  }
+
+  // Check if this is a .binder interchange document
+  if (isBinderData(parsed)) {
+    const binderResult = await importBinderData(parsed);
+    return {
+      assetCount: binderResult.assetCount,
+      charCount: binderResult.charCount,
+      session: binderResult.session,
+    };
+  }
+
+  const data = parsed as BackupPayload;
 
   if (data.app !== 'OldBearRodeo' || !Array.isArray(data.assets)) {
-    throw new Error('Invalid backup file: Not a recognized OldBearRodeo backup.');
+    throw new Error('Invalid backup file: Not a recognized OldBearRodeo backup or .binder file.');
   }
 
   // Restore IndexedDB assets

@@ -292,6 +292,7 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
         for (const file of files) {
           if (
             file.name.toLowerCase().endsWith('.monster') ||
+            file.name.toLowerCase().endsWith('.binder') ||
             file.name.toLowerCase().endsWith('.json') ||
             file.name.toLowerCase().endsWith('.rosz')
           ) {
@@ -311,18 +312,19 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
         }
       }
 
-      // 2. JSON files (Backups)
-      const jsonFiles = files.filter((f) => f.name.endsWith('.json'));
-      if (jsonFiles.length > 0) {
-        for (const jsonFile of jsonFiles) {
+      // 2. .binder and JSON files (Backups & Universal Interchange)
+      const dataFiles = files.filter((f) => f.name.endsWith('.json') || f.name.endsWith('.binder'));
+      if (dataFiles.length > 0) {
+        for (const dataFile of dataFiles) {
           try {
-            const text = await jsonFile.text();
+            const text = await dataFile.text();
             const res = await importAllData(text);
-            showToast(`Restored backup with ${res.assetCount} asset(s)!`);
+            const isBinder = dataFile.name.endsWith('.binder') || text.includes('schemaVersion');
+            showToast(`Restored ${isBinder ? '.binder collection' : 'backup'} with ${res.assetCount} asset(s)!`);
             onDataRestored?.();
             return;
           } catch (err: any) {
-            showToast(`Backup error: ${err.message}`);
+            showToast(`Import error: ${err.message}`);
           }
         }
         return;
