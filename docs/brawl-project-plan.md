@@ -169,7 +169,7 @@ Custom dice rolls are tied directly to action buttons on models, units, and toke
   *Rolls 40 dice, displays raw values, adds 3 to the total.*
 - **Grouped Modified Roll**: `/roll 40(d6+3)`  
   *Rolls 40 individual d6s, applies +3 to every single die, displays all 40 values, and calculates grand total (`sum(raw rolls) + 3*40`).*
-- **Threshold Success / Failure Counting**: `/roll 10(d6+2 >= 5)` or `/roll 10(d6+2)/5`  
+- **Threshold Success / Failure Counting**: `/roll 10(d6+2 >= 5)`  
   *Evaluates the boolean condition per die and reports total successes and failures.*
 - **Botch / Glitch Support (Shadowrun / Vampire)**:  
   *Flags 1s as botches/glitches and outputs net successes, total successes, and glitch warnings.*

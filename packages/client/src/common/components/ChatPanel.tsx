@@ -230,12 +230,12 @@ export function processSlashCommand(
         const advArg = args[1]?.toLowerCase();
         const advMode = advArg === 'adv' || advArg === 'advantage' ? 'advantage' : advArg === 'dis' || advArg === 'disadvantage' ? 'disadvantage' : 'normal';
 
-        // Advanced dice expression: e.g. 40(d6+3), 10(d6+2 >= 5), 10(d6+2)/5 (OB-133)
+        // Advanced dice expression: e.g. 40(d6+3), 10(d6+2 >= 5) (OB-133, OB-171)
         if (isAdvancedDiceExpression(expr)) {
           const advResult = parseAndRollAdvanced(expr);
           if (!advResult) {
             sendPrivateSystemMessage(
-              `Invalid advanced roll syntax: "${expr}". Examples:\n• \`/roll 40(d6+3)\`\n• \`/roll 10(d6+2 >= 5)\`\n• \`/roll 10(d6+2)/5\``,
+              `Invalid advanced roll syntax: "${expr}". Examples:\n• \`/roll 40(d6+3)\`\n• \`/roll 10(d6+2 >= 5)\``,
               'System',
               '#f43f5e'
             );

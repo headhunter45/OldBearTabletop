@@ -10,8 +10,10 @@ describe('Advanced Dice Expression Engine (OB-133)', () => {
   it('detects advanced grouped and threshold expressions correctly', () => {
     assert.strictEqual(isAdvancedDiceExpression('40(d6+3)'), true);
     assert.strictEqual(isAdvancedDiceExpression('10(d6+2 >= 5)'), true);
-    assert.strictEqual(isAdvancedDiceExpression('10(d6+2)/5'), true);
     assert.strictEqual(isAdvancedDiceExpression('8(d10 >= 7)'), true);
+    // Slash threshold syntax is invalid (OB-171)
+    assert.strictEqual(isAdvancedDiceExpression('10(d6+2)/5'), false);
+    assert.strictEqual(isAdvancedDiceExpression('5(d6+2)/4'), false);
     assert.strictEqual(isAdvancedDiceExpression('1d20+5'), false);
     assert.strictEqual(isAdvancedDiceExpression('3d6'), false);
   });
@@ -57,14 +59,10 @@ describe('Advanced Dice Expression Engine (OB-133)', () => {
     assert.ok(preview.includes('✅') && preview.includes('❌'));
   });
 
-  it('supports slash threshold shorthand: 10(d6+2)/5', () => {
-    const mockRandom = () => 0.5; // raw 4 + 2 = 6 >= 5 (all successes)
-    const res = parseAndRollAdvanced('10(d6+2)/5', mockRandom);
-
-    assert.ok(res);
-    assert.deepStrictEqual(res.threshold, { operator: '>=', target: 5 });
-    assert.strictEqual(res.successCount, 10);
-    assert.strictEqual(res.failureCount, 0);
+  it('rejects slash threshold syntax as invalid syntax (OB-171)', () => {
+    assert.strictEqual(parseAndRollAdvanced('10(d6+2)/5'), null);
+    assert.strictEqual(parseAndRollAdvanced('5(d6+2)/4'), null);
+    assert.strictEqual(isAdvancedDiceExpression('5(d6+2)/4'), false);
   });
 
   it('tracks botches and glitches in dice pools', () => {

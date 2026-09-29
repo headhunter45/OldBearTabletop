@@ -1,9 +1,9 @@
 /**
- * Advanced Dice Expression Engine & Action-Tied Roll Parser (OB-133)
+ * Advanced Dice Expression Engine & Action-Tied Roll Parser (OB-133, OB-171)
  *
  * Supports:
  * - Grouped modified rolls: 40(d6+3)
- * - Threshold success/failure counting: 10(d6+2 >= 5) or 10(d6+2)/5
+ * - Threshold success/failure counting: 10(d6+2 >= 5)
  * - Dice pool botch & glitch tracking (Shadowrun / World of Darkness style)
  */
 
@@ -47,7 +47,7 @@ export interface AdvancedRollResult {
 export function isAdvancedDiceExpression(expr: string): boolean {
   if (!expr) return false;
   const clean = expr.trim();
-  return /^\d+\s*\(.+\)/.test(clean) || /\/\d+$/.test(clean);
+  return /^\d+\s*\(.+\)$/.test(clean);
 }
 
 /**
@@ -79,7 +79,6 @@ export function evaluateThreshold(
  * Parses and executes an advanced dice expression:
  * - 40(d6+3)
  * - 10(d6+2 >= 5)
- * - 10(d6+2)/5
  * - 8(d10 >= 7)
  */
 export function parseAndRollAdvanced(
@@ -89,10 +88,11 @@ export function parseAndRollAdvanced(
   if (!expr) return null;
   const raw = expr.trim();
 
-  // Pattern 1: N( <inner> ) [ /Target ]
-  // e.g. 40(d6+3) or 10(d6+2 >= 5) or 10(d6+2)/5
+  // Pattern: N( <inner> )
+  // e.g. 40(d6+3) or 10(d6+2 >= 5)
+  // (OB-171: /roll 5(d6+2)/4 slash threshold syntax is invalid)
   const groupedMatch = raw.match(
-    /^(\d+)\s*\(\s*(\d*)d(\d+)\s*(?:([+-])\s*(\d+))?\s*(?:(>=|>|<=|<|==|=)\s*(\d+))?\s*\)(?:\s*\/\s*(\d+))?$/i
+    /^(\d+)\s*\(\s*(\d*)d(\d+)\s*(?:([+-])\s*(\d+))?\s*(?:(>=|>|<=|<|==|=)\s*(\d+))?\s*\)$/i
   );
 
   if (!groupedMatch) {
@@ -117,12 +117,6 @@ export function parseAndRollAdvanced(
     threshold = {
       operator: groupedMatch[6] as ThresholdOperator,
       target: parseInt(groupedMatch[7], 10),
-    };
-  } else if (groupedMatch[8]) {
-    // Slash threshold syntax: e.g. /5 -> >= 5
-    threshold = {
-      operator: '>=',
-      target: parseInt(groupedMatch[8], 10),
     };
   }
 
