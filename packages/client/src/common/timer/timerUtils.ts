@@ -89,6 +89,14 @@ export function formatTimer(seconds: number): string {
 }
 
 /**
+ * Formats completion announcement text for chat and toasts (OB-175).
+ */
+export function formatTimerCompletionText(label?: string): string {
+  const safeLabel = label?.trim() || 'Round Timer';
+  return `⏰ Timer "${safeLabel}" completed!`;
+}
+
+/**
  * Synthesizes a gentle two-tone completion chime using Web Audio API.
  */
 export function playTimerChime(): void {

@@ -63,6 +63,7 @@ import { MarkerControls } from '../common/components/MarkerControls.js';
 import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
 import { resolveStatusDefinitions, processTurnTransition } from '../common/status/StatusManager.js';
 import { TimerHUD } from '../common/components/TimerHUD.js';
+import { formatTimerCompletionText } from '../common/timer/timerUtils.js';
 import { ProgressClockModal } from '../common/components/ProgressClockModal.js';
 
 export const AppVtt: React.FC = () => {
@@ -1957,7 +1958,21 @@ export const AppVtt: React.FC = () => {
         isOpen={isTimerOpen}
         onClose={() => setIsTimerOpen(false)}
         onComplete={() => {
-          showToast(`⏰ Timer "${timerLabel}" completed!`);
+          const text = formatTimerCompletionText(timerLabel);
+          showToast(text);
+          const timerMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            senderId: 'system',
+            senderName: 'Timer',
+            senderColor: '#f59e0b',
+            text: text,
+            timestamp: Date.now(),
+          };
+          networkRef.current?.send({ type: 'chat-send', message: timerMsg });
+          setChatMessages((prev) => [...prev, timerMsg]);
+          if (!isChatOpen) {
+            setUnreadChatCount((c) => c + 1);
+          }
         }}
       />
 

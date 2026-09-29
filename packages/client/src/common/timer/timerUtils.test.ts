@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseTimerDuration, formatTimer } from './timerUtils.js';
+import { parseTimerDuration, formatTimer, formatTimerCompletionText } from './timerUtils.js';
 
-describe('Round Timers Parser & Formatter (OB-132)', () => {
+describe('Round Timers Parser & Formatter (OB-132, OB-175)', () => {
   it('parses minutes and decimals correctly', () => {
     assert.strictEqual(parseTimerDuration('10 min'), 600);
     assert.strictEqual(parseTimerDuration('10m'), 600);
@@ -44,5 +44,11 @@ describe('Round Timers Parser & Formatter (OB-132)', () => {
     assert.strictEqual(formatTimer(90), '01:30');
     assert.strictEqual(formatTimer(600), '10:00');
     assert.strictEqual(formatTimer(3665), '1:01:05');
+  });
+
+  it('formats timer expiration chat announcement (OB-175)', () => {
+    assert.strictEqual(formatTimerCompletionText('Dragon Breath'), '⏰ Timer "Dragon Breath" completed!');
+    assert.strictEqual(formatTimerCompletionText(''), '⏰ Timer "Round Timer" completed!');
+    assert.strictEqual(formatTimerCompletionText(undefined), '⏰ Timer "Round Timer" completed!');
   });
 });
