@@ -1,157 +1,157 @@
 # Tasks
 
-| ID     | Status   | Title                                                                                                                                                                          |
-| :----- | :------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OB-001 | Complete | In voice and audio settings the 4th button for streaming is mostly off screen                                                                                                  |
-| OB-002 | Complete | When adding a new token to the board try to not put it on top of an existing one                                                                                               |
-| OB-003 | Complete | When uploading files allow selecting multiple files at once                                                                                                                    |
-| OB-004 | Complete | When uploading files allow drag and drop onto the window                                                                                                                       |
-| OB-005 | Complete | Fix map upload trigger                                                                                                                                                         |
-| OB-006 | Complete | Carry over image when syncing D&D Beyond with a token                                                                                                                          |
-| OB-007 | Complete | Save user characters in player and GM local storage during D&D Beyond import                                                                                                   |
-| OB-008 | Complete | Show ability score modifier large and score small                                                                                                                              |
-| OB-009 | Complete | Add trained and expertise skills to character sheet                                                                                                                            |
-| OB-010 | Complete | Add proficiency bonus to character sheet                                                                                                                                       |
-| OB-011 | Complete | Add export/import option for all data (characters, uploaded files, maps, tokens)                                                                                               |
-| OB-012 | Complete | Fix initiative tracker button                                                                                                                                                  |
-| OB-013 | Complete | Fix dice roller button                                                                                                                                                         |
-| OB-014 | Complete | Configure available UI colors in source code                                                                                                                                   |
-| OB-015 | Complete | Allow GM to add sounds to the soundboard                                                                                                                                       |
-| OB-016 | Complete | Duplicate selected token                                                                                                                                                       |
-| OB-017 | Complete | Allow assigning a player control over multiple tokens                                                                                                                          |
-| OB-018 | Complete | Make token preview icon square on bottom interaction bar                                                                                                                       |
-| OB-019 | Complete | Cycle selection through overlapping tokens on click/tap                                                                                                                        |
-| OB-020 | Complete | Specify map dimensions in tiles or tile pixel size and grid offset on import                                                                                                   |
-| OB-021 | Complete | Render configurable grid on top of map but under tokens                                                                                                                        |
-| OB-022 | Complete | Animate mic and headphone icons in top bar when sending or receiving audio                                                                                                     |
-| OB-023 | Complete | Fix "Send Players" on map to properly direct player view                                                                                                                       |
-| OB-024 | Complete | Make map edit component a modal or positioned non-obstructively                                                                                                                |
-| OB-025 | Complete | Fix grid size input backspace behavior and auto-select text on focus                                                                                                           |
-| OB-026 | Complete | Restructure map settings layout into two clean columns                                                                                                                         |
-| OB-027 | Complete | Remove redundant "Back to Maps List" button in modal context                                                                                                                   |
-| OB-028 | Complete | Add map deletion and map renaming                                                                                                                                              |
-| OB-029 | Complete | Separate maps from scenes to allow sharing maps across multiple scenes                                                                                                         |
-| OB-030 | Complete | Asset manager listing tokens, maps, and sounds with hash deduplication                                                                                                         |
-| OB-031 | Complete | Asset manager UI grouping with previews, bulk delete, and rename                                                                                                               |
-| OB-032 | Complete | Token image selection prompt when adding token with + button                                                                                                                   |
-| OB-033 | Complete | Token asset settings: border shape and clip/zoom/pan controls                                                                                                                  |
-| OB-034 | Complete | Map background color picker for imageless grids and outer canvas                                                                                                               |
-| OB-035 | Complete | Fix hex grid snapping alignment                                                                                                                                                |
-| OB-036 | Complete | Quick control to cover entire map in fog                                                                                                                                       |
-| OB-037 | Complete | Fog persistence fix and transparent fog rendering in GM view                                                                                                                   |
-| OB-038 | Complete | Fix trackpad pinch-to-zoom vs two-finger scroll on mobile and desktop                                                                                                          |
-| OB-039 | Complete | Keyboard shortcuts for highlights (1-5), pan (h), select (s), fog (f), reveal (r), duplicate (d)                                                                               |
-| OB-040 | Complete | Bulk move group of tokens to another map                                                                                                                                       |
-| OB-041 | Complete | Spawn synced D&D Beyond token off map edge and update selected token                                                                                                           |
-| OB-042 | Complete | Pre-create claimable player tokens when player joins                                                                                                                           |
-| OB-043 | Complete | Animated roll announcement toast with player name, formula, and result                                                                                                         |
-| OB-044 | Complete | Remember previously used characters in local storage for quick selection                                                                                                       |
-| OB-045 | Complete | Chat command system (/roll, /attack, /skill, /spell with adv/dis)                                                                                                              |
-| OB-046 | Complete | Move client, server, and nginx ports to .env and .env.example                                                                                                                  |
-| OB-047 | Complete | Default mic to muted and defer permission request until unmuted                                                                                                                |
-| OB-048 | Complete | [Syllable-based fantasy name generator](#ob-048---syllable-based-fantasy-name-generator)                                                                                       |
-| OB-049 | Complete | Default GM user name to "GM" instead of "Adventurer"                                                                                                                           |
-| OB-050 | Complete | [D&D Beyond attacks and actions import parsing](#ob-050---dnd-beyond-attacks-and-actions-import-parsing)                                                                       |
-| OB-051 | Complete | Import and display initiative bonus, saving throws, passive perception, currency                                                                                               |
-| OB-052 | Complete | Automatically apply character initiative bonus in initiative tracker rolls                                                                                                     |
-| OB-053 | Complete | Allow GM to manually set initiative scores in tracker                                                                                                                          |
-| OB-054 | Complete | Ephemeral /help and parameter validation for /attack, /spell, and /skill                                                                                                       |
-| OB-055 | Complete | Support token index parameter in /sync command                                                                                                                                 |
-| OB-056 | Complete | Add /tokens command listing controllable tokens and their indices                                                                                                              |
-| OB-057 | Complete | Move hamburger menu to far left of top bar                                                                                                                                     |
-| OB-058 | Complete | Consolidate fog controls into submenu under single fog button                                                                                                                  |
-| OB-059 | Complete | Consolidate highlights and pointers into submenu under single button                                                                                                           |
-| OB-060 | Complete | Rebind select tool to 's' key                                                                                                                                                  |
-| OB-061 | Complete | Rebind hand/grab tool to 'g' key                                                                                                                                               |
-| OB-062 | Complete | Add box select tool below hand tool bound to 'b' key                                                                                                                           |
-| OB-063 | Complete | Fix chat bubble text color and remove bottom-left chat capsule                                                                                                                 |
-| OB-064 | Complete | Auto-dismiss full-map fog notification toasts                                                                                                                                  |
-| OB-065 | Complete | Adaptive top and left toolbars for mobile and narrow screens                                                                                                                   |
-| OB-066 | Complete | Draggable non-modal windows with animated minimize chevrons                                                                                                                    |
-| OB-067 | Complete | Drag to reorder initiative tracker rows and inline score editing                                                                                                               |
-| OB-068 | Complete | Per-user scrollable roll history in dice roller window                                                                                                                         |
-| OB-069 | Complete | Configurable toast display duration in .env                                                                                                                                    |
-| OB-070 | Complete | Create scene directly from map card in Asset Manager                                                                                                                           |
-| OB-071 | Complete | Highlight bonus actions and reactions in attacks list                                                                                                                          |
-| OB-072 | Complete | Interactive zoom, crop, and pan preview for token avatars                                                                                                                      |
-| OB-073 | Complete | [TetraCube .monster import with dual-drop support](#ob-073---tetracube-monster-import-with-dual-drop-support)                                                                  |
-| OB-074 | Complete | [Multi-file drag-and-drop batch asset import dialog](#ob-074---multi-file-drag-and-drop-batch-asset-import-dialog)                                                             |
-| OB-075 | Complete | Immediate player nickname update in top bar icons on change                                                                                                                    |
-| OB-076 | Complete | Nickname persistence in player settings                                                                                                                                        |
-| OB-077 | Complete | Animate hamburger menu slide-in from the left                                                                                                                                  |
-| OB-078 | Complete | Multi-token box select for bulk movement, assignment, and duplication                                                                                                          |
-| OB-079 | Complete | Inline initiative score editing in tracker row                                                                                                                                 |
-| OB-080 | Complete | Persist reordered initiative tracker rows                                                                                                                                      |
-| OB-081 | Complete | Pan/focus canvas on token click in initiative tracker                                                                                                                          |
-| OB-082 | Complete | Fix minimized initiative tracker window clipping                                                                                                                               |
-| OB-083 | Complete | Record chat command rolls in dice roller history                                                                                                                               |
-| OB-084 | Complete | Prevent duplicate player connection entries on page refresh                                                                                                                    |
-| OB-085 | Complete | Fix submenu flyout visibility for selection and fog tools                                                                                                                      |
-| OB-086 | Complete | Combine grid tools into single flyout (snap toggle and show/hide icons)                                                                                                        |
-| OB-087 | Complete | Remove standalone sound icons from top bar                                                                                                                                     |
-| OB-088 | Complete | Move toggle chat button into left menu toolbar                                                                                                                                 |
-| OB-089 | Complete | Reorganize tools and audio controls in hamburger menu                                                                                                                          |
-| OB-090 | Complete | Prefill D&D Beyond sync URL when character ID is known                                                                                                                         |
-| OB-091 | Complete | Index-based selection for /spell, /skill, /attack, /item suggestions                                                                                                           |
-| OB-092 | Complete | Add /spell quick link at top of chat                                                                                                                                           |
-| OB-093 | Complete | Real-time Asset Manager refresh when dragging assets in                                                                                                                        |
-| OB-094 | Complete | Fix double vertical scrollbar in scene settings modal                                                                                                                          |
-| OB-095 | Complete | Fix hex grid rendering and snapping across scenes                                                                                                                              |
-| OB-096 | Complete | Display imported monsters and characters in Asset Manager                                                                                                                      |
-| OB-097 | Complete | Interactive measuring tape tool                                                                                                                                                |
-| OB-098 | Complete | Live dimensions preview while drawing shapes (radius, length, box)                                                                                                             |
-| OB-099 | Complete | Ensure microphone starts muted by default                                                                                                                                      |
-| OB-100 | Complete | Pass client and server ports from .env into Dockerfile                                                                                                                         |
-| OB-101 | Complete | Production compose.yaml and .env.production configuration                                                                                                                      |
-| OB-102 | Complete | Production CI container build script (scripts/ci-build.sh)                                                                                                                     |
-| OB-103 | Complete | Log initiative rolls to dice history with modifiers                                                                                                                            |
-| OB-104 | Complete | Inline input positioning during initiative tracker row editing                                                                                                                 |
-| OB-105 | Complete | [Discord webhook one-way chat & roll sync](#ob-105---discord-webhook-one-way-chat--roll-sync)                                                                                  |
-| OB-106 | Complete | [CLI / Terminal chat client (oldbearchat)](#ob-106---cli--terminal-chat-client-oldbearchat)                                                                                    |
-| OB-107 | Complete | Track props like tokens in Asset Manager                                                                                                                                       |
-| OB-108 | Complete | [Reorganize hamburger menu hierarchy](#ob-108---reorganize-hamburger-menu-hierarchy)                                                                                           |
-| OB-109 | Complete | Favicon generation prompt (FAVICON_PROMPT.md)                                                                                                                                  |
-| OB-110 | Complete | Add dedicated Props tab to Asset Manager                                                                                                                                       |
-| OB-111 | Complete | [Persistent highlights and drawings with lock & delete](#ob-111---persistent-highlights-and-drawings-with-lock--delete)                                                        |
-| OB-112 | Complete | [Floating non-modal Asset Manager with map drag-drop](#ob-112---floating-non-modal-asset-manager-with-map-drag-drop)                                                           |
-| OB-113 | Complete | Support decimal tile dimensions for props                                                                                                                                      |
-| OB-114 | Complete | Prop rotation controls in settings and bottom toolbar                                                                                                                          |
-| OB-115 | Complete | [Prop versatility, rotation widget, and token lock/unlock](#ob-115---prop-versatility-rotation-widget-and-token-lockunlock)                                                    |
-| OB-116 | Complete | Display application version in top bar                                                                                                                                         |
-| OB-117 | Complete | [Trackpad scrolling vs zooming separation and auto-revert box select](#ob-117---trackpad-scrolling-vs-zooming-separation-and-auto-revert-box-select)                           |
-| OB-118 | Complete | [Arc / Cone spell template indicator tool with dual-color visualization](#ob-118---arc--cone-spell-template-indicator-tool-with-dual-color-visualization)                      |
-| OB-119 | Complete | Draggable target indicator with distance preview                                                                                                                               |
-| OB-120 | Complete | Draggable floating dice roller window                                                                                                                                          |
-| OB-121 | Complete | Draggable floating character sheet window                                                                                                                                      |
-| OB-123 | Complete | Maintain battlemap visibility during asset drag-and-drop                                                                                                                       |
-| OB-124 | Complete | [Build version with short git hash in top bar and CI](#ob-124---build-version-with-short-git-hash-in-top-bar-and-ci)                                                           |
-| OB-125 | Complete | Add feedback and GitHub repository links                                                                                                                                       |
-| OB-126 | Complete | Add MIT License file                                                                                                                                                           |
-| OB-127 | Done     | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
-| OB-128 | Pending  | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
-| OB-129 | Done     | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
-| OB-130 | Pending  | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
-| OB-131 | Done     | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
-| OB-132 | Done     | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
-| OB-133 | Done     | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
-| OB-134 | Done     | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
-| OB-135 | Pending  | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
-| OB-136 | Complete | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
-| OB-137 | Backlog  | [Mobile Touch Hit-Box & Finger Offset Calibration](#ob-137---mobile-touch-hit-box--finger-offset-calibration)                                                                  |
-| OB-138 | Backlog  | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                |
-| OB-139 | Backlog  | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
-| OB-140 | Backlog  | [Direct JSON Paste / Drop Import for Characters & Monsters](#ob-140---direct-json-paste--drop-import-for-characters--monsters)                                                 |
-| OB-141 | Backlog  | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                           |
-| OB-142 | Backlog  | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                              |
-| OB-143 | Backlog  | [Direct Token Creation from D&D Beyond Monster/Character URL](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url)                                            |
-| OB-144 | Backlog  | [Pathbuilder 2e (PF2e) Character Import & Ruleset Support](#ob-144---pathbuilder-2e-pf2e-character-import--ruleset-support)                                                    |
-| OB-145 | Backlog  | [Live Video Feed Tokens](#ob-145---live-video-feed-tokens)                                                                                                                     |
-| OB-146 | Backlog  | [WebRTC Webcam Video Mesh with Draggable PIP Tiles](#ob-146---webrtc-webcam-video-mesh-with-draggable-pip-tiles)                                                               |
-| OB-147 | Backlog  | [Discord Two-Way Bot Sync Gateway](#ob-147---discord-two-way-bot-sync-gateway)                                                                                                 |
-| OB-148 | Backlog  | [D&D Beyond CobaltSession Auth & Private Sheets Support](#ob-148---dnd-beyond-cobaltsession-auth--private-sheets-support)                                                      |
-| OB-149 | Backlog  | [Discord Embedded App SDK Activity Integration](#ob-149---discord-embedded-app-sdk-activity-integration)                                                                       |
-| OB-150 | Backlog  | [System-Agnostic Ruleset Manifest & Characterfiles Integration](#ob-150---system-agnostic-ruleset-manifest--characterfiles-integration)                                        |
-| OB-151 | Complete | [Switch Container CI/CD to GitHub Container Registry (ghcr.io)](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio)                                           |
+| ID     | Status  | Title                                                                                                                                                                          |
+| :----- | :------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OB-001 | Done    | In voice and audio settings the 4th button for streaming is mostly off screen                                                                                                  |
+| OB-002 | Done    | When adding a new token to the board try to not put it on top of an existing one                                                                                               |
+| OB-003 | Done    | When uploading files allow selecting multiple files at once                                                                                                                    |
+| OB-004 | Done    | When uploading files allow drag and drop onto the window                                                                                                                       |
+| OB-005 | Done    | Fix map upload trigger                                                                                                                                                         |
+| OB-006 | Done    | Carry over image when syncing D&D Beyond with a token                                                                                                                          |
+| OB-007 | Done    | Save user characters in player and GM local storage during D&D Beyond import                                                                                                   |
+| OB-008 | Done    | Show ability score modifier large and score small                                                                                                                              |
+| OB-009 | Done    | Add trained and expertise skills to character sheet                                                                                                                            |
+| OB-010 | Done    | Add proficiency bonus to character sheet                                                                                                                                       |
+| OB-011 | Done    | Add export/import option for all data (characters, uploaded files, maps, tokens)                                                                                               |
+| OB-012 | Done    | Fix initiative tracker button                                                                                                                                                  |
+| OB-013 | Done    | Fix dice roller button                                                                                                                                                         |
+| OB-014 | Done    | Configure available UI colors in source code                                                                                                                                   |
+| OB-015 | Done    | Allow GM to add sounds to the soundboard                                                                                                                                       |
+| OB-016 | Done    | Duplicate selected token                                                                                                                                                       |
+| OB-017 | Done    | Allow assigning a player control over multiple tokens                                                                                                                          |
+| OB-018 | Done    | Make token preview icon square on bottom interaction bar                                                                                                                       |
+| OB-019 | Done    | Cycle selection through overlapping tokens on click/tap                                                                                                                        |
+| OB-020 | Done    | Specify map dimensions in tiles or tile pixel size and grid offset on import                                                                                                   |
+| OB-021 | Done    | Render configurable grid on top of map but under tokens                                                                                                                        |
+| OB-022 | Done    | Animate mic and headphone icons in top bar when sending or receiving audio                                                                                                     |
+| OB-023 | Done    | Fix "Send Players" on map to properly direct player view                                                                                                                       |
+| OB-024 | Done    | Make map edit component a modal or positioned non-obstructively                                                                                                                |
+| OB-025 | Done    | Fix grid size input backspace behavior and auto-select text on focus                                                                                                           |
+| OB-026 | Done    | Restructure map settings layout into two clean columns                                                                                                                         |
+| OB-027 | Done    | Remove redundant "Back to Maps List" button in modal context                                                                                                                   |
+| OB-028 | Done    | Add map deletion and map renaming                                                                                                                                              |
+| OB-029 | Done    | Separate maps from scenes to allow sharing maps across multiple scenes                                                                                                         |
+| OB-030 | Done    | Asset manager listing tokens, maps, and sounds with hash deduplication                                                                                                         |
+| OB-031 | Done    | Asset manager UI grouping with previews, bulk delete, and rename                                                                                                               |
+| OB-032 | Done    | Token image selection prompt when adding token with + button                                                                                                                   |
+| OB-033 | Done    | Token asset settings: border shape and clip/zoom/pan controls                                                                                                                  |
+| OB-034 | Done    | Map background color picker for imageless grids and outer canvas                                                                                                               |
+| OB-035 | Done    | Fix hex grid snapping alignment                                                                                                                                                |
+| OB-036 | Done    | Quick control to cover entire map in fog                                                                                                                                       |
+| OB-037 | Done    | Fog persistence fix and transparent fog rendering in GM view                                                                                                                   |
+| OB-038 | Done    | Fix trackpad pinch-to-zoom vs two-finger scroll on mobile and desktop                                                                                                          |
+| OB-039 | Done    | Keyboard shortcuts for highlights (1-5), pan (h), select (s), fog (f), reveal (r), duplicate (d)                                                                               |
+| OB-040 | Done    | Bulk move group of tokens to another map                                                                                                                                       |
+| OB-041 | Done    | Spawn synced D&D Beyond token off map edge and update selected token                                                                                                           |
+| OB-042 | Done    | Pre-create claimable player tokens when player joins                                                                                                                           |
+| OB-043 | Done    | Animated roll announcement toast with player name, formula, and result                                                                                                         |
+| OB-044 | Done    | Remember previously used characters in local storage for quick selection                                                                                                       |
+| OB-045 | Done    | Chat command system (/roll, /attack, /skill, /spell with adv/dis)                                                                                                              |
+| OB-046 | Done    | Move client, server, and nginx ports to .env and .env.example                                                                                                                  |
+| OB-047 | Done    | Default mic to muted and defer permission request until unmuted                                                                                                                |
+| OB-048 | Done    | [Syllable-based fantasy name generator](#ob-048---syllable-based-fantasy-name-generator)                                                                                       |
+| OB-049 | Done    | Default GM user name to "GM" instead of "Adventurer"                                                                                                                           |
+| OB-050 | Done    | [D&D Beyond attacks and actions import parsing](#ob-050---dnd-beyond-attacks-and-actions-import-parsing)                                                                       |
+| OB-051 | Done    | Import and display initiative bonus, saving throws, passive perception, currency                                                                                               |
+| OB-052 | Done    | Automatically apply character initiative bonus in initiative tracker rolls                                                                                                     |
+| OB-053 | Done    | Allow GM to manually set initiative scores in tracker                                                                                                                          |
+| OB-054 | Done    | Ephemeral /help and parameter validation for /attack, /spell, and /skill                                                                                                       |
+| OB-055 | Done    | Support token index parameter in /sync command                                                                                                                                 |
+| OB-056 | Done    | Add /tokens command listing controllable tokens and their indices                                                                                                              |
+| OB-057 | Done    | Move hamburger menu to far left of top bar                                                                                                                                     |
+| OB-058 | Done    | Consolidate fog controls into submenu under single fog button                                                                                                                  |
+| OB-059 | Done    | Consolidate highlights and pointers into submenu under single button                                                                                                           |
+| OB-060 | Done    | Rebind select tool to 's' key                                                                                                                                                  |
+| OB-061 | Done    | Rebind hand/grab tool to 'g' key                                                                                                                                               |
+| OB-062 | Done    | Add box select tool below hand tool bound to 'b' key                                                                                                                           |
+| OB-063 | Done    | Fix chat bubble text color and remove bottom-left chat capsule                                                                                                                 |
+| OB-064 | Done    | Auto-dismiss full-map fog notification toasts                                                                                                                                  |
+| OB-065 | Done    | Adaptive top and left toolbars for mobile and narrow screens                                                                                                                   |
+| OB-066 | Done    | Draggable non-modal windows with animated minimize chevrons                                                                                                                    |
+| OB-067 | Done    | Drag to reorder initiative tracker rows and inline score editing                                                                                                               |
+| OB-068 | Done    | Per-user scrollable roll history in dice roller window                                                                                                                         |
+| OB-069 | Done    | Configurable toast display duration in .env                                                                                                                                    |
+| OB-070 | Done    | Create scene directly from map card in Asset Manager                                                                                                                           |
+| OB-071 | Done    | Highlight bonus actions and reactions in attacks list                                                                                                                          |
+| OB-072 | Done    | Interactive zoom, crop, and pan preview for token avatars                                                                                                                      |
+| OB-073 | Done    | [TetraCube .monster import with dual-drop support](#ob-073---tetracube-monster-import-with-dual-drop-support)                                                                  |
+| OB-074 | Done    | [Multi-file drag-and-drop batch asset import dialog](#ob-074---multi-file-drag-and-drop-batch-asset-import-dialog)                                                             |
+| OB-075 | Done    | Immediate player nickname update in top bar icons on change                                                                                                                    |
+| OB-076 | Done    | Nickname persistence in player settings                                                                                                                                        |
+| OB-077 | Done    | Animate hamburger menu slide-in from the left                                                                                                                                  |
+| OB-078 | Done    | Multi-token box select for bulk movement, assignment, and duplication                                                                                                          |
+| OB-079 | Done    | Inline initiative score editing in tracker row                                                                                                                                 |
+| OB-080 | Done    | Persist reordered initiative tracker rows                                                                                                                                      |
+| OB-081 | Done    | Pan/focus canvas on token click in initiative tracker                                                                                                                          |
+| OB-082 | Done    | Fix minimized initiative tracker window clipping                                                                                                                               |
+| OB-083 | Done    | Record chat command rolls in dice roller history                                                                                                                               |
+| OB-084 | Done    | Prevent duplicate player connection entries on page refresh                                                                                                                    |
+| OB-085 | Done    | Fix submenu flyout visibility for selection and fog tools                                                                                                                      |
+| OB-086 | Done    | Combine grid tools into single flyout (snap toggle and show/hide icons)                                                                                                        |
+| OB-087 | Done    | Remove standalone sound icons from top bar                                                                                                                                     |
+| OB-088 | Done    | Move toggle chat button into left menu toolbar                                                                                                                                 |
+| OB-089 | Done    | Reorganize tools and audio controls in hamburger menu                                                                                                                          |
+| OB-090 | Done    | Prefill D&D Beyond sync URL when character ID is known                                                                                                                         |
+| OB-091 | Done    | Index-based selection for /spell, /skill, /attack, /item suggestions                                                                                                           |
+| OB-092 | Done    | Add /spell quick link at top of chat                                                                                                                                           |
+| OB-093 | Done    | Real-time Asset Manager refresh when dragging assets in                                                                                                                        |
+| OB-094 | Done    | Fix double vertical scrollbar in scene settings modal                                                                                                                          |
+| OB-095 | Done    | Fix hex grid rendering and snapping across scenes                                                                                                                              |
+| OB-096 | Done    | Display imported monsters and characters in Asset Manager                                                                                                                      |
+| OB-097 | Done    | Interactive measuring tape tool                                                                                                                                                |
+| OB-098 | Done    | Live dimensions preview while drawing shapes (radius, length, box)                                                                                                             |
+| OB-099 | Done    | Ensure microphone starts muted by default                                                                                                                                      |
+| OB-100 | Done    | Pass client and server ports from .env into Dockerfile                                                                                                                         |
+| OB-101 | Done    | Production compose.yaml and .env.production configuration                                                                                                                      |
+| OB-102 | Done    | Production CI container build script (scripts/ci-build.sh)                                                                                                                     |
+| OB-103 | Done    | Log initiative rolls to dice history with modifiers                                                                                                                            |
+| OB-104 | Done    | Inline input positioning during initiative tracker row editing                                                                                                                 |
+| OB-105 | Done    | [Discord webhook one-way chat & roll sync](#ob-105---discord-webhook-one-way-chat--roll-sync)                                                                                  |
+| OB-106 | Done    | [CLI / Terminal chat client (oldbearchat)](#ob-106---cli--terminal-chat-client-oldbearchat)                                                                                    |
+| OB-107 | Done    | Track props like tokens in Asset Manager                                                                                                                                       |
+| OB-108 | Done    | [Reorganize hamburger menu hierarchy](#ob-108---reorganize-hamburger-menu-hierarchy)                                                                                           |
+| OB-109 | Done    | Favicon generation prompt (FAVICON_PROMPT.md)                                                                                                                                  |
+| OB-110 | Done    | Add dedicated Props tab to Asset Manager                                                                                                                                       |
+| OB-111 | Done    | [Persistent highlights and drawings with lock & delete](#ob-111---persistent-highlights-and-drawings-with-lock--delete)                                                        |
+| OB-112 | Done    | [Floating non-modal Asset Manager with map drag-drop](#ob-112---floating-non-modal-asset-manager-with-map-drag-drop)                                                           |
+| OB-113 | Done    | Support decimal tile dimensions for props                                                                                                                                      |
+| OB-114 | Done    | Prop rotation controls in settings and bottom toolbar                                                                                                                          |
+| OB-115 | Done    | [Prop versatility, rotation widget, and token lock/unlock](#ob-115---prop-versatility-rotation-widget-and-token-lockunlock)                                                    |
+| OB-116 | Done    | Display application version in top bar                                                                                                                                         |
+| OB-117 | Done    | [Trackpad scrolling vs zooming separation and auto-revert box select](#ob-117---trackpad-scrolling-vs-zooming-separation-and-auto-revert-box-select)                           |
+| OB-118 | Done    | [Arc / Cone spell template indicator tool with dual-color visualization](#ob-118---arc--cone-spell-template-indicator-tool-with-dual-color-visualization)                      |
+| OB-119 | Done    | Draggable target indicator with distance preview                                                                                                                               |
+| OB-120 | Done    | Draggable floating dice roller window                                                                                                                                          |
+| OB-121 | Done    | Draggable floating character sheet window                                                                                                                                      |
+| OB-123 | Done    | Maintain battlemap visibility during asset drag-and-drop                                                                                                                       |
+| OB-124 | Done    | [Build version with short git hash in top bar and CI](#ob-124---build-version-with-short-git-hash-in-top-bar-and-ci)                                                           |
+| OB-125 | Done    | Add feedback and GitHub repository links                                                                                                                                       |
+| OB-126 | Done    | Add MIT License file                                                                                                                                                           |
+| OB-127 | Done    | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
+| OB-128 | Pending | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
+| OB-129 | Done    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
+| OB-130 | Pending | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
+| OB-131 | Done    | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
+| OB-132 | Done    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
+| OB-133 | Done    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
+| OB-134 | Done    | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
+| OB-135 | Pending | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
+| OB-136 | Done    | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
+| OB-137 | Backlog | [Mobile Touch Hit-Box & Finger Offset Calibration](#ob-137---mobile-touch-hit-box--finger-offset-calibration)                                                                  |
+| OB-138 | Backlog | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                |
+| OB-139 | Backlog | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
+| OB-140 | Backlog | [Direct JSON Paste / Drop Import for Characters & Monsters](#ob-140---direct-json-paste--drop-import-for-characters--monsters)                                                 |
+| OB-141 | Backlog | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                           |
+| OB-142 | Backlog | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                              |
+| OB-143 | Backlog | [Direct Token Creation from D&D Beyond Monster/Character URL](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url)                                            |
+| OB-144 | Backlog | [Pathbuilder 2e (PF2e) Character Import & Ruleset Support](#ob-144---pathbuilder-2e-pf2e-character-import--ruleset-support)                                                    |
+| OB-145 | Backlog | [Live Video Feed Tokens](#ob-145---live-video-feed-tokens)                                                                                                                     |
+| OB-146 | Backlog | [WebRTC Webcam Video Mesh with Draggable PIP Tiles](#ob-146---webrtc-webcam-video-mesh-with-draggable-pip-tiles)                                                               |
+| OB-147 | Backlog | [Discord Two-Way Bot Sync Gateway](#ob-147---discord-two-way-bot-sync-gateway)                                                                                                 |
+| OB-148 | Backlog | [D&D Beyond CobaltSession Auth & Private Sheets Support](#ob-148---dnd-beyond-cobaltsession-auth--private-sheets-support)                                                      |
+| OB-149 | Backlog | [Discord Embedded App SDK Activity Integration](#ob-149---discord-embedded-app-sdk-activity-integration)                                                                       |
+| OB-150 | Backlog | [System-Agnostic Ruleset Manifest & Characterfiles Integration](#ob-150---system-agnostic-ruleset-manifest--characterfiles-integration)                                        |
+| OB-151 | Done    | [Switch Container CI/CD to GitHub Container Registry (ghcr.io)](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio)                                           |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
 
