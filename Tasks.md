@@ -1,372 +1,644 @@
-1. ✅ In voice and audio settings the 4th button for streaming is mostly off screen.
-2. ✅ When adding a new token to the board try to not put it on top of an existing one.
-3. ✅ When uploading files I want to be able to select multiple files at once.
-4. ✅ When uploading files I want to be able to drag and drop the files onto the window.
-5. ✅ Nothing seems to happen when I upload a map either.
-6. ✅ When syncing dndbeyond with a token the image is not carried over.
-7. ✅ I would like to save the user's characters in their local storage and in the gms local storage when they use this import.
-8. ✅ For ability scores please show the modifier large and the score small.
-9. ✅ Please add trained and expertise skills to the character sheet.
-10. ✅ Please add proficiency bonus to the character sheet.
-11. ✅ Please add an export/import option for all data, characters, uploaded files, maps, tokens, etc.. I want to be able to use this to switch browsers or computers for gms and players.
-12. ✅ The initiative tracker button does nothing.
-13. ✅ The dice roller button does nothing.
-14. ✅ Where in the source code can I configure the available colors?
-15. ✅ As a gm user how can I add sounds to the soundboard?
-16. ✅ When I have a token selected I want a way to duplicate it.
-17. ✅ I want to be able to give a player control over multiple tokens.
-18. ✅ The bar at the bottom that describes my current token has an icon at the left that looks like a squished copy of the token image. Can you make that square.
-19. ✅ If there are multiple tokens in the same spot I want a way to select ones other than the top one. Maybe keep clicking/tapping until I get the one I want. If I can't control them then don't select them at first. 
-20. ✅ When importing a map I want to be able to specify the size in tiles of the map or the size of a tile and the offset of the grid.
-21. ✅ My maps mostly don't have grids rendered. Please give me a way to show a grid on top of the map, but under the tokens.
-22. ✅ When I'm sending audio or receiving audio I want the mic and headphone icons in the top bar to animate somehow to show this.
-23. ✅ GM View on a map works, but send players does the same thing and does not send the players.
-24. ✅ When I click the gear to edit a map the edit map component shows up at the top of the list and I have to scroll to find it. Can we make that a modal or make the edit component below or to the right of the map itself.
-25. ✅ when I click in the box to edit the grid size and hit backspace to clear it the value keeps going to 1 so if it starts with 15 and I hit backspace 2 times expecting it to clear and then type 24 the size becomes 124. ✅ When we open this component can we focus on that component for tiles wide and select all of the text? can we make it so the text allows an empty value, but save settings will show an error if it is invalid? Can we make it so clicking in the field selects all of the text?
-26. ✅ Can we flow these components differently. I like the checkbox first. Grid type should be next. then color then opacity, then width, heightm and tile size in px side by side like one component for layout. then offset x and y side by side like another component for offset. I think two columns with the checkbox, grid type, grid color, opacity in the first and tiles wide, tiles high, tile size, grid offset x, and grid offset y in the other column. I don't see how to delete a map.
-27. ✅ The Back to Maps List button doesn't make sense unless this is a modal or something. Having the button while the editor is already in the list doesn't make sense.
-28. ✅ Give me a way to delete a map and a way to edit a map's name.
-29. ✅ separate maps from scenes and allow the same map to be used in multiple scenes.
-30. ✅ Add an asset manager to list tokens, maps, and sounds that have been uploaded. When the user tries to add something that already exists (by file size and simple hash or crc) tell them it already exists and do whatever we would do after they upload with the original file.
-31. ✅ Keep the icon, but have the export and import buttons at the bottom under the rest of the asset manager. List assets with previews above them grouped by type (maps, tokens, sounds). The user should be able to rename or delete assets from here. Allow multiselect for delete.
-32. ✅ When I add a token to the map with the + button ask me which token image I want to use.
-33. ✅ in settings for token assets allow me to pick a border and clip/zoom/pan the token to circle, square, rounded square, hexagon, or octagon.
-34. ✅ for maps allow selecting a background color either for imageless grid maps or for the area outside of a map.
-35. ✅ If grid type is set to hex and the snap to grid option is on does the snapping work correctly on the hexes or does it still snap to squares?
-36. ✅ I want a quick way to set fog over the whole map.
-37. ✅ Fog doesn't seem to persist after dragging the rectangle. In the gm view the fog should be visible but transparent.
-38. ✅ When I pinch I can zoom on the map, but when I two finger drag like I would to scroll it zooms instead. Can we make that work without breaking phone/tablets?
-39. ✅ Bind the 5 highlight controls to the number keys. Bind h to pan and v to the arrow that interacts with things. Bind fog to f and reveal to r. bind d to duplicate token.
-40. ✅ Give me an easy way to move a group of tokens to another map. Mostly this will be the player tokens.
-41. ✅ When a player syncs their character create their token and place it just off the map near the bottom. I also want to be able to select an owned token and use the D&D Beyond import to update it.
-42. ✅ Let me create player tokens to be available when a player joins so they can pick theirs. Only player controllable tokens should show up.
-43. ✅ Add some kind of animation when someone rolls that announces who rolled what dice and modifier they rolled and the result.
-44. ✅ remember in the player's local storage the characters they have used so they can pick one as their character. List them on the character sheet import page.
-45. ✅ Tell me how we can create a chat system with simple commands like /roll or /attack /skill and maybe /spell, but that could be /attack or an alias for it then roll that check as if they chose the correct dice and modifiers from their character sheet. allow appending adv or dis to roll with advantage or disadvantage on any d20 in the roll.
-46. ✅ Move the ports for client, server, and nginx to a .env file and create a .env.example file with the same ports listed. Is there anything else we should move to the .env file?
-47. ✅ User's mic should be muted by default and we shouldn't request the permission unless they unmute it.
-48. ✅ Give users a randomly generated name from this list
-```javascript
-var nm1 = ["A", "Ara", "Alfo", "Bari", "Be", "Bo", "Bha", "Bu", "Ba", "Bra", "Bro", "Brou", "Bru", "Da", "Dalo", "Dare", "De", "Dhu", "Dho", "Do", "Dora", "Dwo", "Dou", "Duri", "Du", "El", "Eri", "Fi", "Fo", "Fo", "Ga", "Gi", "Gla", "Glori", "Go", "Gra", "Gro", "Groo", "Gru", "Grou", "Ha", "Ha", "He", "He", "Ho", "Hou", "Hu", "Ja", "Jo", "Ka", "Khe", "Khu", "Khou", "Ko", "Ku", "Ki", "Kra", "Kro", "Lo", "Lu", "Lo", "Ma", "Mo", "Mu", "Na", "No", "Nu", "Nora", "Nura", "Ne", "No", "O", "Ori", "Rei", "Ra", "Ru", "Sa", "Si", "Sna", "Sko", "Ska", "Stro", "The", "Thi", "Tho", "Thra", "Tha", "Tore", "Tha", "Thra", "Thro", "Thu", "Tu", "U", "Umi", "Va", "Vo", "Whu", "We", "Wera", "Yu", "Yo", "Ya"];
-var nm2 = ["b", "br", "dd", "d", "dr", "dm", "dgr", "f", "fr", "gr", "gg", "gh", "gn", "k", "kh", "kgr", "kdr", "kk", "kh", "kr", "l", "lg", "lgr", "ldr", "lm", "md", "mn", "m", "mm", "mr", "n", "nd", "ndr", "ngr", "nm", "r", "rr", "rgr", "rdr", "rb", "rg", "rn", "rh", "rd", "rm", "rs", "rf", "s", "ss", "sdr", "slkgr", "st", "str", "t", "tr", "tm", "th", "tdr", "tgr", "v", "vr", "z", "zm", "zn", "zz"];
-var nm3 = ["ac", "aic", "aec", "ec", "eac", "ic", "oc", "oic", "ouc", "ack", "aeck", "eck", "eack", "ick", "ock", "oick", "ouck", "uck", "uc", "ad", "aed", "ed", "ead", "id", "od", "oid", "oud", "ud", "uid", "ag", "aeg", "eg", "eag", "ig", "og", "oug", "ug", "ak", "aek", "ek", "eak", "ik", "ok", "oki", "uk", "uik", "ouk", "uki", "al", "ael", "el", "eal", "il", "ol", "oli", "olin", "olim", "olir", "oul", "ul", "uli", "ulim", "ulir", "uil", "am", "ami", "amli", "amri", "aem", "em", "eam", "im", "om", "omli", "omri", "omi", "oum", "um", "umi", "umir", "umin", "umli", "umlir", "umlin", "umri", "an", "aen", "en", "ean", "in", "on", "onlim", "onlir", "oun", "un", "unli", "unri", "ar", "arlum", "arlun", "arlug", "arlig", "aer", "er", "erlum", "erlun", "erlug", "erlig", "ear", "ir", "irlum", "irlun", "or", "orli", "orlim", "orlum", "orlun", "orlig", "orlug", "oir", "our", "ur", "uri", "urim", "urum", "us", "as", "ous", "aes", "eas", "at", "atir", "atum", "atin", "aet", "et", "eat", "it", "ot", "otir", "atin", "otum", "out", "ut", "ath", "aeth", "eth", "eath", "ith", "oth", "outh", "uth"];
-var nm4 = ["A", "Ara", "Alfo", "Bari", "Be", "Bo", "Bha", "Bu", "Ba", "Bra", "Bro", "Brou", "Bru", "Da", "Dalo", "Dare", "De", "Dhu", "Dho", "Do", "Dora", "Dwo", "Dou", "Duri", "Du", "El", "Eri", "Fi", "Fo", "Fo", "Ga", "Gi", "Gla", "Glori", "Go", "Gra", "Gro", "Groo", "Gru", "Grou", "Ha", "Ha", "He", "He", "Ho", "Hou", "Hu", "Ja", "Jo", "Ka", "Khe", "Khu", "Khou", "Ko", "Ku", "Ki", "Kra", "Kro", "Lo", "Lu", "Lo", "Ma", "Mo", "Mu", "Na", "No", "Nu", "Nora", "Nura", "Ne", "No", "O", "Ori", "Rei", "Ra", "Ru", "Sa", "Si", "Sna", "Sko", "Ska", "Stro", "The", "Thi", "Tho", "Thra", "Tha", "Tore", "Tha", "Thra", "Thro", "Thu", "Tu", "U", "Umi", "Va", "Vo", "Whu", "We", "Wera", "Yu", "Yo", "Ya"];
-var nm5 = ["b", "br", "dd", "d", "dr", "dm", "dgr", "dw", "f", "fr", "gr", "gg", "gh", "gn", "k", "kh", "kgr", "kdr", "kk", "kw", "kh", "kr", "l", "lg", "lgr", "ldr", "lm", "md", "mw", "mn", "m", "mm", "mr", "n", "nd", "ndr", "nw", "ngr", "nm", "r", "rr", "rgr", "rdr", "rb", "rg", "rn", "rh", "rd", "rm", "rs", "rf", "s", "ss", "sdr", "sgr", "st", "str", "t", "tr", "tm", "th", "tdr", "tgr", "v", "vr", "w", "z", "zm", "zn", "zz"];
-var nm6 = ["abelle", "aebelle", "ebelle", "ibelle", "obelle", "ubelle", "alyn", "aelyn", "elyn", "ealyn", "ilyn", "olyn", "oulyn", "ulyn", "uilyn", "alynn", "aelynn", "elynn", "ealynn", "ilynn", "olynn", "oulynn", "ulynn", "uilynn", "abelyn", "aebelyn", "ebelyn", "eabelyn", "ibelyn", "obelyn", "oubelyn", "ubelyn", "uibelyn", "abelynn", "aebelynn", "ebelynn", "eabelynn", "ibelynn", "obelynn", "oubelynn", "ubelynn", "uibelyn", "anelyn", "aenelyn", "enelyn", "eanelyn", "inelyn", "onelyn", "ounelyn", "unelyn", "uinelyn", "anelynn", "aenelynn", "enelynn", "eanelynn", "inelynn", "onelynn", "ounelynn", "unelynn", "uinelynn", "agit", "aegit", "egit", "eagit", "igit", "ogit", "ugit", "uigit", "agith", "aegith", "egith", "eagith", "igith", "ogith", "ugith", "uigith", "irgit", "irgith", "uirgit", "uirgith", "airgit", "airgith", "arika", "aerika", "erika", "earika", "irika", "orika", "urika", "atain", "aetain", "etain", "eatain", "itain", "otain", "utain", "ataine", "aetaine", "etaine", "eataine", "itaine", "otaine", "utaine", "ahilda", "aehilda", "ehilda", "eahilda", "ohilda", "ihilda", "uhilda", "ahulda", "aehulda", "ehulda", "eahulda", "ohulda", "ihulda", "uhulda", "agar", "aegar", "egar", "eagar", "igar", "ogar", "ugar", "agaer", "egaer", "igaer", "ogaer", "ugaer", "atrud", "aetrud", "etrud", "eatrud", "itrud", "otrud", "utrud", "atrude", "aetrude", "etrude", "eatrude", "itrude", "otrude", "utrude", "ada", "aeda", "eda", "eada", "ida", "oda", "uda", "alda", "aelda", "elda", "ealda", "ilda", "olda", "oulda", "ulda", "alin", "aelin", "elin", "ealin", "ilin", "olin", "oulin", "ulin", "aline", "aeline", "eline", "ealine", "iline", "oline", "ouline", "uline", "atalin", "aetalin", "etalin", "eatalin", "italin", "otalin", "outalin", "utalin", "atalyn", "aetalyn", "etalyn", "eatalyn", "italyn", "otalyn", "outalyn", "utalyn", "atelin", "aetelin", "etelin", "eatelin", "itelin", "otelin", "outelin", "utelin", "atelyn", "aetelyn", "etelyn", "eatelyn", "itelyn", "otelyn", "outelyn", "utelyn", "angrid", "aengrid", "engrid", "eangrid", "ingrid", "ongrid", "oungrid", "ungrid", "ani", "aeni", "eni", "eani", "ini", "oni", "ouni", "uni", "ana", "aena", "ena", "eana", "ina", "ona", "ouna", "una", "alsia", "aelsia", "elsia", "ealsia", "ilsia", "olsia", "oulsia", "ulsia", "ala", "aela", "ela", "eala", "ila", "ola", "oula", "ula", "abella", "aebella", "ebella", "eabella", "ibella", "obella", "oubella", "ubella", "abela", "aebela", "ebela", "eabela", "ibela", "obela", "oubela", "ubela", "astr", "aestr", "estr", "eastr", "istr", "ostr", "oustr", "ustr", "abo", "aebo", "ebo", "eabo", "ibo", "obo", "oubo", "ubo", "abena", "aebena", "ebena", "eabena", "ibena", "obena", "oubena", "ubena", "abera", "aebera", "ebera", "eabera", "ibera", "obera", "oubera", "ubera", "adeth", "aedeth", "edeth", "eadeth", "ideth", "odeth", "oudeth", "udeth", "adrid", "aedrid", "edrid", "eadrid", "idrid", "odrid", "oudrid", "udrid", "abyrn", "aebyrn", "ebyrn", "eabyrn", "ibyrn", "obyrn", "oubyrn", "ubyrn", "agrett", "aegrett", "egrett", "eagrett", "igrett", "ogrett", "ougrett", "ugrett", "agret", "aegret", "egret", "eagret", "igret", "ogret", "ougret", "ugret", "asli", "aesli", "esli", "easli", "isli", "osli", "ousli", "usli", "ahilda", "aehilda", "ehilda", "eahilda", "ihilda", "ohilda", "ouhilda", "uhilda", "ahilde", "aehilde", "ehilde", "eahilde", "ihilde", "ohilde", "ouhilde", "uhilde", "aginn", "aeginn", "eginn", "eaginn", "iginn", "oginn", "ouginn", "uginn", "amora", "aemora", "emora", "eamora", "imora", "omora", "oumora", "umora", "alydd", "aelydd", "elydd", "ealydd", "ilydd", "olydd", "oulydd", "ulydd", "akara", "aekara", "ekara", "eakara", "ikara", "okara", "oukara", "ukara", "aren", "aeren", "eren", "earen", "iren", "oren", "ouren", "uren", "arra", "aerra", "erra", "earra", "irra", "orra", "ourra", "urra", "are", "aere", "ere", "eare", "ire", "ore", "oure", "ure", "awynn", "aewynn", "ewynn", "eawynn", "iwynn", "owynn", "ouwynn", "uwynn", "atryd", "aetryd", "etryd", "eatryd", "itryd", "otryd", "outryd", "utryd", "athra", "aethra", "ethra", "eathra", "ithra", "othra", "outhra", "uthra", "aserd", "aeserd", "eserd", "easerd", "iserd", "oserd", "ouserd", "userd", "tryd"];
-var nm7 = ["Ale", "Amber", "Anvil", "Ash", "Axe", "Barbed", "Barrel", "Battle", "Beast", "Bone", "Beryl", "Bitter", "Black", "Blazing", "Blessed", "Blood", "Blunt", "Bone", "Bottle", "Boulder", "Brew", "Brick", "Bright", "Bristle", "Broad", "Bronze", "Brown", "Cave", "Cask", "Chain", "Crag", "Chaos", "Coal", "Coin", "Copper", "Dark", "Deep", "Dim", "Dragon", "Drake", "Dusk", "Earth", "Ember", "Fiery", "Flint", "Flask", "Flint", "Flat", "Forge", "Frost", "Giant", "Gold", "Golden", "Granite", "Gravel", "Gray", "Great", "Grey", "Grim", "Grumble", "Hammer", "Hard", "Heavy", "Hill", "Honor", "Horn", "Ice", "Ingot", "Iron", "Jade", "Keg", "Kobold", "Krag", "Lead", "Large", "Lava", "Leather", "Light", "Long", "Marble", "Magma", "Merry", "Metal", "Mithril", "Mine", "Mountain", "Mud", "Night", "Noble", "Oak", "Oaken", "Onyx", "Opal", "Ore", "Orc", "Plate", "Pebble", "Red", "Rune", "Ruby", "Sapphire", "Shadow", "Shatter", "Smelt", "Silver", "Snow", "Steel", "Storm", "Strong", "Troll", "Thunder", "Twilight", "Treasure", "Under", "War", "Warm", "Whit", "Wind", "Wold", "Wraith", "Wyvern"];
-var nm8 = ["arm", "armour", "axe", "back", "bane", "beard", "basher", "belly", "belt", "bender", "blade", "born", "bow", "braid", "braids", "branch", "brand", "breaker", "brew", "brewer", "bringer", "brow", "buckle", "buster", "chest", "chin", "cloak", "coat", "delver", "digger", "foot", "fall", "fury", "finger", "flayer", "feet", "forge", "forged", "grog", "grip", "guard", "gut", "granite", "hand", "head", "heart", "helm", "hide", "hood", "horn", "jaw", "mace", "mail", "maker", "mantle", "mane", "master", "maul", "miner", "pike", "rock", "river", "shield", "shaper", "sword", "shoulder", "stone", "spine", "sunder", "thane", "toe", "tank", "view"];
-/**
-* @return string[]
-*/
-function nameGen(type) {
-    const names = [];
-    var gender = 'male';
+# Tasks
 
-    for (i = 0; i < 10; i++) {
-        rnd4 = Math.floor(Math.random() * nm7.length);
-        rnd5 = Math.floor(Math.random() * nm8.length);
-        if (gender === 'male') {
-            rnd2 = Math.floor(Math.random() * nm5.length);
-            rnd3 = Math.floor(Math.random() * nm6.length);
-            rnd = Math.floor(Math.random() * nm4.length);
-            names = nm4[rnd] + nm5[rnd2] + nm6[rnd3] + " " + nm7[rnd4] + nm8[rnd5];
-        } else if gender === 'female' {
-            rnd2 = Math.floor(Math.random() * nm2.length);
-            rnd3 = Math.floor(Math.random() * nm3.length);
-            rnd = Math.floor(Math.random() * nm1.length);
-            names = nm1[rnd] + nm2[rnd2] + nm3[rnd3] + " " + nm7[rnd4] + nm8[rnd5];
-        } else {
-            // TODO add lgbtq names to name generator. If we don't know how to use these arrays, then choose either male or female randomly and add one of those to names
-        }
-    }
-    return names;
-}
-```
-
-49. ✅ When the GM joins name them GM instead of Adventurer.
-50. ✅ Missing spells and actions This profile https://www.dndbeyond.com/characters/47804290 should have
-* Greataxe +1 5 ft. reach +1 to hit 1d12+4 damage
-* Javelin range 30 ft. (120 ft.) +6 to hit 1d6+3 damage
-* Unarmed Strike 5ft. reach +6 to hit 4 damage
-51. ✅ We should import and show initiative bonus, saving throws, passive (perception, investigation, insight), and currency.
-52. ✅ Use a character's initiative bonus if available when rolling initiative for them.
-53. ✅ How do we actually use the initiative tracker. can you give me a way to set the initiative score for a token/player as the gm?
-54. ✅ /attack, /spell, and /skill should not make a roll if no name is provided. Without parameters or with invalid parameters it should list the available options. If possible this message should only show for the user that used the command. /help should only show for the user that ran the command.
-55. ✅ Users should be able to use /sync to sync their character with the dndbeyond url or character id. If they have more than one token then they should specify the token index in their list of tokens.
-56. ✅ /tokens should list all of the tokens and their index number that a user can sync.
-57. ✅ move the hamburger menu to the far left of the top bar.
-58. ✅ Make the fog controls be a sub menu of a single fog button where they are.
-59. ✅ Move the highlights like the laser pointer and the other 4 we bound to the number keys under a single button too.
-60. ✅ Make the select tool bound to s instead of v and change the tooltip to select.
-61. ✅ make the hand tool bound to g and change the tooltip to grab.
-62. ✅ Add a box select tool below the hand tool and bind it to b.
-63. ✅ The text in the chat bubble is black for me I think it was white before. This could be some light/dark mode thing or it just got changed. since we have a chat button in the top bar get rid of that whole capsule for chat on the bottom left.
-64. ✅ covered entire map with fog and cleared all fog from map messages don't go away. They should only stay as long as the attack toasts do.
-65. ✅ The top and left toolbars should be more adaptive to smaller screens. compress everything on the top bar into the hamburger menu if we have to and make the left toolbar wrap into a second column or scroll. if it is too short.
-66. ✅ Non-modal windows like the initiative tracker and chat should be draggable to move them and should have a minimize button next to close that vertically shrinks them to just their title bar and keeps them in the same position on the screen. They should still be able to be brought back to their original size by clicking on the minimize button. Make the icon v like chevrons pointing up and down. animate the opening and closing and the icon spinning 180 degrees clockwise to expand and anti-clockwise to shrink. It should point up to indicate minimized and down to indicate expanded.
-67. ✅ I want to be able to drag items in the initiative tracker to reorder them and have the numbers update to fit. I want to be able to edit the number on the row. When we move to another turn I want a message like when we make rolls to indicate who is up next.
-68. ✅ I like the list of roles in the dice roller. I want it to be per user and scrollable so everyone can see their own rolls there.
-69. ✅ Make toast length be configurable in .env for now
-70. ✅ When I'm in the asset manager I want to be able to make a scene from a map directly from there.
-71. ✅ When we show a token's attacks can we highlight them if they are reactions or bonus actions. I mainly want the bonus and reaction highlights in the character view and when running `/attack` or `/spell`.
-72. ✅ The token image zoom, crop, and pan controls did nothing. Can we integrate them into the image preview better so a user can see the cropping shape and drag/pinch to adjust the zoom and offset.
-73. ✅ Support importing TetraCube `.monster` files as monster/NPC assets with full stats, AC, HP, speed, and actions. Setup dual-drop support for monster files:
-    - Drop `.monster` onto the Battlemap directly: It saves the creature to the Asset Manager and instantly drops a ready-to-fight token at the mouse cursor.
-    - Drop `.monster` into the Asset Manager: It saves to the library for encounter prep without cluttering the current map.
-    - When a GM drags a monster from the Asset Manager onto the map, it spawns a token with those settings, art, and auto-numbered names (e.g. Ankheg 1, Ankheg 2), with clickable statblock attacks and actions.
-74. ✅ Multi-file image drag-and-drop import: when image files are dragged in, prompt the user with a single unified view listing all dropped files. Allow toggling/selecting each file as a Map, Token, or Prop. Include bulk-selection aids ("Set all to Tokens", "Set all to Maps", "Set all to Props", "Check all") since users may import many images at once.
-75. ✅ When I change my player name it doesn't update in the icons at the top. The letter stays at what it was before until I refresh.
-76. ✅ When I open settings the nickname is "Player" and not the random nickname I was assigned. When I click save after typing in a different name the new name does not take effect for the icons at the bottom that show connected players or when I go back to the main screen the connected players at the top until I refresh the page.
-77. ✅ The hamburger menu animates in and out from the right instead of the left.
-78. ✅ Box select still only selects one token. I want it to select all tokens in the box so I can move them as a group, Assign them as a group, or duplicate them as a group.
-79. ✅ The button to change the initiative score is on the token info component at the bottom. It should be inline in the initiative tracker row. Perhaps a pen icon next to the roll one that puts a number input and green check / red x or yes/no icons to save the number or go back to the previous value.
-80. ✅ When I drag rows in the initiative tracker they don't stay and the scores don't change.
-81. ✅ When I click a row in the initiative tracker select the associated token and pan to focus on it. If it is one that is not attached to a token don't do that.
-82. ✅ When minimizing the initiative tracker we minimize too small it should be slightly larger to avoid clipping the icon, text, and buttons in the header. Minimized chat is perfect.
-83. ✅ Rolling via chat command or the buttons on the dice roller do not add the roll to history. 
-84. ✅ Refreshing the page adds me to the connected list again repeatedly.
-85. ✅ The flyout submenu for selection tools does not appear. The icon and tool do change when I use the shortcut keys. Same for the fog.
-86. ✅ I want to combine the grid similarly and have different icons for snap to grid and show grid. The snap to grid can be the same grid icon, but make the show/hide be the same as the hide/show fog eye icons.
-87. ✅ Remove the sound icons from the top bar now that they are in the hamburger menu.
-88. ✅ Move the toggle chat button into the left menu as well.
-89. ✅ Move dice roller, character sheet, initiative tracker, scene manager, add token, and backup and transfer, and soundbar buttons into the hamburger menu under the section with audio controls.
-90. ✅ When we know the dndbeyond id/url of a character prefill the sync url with that so the user can click sync to update it from dndbeyond.
-91. ✅ Let spell/skill/attack/item commands use the index from 1 of the results suggested with the bare command and include that index in the message that lists them.
-92. ✅ At the top of chat between /skill and /help include /spell now that /spell looks for spells on the character.
-93. ✅ When an asset is dragged in and added to the asset manager the asset manager display does not update to show it. I have to close and reopen it again.
-94. ✅ When editing a scene in the settings for it I have two vertical scrollbars.
-95. ✅ When I change grid type in a scene settings it chagnes the type value for all scenes, but the grid drawn and snapped to is still squeare not hexagonal
-96. ✅ I don't see anything showing my imported monsters and characters. Please add them to the asset manager.
-97. ✅ Add a measuring tape. This should allow a user to see how far they are away from something.
-98. ✅ When using the circle, rectangle, or arrow indicator tools show the size of the rectangle, the length of the arrow and the radius of the circle as they are being drawn. This way I can make a 30' radius without guessing.
-99. ✅ My mic started recording. It should start muted.
-100. ✅ We have client port and server port in our .env, but our dockerfile doesn't use them. Please ensure it uses them to put the containers on the right ports.
-101. ✅ Create a production .env.production and a either a production compose.yaml that uses it or update our current compose.yaml
-102. ✅ I want to create a ci script that builds the container in a production state so I can push it to another registry.
-103. ✅ When I roll initiative in the initiative tracker it doesn't show up as a roll in the dice tool. It does show up in chat which is great, but it doesn't show what the roll and bonus were.
-104. ✅ When I edit in the initiative tracker, make the current number stay and put the input field where the name and hp text are.
-105. ✅ - **Discord webhook one-way chat & roll sync** `[AI Credit Cost: ★☆☆☆☆ - Minimal]`:
-    - *Cost Drivers*: Minimal context footprint; simple outbound HTTP POST to webhook URL.
-    - Add one-way sync from OldBearRodeo to a Discord text channel via a Discord webhook URL.
-    - Add `/discord webhook <webhook url>` to configure the webhook URL.
-    - Add `/discord webhook none` to clear/disable the webhook.
-    - Running `/discord` with no parameters should display usage instructions.
-    - All output from `/discord` commands must only be visible to the user executing them (ephemeral / whisper).
-    - Only allow GMs to execute `/discord` commands.
-    - When enabled, chat messages and dice rolls are automatically posted to the Discord channel via the webhook.
-106. ✅ - **CLI / Terminal Chat Client** `[AI Credit Cost: ★☆☆☆☆ - Minimal]`:
-    - *Cost Drivers*: Completely self-contained script; consumes existing WebSocket signaling protocol without modifying core engine.
-    - Lightweight terminal client or script connecting to the WebSocket server (`/ws`) to monitor chat and roll dice from the command line or stream decks.
-    - local history so up lets you go back through the commands and messages you typed.
-    - use python or something reliably multi platform but not java.
-    - call the executable "oldbearchat" and let us join by running `oldbearchat <invite url>` or `oldbearchat` and then in the chat context `/join <invite url>`. Take inspiration from irc/mirc for the ui and commands. We don't need to support multiple rooms or channels yet.
-107. ✅ Props should be tracked like tokens in the asset manager.
-108. ✅ Reorganize the hamburger menu.
-  1. Sound status. The bar that's already there.
-  2. Chat
-  3. Character Sheets and Spells -> rename to Characters
-  4. Initiative Tracker
-  5. Add Token this should let the user add any tokens, props, monster tokens, or character tokens they have access to. Preferably into a visible area or just off the board, but not on top of another token/prop.
-  6. Soundboard
-  7. Backup & Transfer Data -> Rename to Asset Manager and add a scene manager tab. move the scene manager into this Asset Manager.
-  8. Voice & Audio settings
-109. ✅ Make a prompt to generate a favicon for the page. I will execute it and add the file later.
-110. ✅ Asset manager doesn't show props. Add a props tab.
-111. ✅ Persistent highlights and drawings (spell templates, zones, arrows) with removal:
-  - Add a `📌 Persist` toggle in the drawing tools flyout and bottom toolbar (`⚡ Quick Ping` fades after 4s vs. `📌 Persist` stays on map; `Shift` key inverts mode on desktop).
-  - Treat persistent shapes (circle, rectangle, arrow, target) as entities on a drawing layer rendered directly on top of the background grid but beneath character tokens (so tokens can stand inside spell areas without blocking selection).
-  - Laser pointer remains strictly ephemeral.
-  - Allow the creator and any GM to select persistent shapes using the Arrow (`select`) tool to move or remove them.
-  - When a persistent shape is selected, display a minimal toolbar with a Delete button `🗑️` (or `Delete`/`Backspace` on desktop) and a Lock toggle `🔒` (from Task 115) to prevent accidental movement during battle.
-112. ✅ Make the Asset Manager a draggable, non-modal floating window without a dark backdrop overlay so the battlemap remains interactive underneath. Support dragging tokens, props, monsters, and characters directly out of the asset window onto the canvas scene to spawn them at the cursor, and include a "Deploy to Map" button on each asset card (dropping near viewport center/visible area), along with minimize/collapse and close controls.
-113. ✅ When managing props in the asset manager we should be able to set the prop dimensions in tiles as a decimal number so 1.5 x 3.24 or something like that.
-114. ✅ I want to be able to rotate props from their settings and the bottom toolbar when they are selected.
-115. ✅ I want to be able to use props as different things like unkillable npcs, walls, plants, doors, etc. They don't need hp or temp hp on their toolbar. They don't need the status add thing on the toolbar either. The assigned dropdown on the toolbar should be removed for both tokens and props. I think the toolbar needs a rotation control where I can type in a number of degrees and a arrow/compas like thing that can be dragged to set the rotation. I also want to be able to lock and unlock tokens and props. locked tokens/props should be able to be selected but not moved.
-116. ✅ Add a version to the top bar. small text under the Old Bear Rodeo text. Preferably keep the Old Bear Rodeo text in the same position it is in. I like how everything in the top bar is baseline aligned.
-117. ✅ Fix trackpad scrolling vs. zooming and auto-revert box select:
-  - Separate two-finger trackpad panning from pinch-to-zoom: standard two-finger swipe (`e.ctrlKey === false`) should pan the battlemap smoothly via `this.viewport.pan(-deltaX, -deltaY)`, while trackpad pinch (`e.ctrlKey === true`) or Ctrl/Cmd+scroll zooms smoothly at the cursor.
-  - Expose adjustable top-level sensitivity constants in `packages/client/src/engine/CanvasEngine.ts` (`TRACKPAD_PAN_SENSITIVITY`, `TRACKPAD_ZOOM_SENSITIVITY`, `MOUSE_WHEEL_ZOOM_SENSITIVITY`) so scrolling and zooming speed can be easily dialed in.
-  - When the box select tool successfully selects one or more tokens, automatically switch the active tool back to the arrow (`select`) tool.
-118. ✅ Arc / Cone spell template indicator tool with optional persistence:
-  - Add an Arc / Cone indicator tool to the drawing tools sub-menu (for spells like Burning Hands, Cone of Cold, Acid Breath, etc.).
-  - Drawing workflow: tap/click origin (caster) and drag outward to set direction and length/radius with live preview badge (`${radiusFt} ft cone`).
-  - Angle & spread defaults:
-    - Non-persistent mode (`⚡ Quick Ping`): fixed at 60° default without cluttering handles during the quick ping.
-    - Persistent mode (`📌 Persist`): defaults to 60°, but includes an interactive edge handle dot to freely drag and adjust the spread angle (plus toolbar preset chips: 53°, 60°, 90°, 120°, 180°).
-  - Dual Cone / Triangle visualization:
-    - Render the circular cone arc in the primary highlight color.
-    - Render the area where a flat-ended triangle cone covers but the circular arc does not (the outer triangle corners / difference) in a second, darker or contrasting accent color, clearly distinguishing both circular and triangular ruleset interpretations at a glance.
-  - Fully supports the `📌 Persist` toggle from Task 111 so it can be used either as an ephemeral ping or kept on the board as a persistent zone.
-  - Selectable, rotatable, and removable with the Delete button `🗑️` by the creator or GM.
-119. ✅ Make the target have a draggable size with distance like the circle, but keep the current size the minimum so users can still tap and get it.
-120. ✅ Make dice roller a draggable window
-121. ✅ Make character sheet a draggable window.
-123. ✅ When dragging an asset onto the scene we should not get the drop files to import screen. We should still see the scene so we can see where we are dragging.
-124. ✅ Store the version somewhere we can use it in ci when building and tagging containers. If we have to manually update it I want to do it in one place. If possible include the short git hash when displaying it in the app something like `v0.1.0-alpha5 (c292e59)` where the version number in our file is `0.1.0-alpha5`.
-125. ✅ Add a feedback link to `https://forms.gle/zD9Rmqj4c3Dffpw39`, and a github link to `https://github.com/headhunter45/OldBearRodeo`. 
-126. ✅ Add an MIT license file. Use `Tom Hicks` as the name and `headhunter3@gmail.com` as the email.
-127. When dragging a window put it on top of the other floating windows.
-
-## Future Ideas AGENTS DO NOT IMPLEMENT YET
-
-
-## Breakdown of Future Ideas & Cost-Reduction Strategy
-
-To minimize AI token/credit consumption while maximizing development speed, we should break down the backlog into **distinct, self-contained milestones** and divide work based on what AI does best (algorithmic logic, state wiring, unit tests) vs. what you can do directly (UI copy, CSS fine-tuning, design decisions).
+| ID | Status | Title |
+| :--- | :--- | :--- |
+| OB-1 | Complete | In voice and audio settings the 4th button for streaming is mostly off screen |
+| OB-2 | Complete | When adding a new token to the board try to not put it on top of an existing one |
+| OB-3 | Complete | When uploading files allow selecting multiple files at once |
+| OB-4 | Complete | When uploading files allow drag and drop onto the window |
+| OB-5 | Complete | Fix map upload trigger |
+| OB-6 | Complete | Carry over image when syncing D&D Beyond with a token |
+| OB-7 | Complete | Save user characters in player and GM local storage during D&D Beyond import |
+| OB-8 | Complete | Show ability score modifier large and score small |
+| OB-9 | Complete | Add trained and expertise skills to character sheet |
+| OB-10 | Complete | Add proficiency bonus to character sheet |
+| OB-11 | Complete | Add export/import option for all data (characters, uploaded files, maps, tokens) |
+| OB-12 | Complete | Fix initiative tracker button |
+| OB-13 | Complete | Fix dice roller button |
+| OB-14 | Complete | Configure available UI colors in source code |
+| OB-15 | Complete | Allow GM to add sounds to the soundboard |
+| OB-16 | Complete | Duplicate selected token |
+| OB-17 | Complete | Allow assigning a player control over multiple tokens |
+| OB-18 | Complete | Make token preview icon square on bottom interaction bar |
+| OB-19 | Complete | Cycle selection through overlapping tokens on click/tap |
+| OB-20 | Complete | Specify map dimensions in tiles or tile pixel size and grid offset on import |
+| OB-21 | Complete | Render configurable grid on top of map but under tokens |
+| OB-22 | Complete | Animate mic and headphone icons in top bar when sending or receiving audio |
+| OB-23 | Complete | Fix "Send Players" on map to properly direct player view |
+| OB-24 | Complete | Make map edit component a modal or positioned non-obstructively |
+| OB-25 | Complete | Fix grid size input backspace behavior and auto-select text on focus |
+| OB-26 | Complete | Restructure map settings layout into two clean columns |
+| OB-27 | Complete | Remove redundant "Back to Maps List" button in modal context |
+| OB-28 | Complete | Add map deletion and map renaming |
+| OB-29 | Complete | Separate maps from scenes to allow sharing maps across multiple scenes |
+| OB-30 | Complete | Asset manager listing tokens, maps, and sounds with hash deduplication |
+| OB-31 | Complete | Asset manager UI grouping with previews, bulk delete, and rename |
+| OB-32 | Complete | Token image selection prompt when adding token with + button |
+| OB-33 | Complete | Token asset settings: border shape and clip/zoom/pan controls |
+| OB-34 | Complete | Map background color picker for imageless grids and outer canvas |
+| OB-35 | Complete | Fix hex grid snapping alignment |
+| OB-36 | Complete | Quick control to cover entire map in fog |
+| OB-37 | Complete | Fog persistence fix and transparent fog rendering in GM view |
+| OB-38 | Complete | Fix trackpad pinch-to-zoom vs two-finger scroll on mobile and desktop |
+| OB-39 | Complete | Keyboard shortcuts for highlights (1-5), pan (h), select (s), fog (f), reveal (r), duplicate (d) |
+| OB-40 | Complete | Bulk move group of tokens to another map |
+| OB-41 | Complete | Spawn synced D&D Beyond token off map edge and update selected token |
+| OB-42 | Complete | Pre-create claimable player tokens when player joins |
+| OB-43 | Complete | Animated roll announcement toast with player name, formula, and result |
+| OB-44 | Complete | Remember previously used characters in local storage for quick selection |
+| OB-45 | Complete | Chat command system (/roll, /attack, /skill, /spell with adv/dis) |
+| OB-46 | Complete | Move client, server, and nginx ports to .env and .env.example |
+| OB-47 | Complete | Default mic to muted and defer permission request until unmuted |
+| [OB-48](#ob-48---syllable-based-fantasy-name-generator) | Complete | Syllable-based fantasy name generator |
+| OB-49 | Complete | Default GM user name to "GM" instead of "Adventurer" |
+| [OB-50](#ob-50---dnd-beyond-attacks-and-actions-import-parsing) | Complete | D&D Beyond attacks and actions import parsing |
+| OB-51 | Complete | Import and display initiative bonus, saving throws, passive perception, currency |
+| OB-52 | Complete | Automatically apply character initiative bonus in initiative tracker rolls |
+| OB-53 | Complete | Allow GM to manually set initiative scores in tracker |
+| OB-54 | Complete | Ephemeral /help and parameter validation for /attack, /spell, and /skill |
+| OB-55 | Complete | Support token index parameter in /sync command |
+| OB-56 | Complete | Add /tokens command listing controllable tokens and their indices |
+| OB-57 | Complete | Move hamburger menu to far left of top bar |
+| OB-58 | Complete | Consolidate fog controls into submenu under single fog button |
+| OB-59 | Complete | Consolidate highlights and pointers into submenu under single button |
+| OB-60 | Complete | Rebind select tool to 's' key |
+| OB-61 | Complete | Rebind hand/grab tool to 'g' key |
+| OB-62 | Complete | Add box select tool below hand tool bound to 'b' key |
+| OB-63 | Complete | Fix chat bubble text color and remove bottom-left chat capsule |
+| OB-64 | Complete | Auto-dismiss full-map fog notification toasts |
+| OB-65 | Complete | Adaptive top and left toolbars for mobile and narrow screens |
+| OB-66 | Complete | Draggable non-modal windows with animated minimize chevrons |
+| OB-67 | Complete | Drag to reorder initiative tracker rows and inline score editing |
+| OB-68 | Complete | Per-user scrollable roll history in dice roller window |
+| OB-69 | Complete | Configurable toast display duration in .env |
+| OB-70 | Complete | Create scene directly from map card in Asset Manager |
+| OB-71 | Complete | Highlight bonus actions and reactions in attacks list |
+| OB-72 | Complete | Interactive zoom, crop, and pan preview for token avatars |
+| [OB-73](#ob-73---tetracube-monster-import-with-dual-drop-support) | Complete | TetraCube .monster import with dual-drop support |
+| [OB-74](#ob-74---multi-file-drag-and-drop-batch-asset-import-dialog) | Complete | Multi-file drag-and-drop batch asset import dialog |
+| OB-75 | Complete | Immediate player nickname update in top bar icons on change |
+| OB-76 | Complete | Nickname persistence in player settings |
+| OB-77 | Complete | Animate hamburger menu slide-in from the left |
+| OB-78 | Complete | Multi-token box select for bulk movement, assignment, and duplication |
+| OB-79 | Complete | Inline initiative score editing in tracker row |
+| OB-80 | Complete | Persist reordered initiative tracker rows |
+| OB-81 | Complete | Pan/focus canvas on token click in initiative tracker |
+| OB-82 | Complete | Fix minimized initiative tracker window clipping |
+| OB-83 | Complete | Record chat command rolls in dice roller history |
+| OB-84 | Complete | Prevent duplicate player connection entries on page refresh |
+| OB-85 | Complete | Fix submenu flyout visibility for selection and fog tools |
+| OB-86 | Complete | Combine grid tools into single flyout (snap toggle and show/hide icons) |
+| OB-87 | Complete | Remove standalone sound icons from top bar |
+| OB-88 | Complete | Move toggle chat button into left menu toolbar |
+| OB-89 | Complete | Reorganize tools and audio controls in hamburger menu |
+| OB-90 | Complete | Prefill D&D Beyond sync URL when character ID is known |
+| OB-91 | Complete | Index-based selection for /spell, /skill, /attack, /item suggestions |
+| OB-92 | Complete | Add /spell quick link at top of chat |
+| OB-93 | Complete | Real-time Asset Manager refresh when dragging assets in |
+| OB-94 | Complete | Fix double vertical scrollbar in scene settings modal |
+| OB-95 | Complete | Fix hex grid rendering and snapping across scenes |
+| OB-96 | Complete | Display imported monsters and characters in Asset Manager |
+| OB-97 | Complete | Interactive measuring tape tool |
+| OB-98 | Complete | Live dimensions preview while drawing shapes (radius, length, box) |
+| OB-99 | Complete | Ensure microphone starts muted by default |
+| OB-100 | Complete | Pass client and server ports from .env into Dockerfile |
+| OB-101 | Complete | Production compose.yaml and .env.production configuration |
+| OB-102 | Complete | Production CI container build script (scripts/ci-build.sh) |
+| OB-103 | Complete | Log initiative rolls to dice history with modifiers |
+| OB-104 | Complete | Inline input positioning during initiative tracker row editing |
+| [OB-105](#ob-105---discord-webhook-one-way-chat--roll-sync) | Complete | Discord webhook one-way chat & roll sync |
+| [OB-106](#ob-106---cli--terminal-chat-client-oldbearchat) | Complete | CLI / Terminal chat client (oldbearchat) |
+| OB-107 | Complete | Track props like tokens in Asset Manager |
+| [OB-108](#ob-108---reorganize-hamburger-menu-hierarchy) | Complete | Reorganize hamburger menu hierarchy |
+| OB-109 | Complete | Favicon generation prompt (FAVICON_PROMPT.md) |
+| OB-110 | Complete | Add dedicated Props tab to Asset Manager |
+| [OB-111](#ob-111---persistent-highlights-and-drawings-with-lock--delete) | Complete | Persistent highlights and drawings with lock & delete |
+| [OB-112](#ob-112---floating-non-modal-asset-manager-with-map-drag-drop) | Complete | Floating non-modal Asset Manager with map drag-drop |
+| OB-113 | Complete | Support decimal tile dimensions for props |
+| OB-114 | Complete | Prop rotation controls in settings and bottom toolbar |
+| [OB-115](#ob-115---prop-versatility-rotation-widget-and-token-lockunlock) | Complete | Prop versatility, rotation widget, and token lock/unlock |
+| OB-116 | Complete | Display application version in top bar |
+| [OB-117](#ob-117---trackpad-scrolling-vs-zooming-separation-and-auto-revert-box-select) | Complete | Trackpad scrolling vs zooming separation and auto-revert box select |
+| [OB-118](#ob-118---arc--cone-spell-template-indicator-tool-with-dual-color-visualization) | Complete | Arc / Cone spell template indicator tool with dual-color visualization |
+| OB-119 | Complete | Draggable target indicator with distance preview |
+| OB-120 | Complete | Draggable floating dice roller window |
+| OB-121 | Complete | Draggable floating character sheet window |
+| OB-123 | Complete | Maintain battlemap visibility during asset drag-and-drop |
+| [OB-124](#ob-124---build-version-with-short-git-hash-in-top-bar-and-ci) | Complete | Build version with short git hash in top bar and CI |
+| OB-125 | Complete | Add feedback and GitHub repository links |
+| OB-126 | Complete | Add MIT License file |
+| [OB-127](#ob-127---window-z-index-elevation-on-drag) | Pending | Window z-index elevation on drag |
+| [OB-128](#ob-128---modular--tileable-maps--snapping-map-tiles) | Pending | Modular / Tileable Maps & Snapping Map Tiles |
+| [OB-129](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering) | Pending | Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering |
+| [OB-130](#ob-130---submaps--secondary-logical-maps-per-scene) | Pending | Submaps & Secondary Logical Maps per Scene |
+| [OB-131](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles) | Pending | Custom Configurable Statuses with Counters & Turn Lifecycles |
+| [OB-132](#ob-132---timers--segmented-pie-wedge-progress-clocks) | Pending | Timers & Segmented Pie-Wedge Progress Clocks |
+| [OB-133](#ob-133---advanced-dice-expression-engine--action-tied-rolls) | Pending | Advanced Dice Expression Engine & Action-Tied Rolls |
+| [OB-134](#ob-134---custom-image-spray-indicator-tool) | Pending | Custom Image "Spray" Indicator Tool |
+| [OB-135](#ob-135---universal-binder-exportimport-pipeline) | Pending | Universal `.binder` Export/Import Pipeline |
+| [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) | Pending | Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl |
+| [OB-137](#ob-137---mobile-touch-hit-box--finger-offset-calibration) | Backlog | Mobile Touch Hit-Box & Finger Offset Calibration |
+| [OB-138](#ob-138---mobile-token-interaction-bar--left-menu-clipping) | Backlog | Mobile Token Interaction Bar & Left Menu Clipping |
+| [OB-139](#ob-139---reusable-help--tooltip-component) | Backlog | Reusable Help & Tooltip Component |
+| [OB-140](#ob-140---direct-json-paste--drop-import-for-characters--monsters) | Backlog | Direct JSON Paste / Drop Import for Characters & Monsters |
+| [OB-141](#ob-141---item-command-with-local-caching--dnd-beyond-fetch) | Backlog | `/item` Command with Local Caching & D&D Beyond Fetch |
+| [OB-142](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid) | Backlog | D&D Beyond Monster, Item & Character Direct Fetch by URL/ID |
+| [OB-143](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url) | Backlog | Direct Token Creation from D&D Beyond Monster/Character URL |
+| [OB-144](#ob-144---pathbuilder-2e-pf2e-character-import--ruleset-support) | Backlog | Pathbuilder 2e (PF2e) Character Import & Ruleset Support |
+| [OB-145](#ob-145---live-video-feed-tokens) | Backlog | Live Video Feed Tokens |
+| [OB-146](#ob-146---webrtc-webcam-video-mesh-with-draggable-pip-tiles) | Backlog | WebRTC Webcam Video Mesh with Draggable PIP Tiles |
+| [OB-147](#ob-147---discord-two-way-bot-sync-gateway) | Backlog | Discord Two-Way Bot Sync Gateway |
+| [OB-148](#ob-148---dnd-beyond-cobaltsession-auth--private-sheets-support) | Backlog | D&D Beyond CobaltSession Auth & Private Sheets Support |
+| [OB-149](#ob-149---discord-embedded-app-sdk-activity-integration) | Backlog | Discord Embedded App SDK Activity Integration |
+| [OB-150](#ob-150---system-agnostic-ruleset-manifest--characterfiles-integration) | Backlog | System-Agnostic Ruleset Manifest & Characterfiles Integration |
+| [OB-151](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio) | Pending | Switch Container CI/CD to GitHub Container Registry (ghcr.io) |
 
 ---
 
-### Phase 1: Mobile Touch & Selection Ergonomics (Highest Priority)
-*These address the daily frustration of interacting with the map on phones and tablets.*
+## OB-48 - Syllable-Based Fantasy Name Generator
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-#### 1.1 Touch Hit-Box & Finger Offset Calibration
-- **The Problem**: A human finger pad is ~40–50px wide, whereas mouse cursors are 1px. Tapping a 30px token with a finger causes the center of mass to miss the hit-box, or triggers map panning instead of token selection.
-- **AI Task (Small, 1 prompt)**:
-  - Add a **Touch Slop / Hit Radius Buffer** in `CanvasEngine.ts` (`touchHitRadius = Math.max(tokenRadius, 28)` for touch events).
-  - In `onTouchStart`, if a touch lands within the expanded radius of a selected token, explicitly lock pan and treat touch-drag as token movement rather than viewport pan.
-- **What You Can Test / Tune**:
-  - Test the feel on your actual mobile device and tweak the `TOUCH_SLOP_PX` constant (e.g. `24px` vs `32px`) to match your finger ergonomics without needing back-and-forth prompt cycles.
-
-#### 1.2 Mobile Token Interaction Bar & Left Menu Clipping
-- **The Problem**: The action HUD overlaps the left toolbar in landscape, and falls off-screen in portrait.
-- **What You Can Code (Free)**:
-  - Pure CSS adjustments in `index.css`:
-    - Add `safe-area-inset` padding (`env(safe-area-inset-bottom)`) to the floating HUD.
-    - Set the token action bar to `bottom: 4.5rem; left: 50%; transform: translateX(-50%)` with `max-width: 90vw` so it stays centered above the bottom bar.
-    - Add `max-height: calc(100dvh - 5rem); overflow-y: auto` to `.floating-hud-toolbar` in landscape media queries.
+Generates random fantasy names for newly connected users from customizable syllable arrays for male, female, and neutral profiles.
 
 ---
 
-### Phase 2: Help, Tooltips & Onboarding (Low AI Cost)
+## OB-50 - D&D Beyond Attacks and Actions Import Parsing
+**Status:** Complete  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
 
-#### 2.1 Reusable Help & Tooltip Component
-- **AI Task (Small, 1 prompt)**:
-  - Build a lightweight, accessible `<HelpTip text="..." />` or `<Tooltip text="...">` component with a subtle `?` icon.
-  - Add a simple hotkey cheat-sheet modal triggered by `?` or `Shift + /`.
-- **What You Can Write (Free)**:
-  - Provide a simple JSON or dictionary file of tooltip copy (e.g. `helpText.json`). LLMs consume thousands of tokens drafting copy text, so writing the descriptions yourself saves significant credits.
-
----
-
-### Phase 3: Content Ingestion (D&D Beyond & Pathbuilder 2e)
-
-#### 3.1 Direct JSON Paste / Drop Import (Easiest & Cheapest)
-- **Why this first**: Scraping live D&D Beyond URLs requires handling Cloudflare and network latency. Allowing users to paste exported JSON directly or drop a `.json` character file requires zero authentication and zero external network fragility.
-- **AI Task**:
-  - Add a "Paste JSON" tab to the character flyout or drag-drop listener.
-- **What You Can Provide**:
-  - Sample exported character and monster JSON files from your own campaigns for the test suites.
-
-#### 3.2 `/item` Command with Local Caching
-- **AI Task**:
-  - Simple client-side command parser for `/item <query>`, storing cached lookups in `localStorage`.
+Parse weapon and natural attack blocks from D&D Beyond character endpoints, generating structured attack actions with reach/range, to-hit modifiers, and damage dice formulas.
 
 ---
 
-### Phase 4: Heavy Architecture (Webcam Mesh, Bot Daemons, Embedded SDK)
-*These carry the highest AI credit burn (Rank 8–13) due to complex external dependencies.*
+## OB-73 - TetraCube .monster Import with Dual-Drop Support
+**Status:** Complete  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
 
-- **Advice**: Keep these deferred until the core mobile touch UX and content ingestion are rock solid. When ready, implement them strictly through phased spikes (e.g. WebRTC 1-to-1 video before attempting a full N-way video grid).
-
-
-### Suggested Next Immediate Step
-Would you like to tackle **Phase 1.1 (Mobile Touch Slop & Token Drag vs. Pan Lock)** next?
+Support importing TetraCube `.monster` files as monster/NPC assets with full stats, AC, HP, speed, and actions:
+- Drop `.monster` onto Battlemap directly: saves to Asset Manager and drops token at cursor.
+- Drop `.monster` into Asset Manager: saves to library for encounter prep without placing on map.
+- Spawning tokens from Asset Manager auto-numbers duplicate names (e.g. Ankheg 1, Ankheg 2) with clickable statblock actions.
 
 ---
 
-### AI Credit Usage Difficulty Ranking (Lowest to Highest)
+## OB-74 - Multi-File Drag-and-Drop Batch Asset Import Dialog
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-#### Direct JSON Paste / Drop Import
+When multiple image files are dragged into the window simultaneously, present a unified batch import dialog allowing each file to be classified as a Map, Token, or Prop with bulk selection buttons ("Set all to Tokens", "Set all to Maps", "Set all to Props").
 
-**Cost:** ★★☆☆☆ (Low)
-**Primary Cost Driver:** Pure client-side schema mapping, zero network auth.
+---
 
-#### `/item` Command with Lookup & Cache
+## OB-105 - Discord Webhook One-Way Chat & Roll Sync
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-**Cost:** ★★☆☆☆ (Low-Med)
-**Primary Cost Driver:** Straightforward endpoint fetch & chat rendering.
+Add one-way sync from OldBearRodeo to a Discord text channel via a Discord webhook URL:
+- `/discord webhook <webhook url>` to configure webhook URL.
+- `/discord webhook none` to clear/disable webhook.
+- All `/discord` command output is ephemeral (visible only to the user).
+- Only GMs may execute `/discord` commands.
+- Automatically relays all public chat messages and dice rolls to Discord.
 
-- `/item list`: Outputs a list of items the user currently has (visible only to the user).
-- `/item <dndbeyond url or id>`: Fetches item details from D&D Beyond (e.g. `https://www.dndbeyond.com/magic-items/9228356-bag-of-holding` or ID `9228356-bag-of-holding`) and displays the formatted description in chat.
-- Cache all unique items locally in storage by their D&D Beyond ID (e.g., `9228356-bag-of-holding`) so repeated lookups do not hit the site again.
+---
 
-#### D&D Beyond Monster, Item & Character Importing by URL / ID
-**Cost:** ★★★☆☆ - Medium
-**Primary Cost Driver:** Moderate token footprint; mapping diverse statblock fields into existing data models and handling asset caching.
-- Allow importing and caching monsters, items, and characters from D&D Beyond by pasting their URL or slug/ID (e.g., `https://www.dndbeyond.com/monsters/16939-kobold` for monsters).
-- Cache all fetched entities in local storage for fast offline access and search.
+## OB-106 - CLI / Terminal Chat Client (oldbearchat)
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-#### Direct Token Creation from D&D Beyond
+Lightweight terminal chat and dice rolling client (`bin/oldbearchat`):
+- Connects directly to the WebSocket server (`/ws`).
+- Supports joining via URL or `/join <invite url>`.
+- Local command history via up/down arrow keys.
+- Inspired by IRC/mIRC command ergonomics.
 
-**Cost:** ★★☆☆☆ - Low-Medium
-**Primary Cost Driver:** Reuses entity parsing pipeline; spawns token on battlemap with cached avatar and populated stats.
-- Add tokens directly from D&D Beyond monster or character URLs/IDs, automatically caching the official avatar/token art and populating the statblock on the token.
+---
 
-#### Pathbuilder 2e (Pathfinder 2e) Character Import & Ruleset Support
+## OB-108 - Reorganize Hamburger Menu Hierarchy
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-**Cost:** ★★★☆☆ - Medium
-**Primary Cost Driver:** Pathbuilder JSON schema is open and straightforward, but adding PF2e action cost glyphs (`◆`), MAP calculations, and TEML proficiency requires extensive UI additions across multiple client components.
-- Import Methods:
-  - Direct Web Sync via Pathbuilder 2e ID or URL (`https://pathbuilder2e.com/json.php?id=<build_id>`) in `/sync` command and Character Sheet dialog.
-  - Drag-and-drop / file upload of Pathbuilder 2e exported `.json` character files onto the Battlemap (direct token spawn) and into the Asset Manager (library storage).
-- Data Model & Ruleset Integration:
-  - Tag characters and tokens with `system: 'pf2e'`.
-  - Support PF2e 3-action economy with action cost glyphs (`◆`, `◆ practical`, `◆◆◆`, `↺`, `◇`) on attacks, spells, and actions.
-  - Support Multiple Attack Penalty (MAP) buttons on strike actions (0, -5, -10 or -4, -8 for agile weapons).
-  - Support TEML proficiency progression (Trained, Expert, Master, Legendary) for skills, perception, saving throws, and attack rolls.
-  - Dynamic `/attack`, `/spell`, and `/skill` chat commands tailored to PF2e modifiers and conditions.
+Standardize hamburger menu ordering:
+1. Sound status / volume bar
+2. Chat
+3. Characters (renamed from Character Sheets and Spells)
+4. Initiative Tracker
+5. Add Token (tokens, props, monsters, characters)
+6. Soundboard
+7. Asset Manager (including integrated Scene Manager)
+8. Voice & Audio Settings
 
-#### Live Video Feed Tokens
+---
 
-**Cost:** ★★★☆☆ - Medium-High
-**Cost Drivers:** Hooking media stream video into HTML5 Canvas via `ctx.drawImage()` requires managing video element lifecycle and maintaining a smooth 60 FPS canvas loop.
-- Render a player's live webcam video feed directly inside their controlling token on the canvas battlemap using `ctx.drawImage(videoElement)`.
+## OB-111 - Persistent Highlights and Drawings with Lock & Delete
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-#### WebRTC Webcam Video
+Persistent canvas drawings and spell templates:
+- `📌 Persist` toggle in drawing tools flyout (`⚡ Quick Ping` fades after 4s vs `📌 Persist` stays on map).
+- Persistent shapes (circle, rectangle, arrow, target) live on a drawing layer above the grid but below tokens.
+- Selectable and movable with the Select (`s`) tool.
+- Floating toolbar with Delete `🗑️` and Lock `🔒` toggle.
 
-**Cost:** ★★★★☆ - High
-**Cost Drivers:** Multi-peer WebRTC mesh video transceivers, negotiation race conditions, floating/draggable PIP controls, and bitrate tuning across browser clients.
-- Floating, draggable picture-in-picture webcam tiles for players with volume sliders, speaking rings, and minimize/dock controls.
+---
 
-#### Discord Two-Way Bot Sync
+## OB-112 - Floating Non-Modal Asset Manager with Map Drag-Drop
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-**Cost:** ★★★★☆ - High
-**Cost Drivers:** Running a persistent Discord gateway bot daemon, managing channel-to-room mappings, rate-limits, and avoiding recursive loopbacks between OldBear and Discord.
-- Full two-way sync where messages typed in Discord are also relayed into OldBearRodeo chat via a Discord bot gateway.
+Make the Asset Manager a draggable, non-modal floating window without a dark backdrop overlay:
+- Battlemap remains interactive while Asset Manager is open.
+- Drag tokens, props, monsters, and characters directly onto the canvas to spawn at cursor.
+- "Deploy to Map" button on each asset card (dropping near viewport center).
+- Includes minimize/collapse and close controls.
 
-#### Sort out D&D Beyond Authentication & Private Sheets
-**Cost:** ★★★★☆ - Very High
-**Cost Drivers:** D&D Beyond Cloudflare WAF / bot protection, non-public Cobalt APIs, and Manifest V3 browser extension architecture consume high debugging credits.
-- Direct JSON paste/drop (`[AI Credit Cost: ★★☆☆☆ - Low]`): Simple client-side schema mapping without network authentication.
-- Copy CobaltSession auth token and forward to the API; store in settings or enter via command.
-- Add a browser extension with a 1-click send to OldBear for any supported URL type.
+---
 
-#### D&D Beyond Homebrew and Private Characters Support
+## OB-115 - Prop Versatility, Rotation Widget, and Token Lock/Unlock
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-**Cost:** ★★★★☆ - Very High
-**Cost Drivers:** 
-- Add support for importing private character sheets and homebrew content (e.g., via user-supplied D&D Beyond `CobaltSession` authentication cookie/token in settings, or via a companion browser extension).
+Refine prop and token toolbar controls:
+- Remove HP, temp HP, and assigned user controls from props.
+- Add rotation degree text input and interactive compass rotation wheel widget.
+- Add lock/unlock toggle `🔒` for tokens and props (locked entities can be selected but not moved).
 
-#### Discord Activity Integration
+---
 
-**Cost:** ★★★★★ - Extreme
-**Cost Drivers:** Cannot be verified locally by an AI agent in isolation; requires Discord Developer Portal setup, public tunnel (Cloudflare/ngrok), OAuth2 exchange, and Embedded App SDK iframe RPCs.
-- Embed OldBearRodeo directly inside Discord voice channels using the Discord Embedded App SDK so players can launch and join sessions with a single click from their voice call, without needing room codes or link sharing.
+## OB-117 - Trackpad Scrolling vs Zooming Separation and Auto-Revert Box Select
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
 
-#### System-Agnostic Ruleset Manifest & Characterfiles Schema Integration
+Input ergonomics refinement:
+- Separate two-finger trackpad panning (`e.ctrlKey === false`) from pinch-to-zoom (`e.ctrlKey === true`).
+- Expose sensitivity constants in `CanvasEngine.ts` (`TRACKPAD_PAN_SENSITIVITY`, `TRACKPAD_ZOOM_SENSITIVITY`, `MOUSE_WHEEL_ZOOM_SENSITIVITY`).
+- Auto-revert to the Select (`s`) arrow tool immediately after a box select completes.
 
-**Cost:** ★★★★★ - Extreme
-**Cost Drivers:** Architectural overhaul replacing hardcoded 5e assumptions with dynamic manifest schemas, expression parsers, and generic UI generators across shared, server, and client packages.
-- Integrate with external generic tabletop entity project providing system-agnostic specifications for characters, monsters, spells, items, and actions.
-  - **Manifest & Display Templates**:
-    - Support loading system definition manifests containing display templates, stat attributes, resource pools, and roll expressions without hardcoding game rules into the core VTT engine.
-    - Render character sheets, token stat overlays, and dice roll buttons dynamically based on the active system manifest's template schema.
-  - **Unified Asset & Token Pipeline**:
-    - Map ingested characterfile entities directly into OldBearRodeo tokens, inventory, spellbooks, and action lists regardless of whether the system is D&D 5e, Pathfinder 2e, OSR, Call of Cthulhu, or a custom homebrew system.
+---
 
-#### Tutorial
-#### Help
-#### ? icons with tooltips and tiny help text.
-#### On mobile selecting a character with the arrow or moving them is nearly impossible. It feels like the cursor is the bottom right of my finger instead of the middle. The place I have to tap on the token is tiny. Even after using the box to select the token when I use the arrow to move it it deselects everything and pans the map.
-#### On mobile the bar to interact with my token is off screen in portrait and slightly cut off in landscape.
-#### On mobile in landscape the left button menu is still slightly cut off. The bottom icon is clipped on the bottom, but the next icon does wrap to a second column. The token interaction bar overlaps the menu icons as well.
+## OB-118 - Arc / Cone Spell Template Indicator Tool with Dual-Color Visualization
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Directional cone and arc drawing tool:
+- Click/tap origin (caster) and drag outward to set direction and length/radius with live distance badge.
+- Preset angle spread chips (`53°`, `60°`, `90°`, `120°`, `180°`) with draggable angle handle.
+- Dual-color rendering: circular cone arc rendered in primary highlight color; outer triangle difference rendered in darker accent color to visualize both circular and triangular ruleset interpretations.
+- Fully supports `📌 Persist` toggle, selection, rotation, locking, and deletion.
+
+---
+
+## OB-124 - Build Version with Short Git Hash in Top Bar and CI
+**Status:** Complete  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Single source of truth for application version (`VERSION` file) passed into CI build scripts, Docker tags, and rendered in top bar subtitle with short git commit hash (e.g. `v0.1.0-alpha5 (c292e59)`).
+
+---
+
+## OB-127 - Window Z-Index Elevation on Drag
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+When dragging any floating non-modal window (chat, initiative tracker, dice roller, asset manager, character sheet), automatically elevate its `z-index` above all other open floating windows so it stays visibly on top during interaction.
+
+---
+
+## OB-128 - Modular / Tileable Maps & Snapping Map Tiles
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Dynamic map tile assembly on the canvas during play:
+- Snap modular map tiles edge-to-edge on the fly with magnetic grid alignment (for dungeon rooms, corridors, or wargame terrain tiles).
+- Asset Manager "Tile Bucket": folder containing modular tiles with individually configurable grid size, offsets, and edge-snapping sockets.
+- In-play deployment: pick specific tiles or draw randomly from the deck (card deck style) and drag/spawn them adjacent to existing tiles.
+
+---
+
+## OB-129 - Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Bottom context toolbar for persistent indicators and multi-aura support:
+- Bottom toolbar appears when a persistent indicator is selected (matching token/prop editor style):
+  - Rename/label custom indicator (e.g. "Spirit Guardians", "Captain 6\" Aura", "Threat Range", "Facing").
+  - Colors, opacity, radius/dimensions, cone spread angle, and compass rotation widget.
+  - Anchor toggle: `Center` vs `Base Edge` (measuring aura from perimeter boundary).
+  - Multiple active indicators per token, individually labeled and styled.
+  - Duplicating/copying a token automatically duplicates its active attached indicators.
+  - Lock toggle `🔒` to prevent accidental dragging.
+- Token/Prop Tethering:
+  - Tool to tether one token to another token or prop.
+  - Connecting line with configurable styles (`straight` vs `wiggly` sine wave with frequency/amplitude controls), color, and stroke width.
+  - Line dynamically follows both connected entities on move.
+
+---
+
+## OB-130 - Submaps & Secondary Logical Maps per Scene
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Support multiple logical submaps within a single canvas scene:
+- Primary map serves as the scene thumbnail and primary battleground.
+- Secondary submaps exist in canvas space with independent names, background colors, dimensions, and grid settings.
+- Unifies multiple gameplay concepts under a single engine abstraction:
+  - Multi-floor buildings (Floor 1, Floor 2, Basement side-by-side in one scene).
+  - Connected portal dungeons (Tavern + Cavern).
+  - Wargaming Deployment Zones (color-coded and labeled).
+  - Casualty Tray / Graveyard (off-table area for slain models to facilitate resurrection and VP scoring).
+  - Off-Table Staging Area (Strategic Reserves, Deep Strike, and Embarked units inside Transports).
+- Scene Templates: duplicate a base scene layout (including all submaps and staging boxes) and swap just the primary map image.
+
+---
+
+## OB-131 - Custom Configurable Statuses with Counters & Turn Lifecycles
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+System-agnostic token status conditions with automatic numeric counters and turn transition triggers:
+- Schema:
+  ```json
+  {
+    "label": "Dying",
+    "description": "The unit is dying",
+    "color": "red",
+    "counter": { "start": 1, "update": 1, "max": 3 },
+    "showOnToken": true,
+    "clearWhen": "beginning_of_turn",
+    "updates": "end_of_turn"
+  }
+  ```
+- Storage hierarchy: global/account defaults in `localStorage` + per-scene overrides.
+- Automatic updates: advances counters or clears statuses on turn change based on `beginning_of_turn` or `end_of_turn`.
+
+---
+
+## OB-132 - Timers & Segmented Pie-Wedge Progress Clocks
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Round timers and Blades in the Dark style progress clocks:
+- Timers:
+  - Chat command `/timer <duration>` supporting minutes/seconds and decimals (`/timer 10 min`, `/timer 30s`, `/timer 2.5m`).
+  - Floating / docked HUD badge with start, pause, reset, and completion chime/toast.
+- Pie-Wedge Clocks:
+  - Circular clock divided into an arbitrary number of pie wedges (defaulting to 8).
+  - Placeable on the canvas or tracked in a floating window.
+  - Nameable and colorable.
+  - Click `+` to light up the next clockwise wedge; click `-` to dim a wedge.
+
+---
+
+## OB-133 - Advanced Dice Expression Engine & Action-Tied Rolls
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Tie custom dice macros directly to action buttons on tokens, units, and monsters:
+- Grouped modified rolls: `/roll 40(d6+3)` rolls 40 individual d6s, applies +3 to each, displays all results, and sums total raw rolls + `3 * 40`.
+- Threshold success/failure counting: `/roll 10(d6+2 >= 5)` or `/roll 10(d6+2)/5` evaluates boolean condition per die and reports success/failure totals.
+- Dice pool botch/glitch tracking (e.g. 1s counting as botches for Shadowrun / Vampire: The Masquerade, reporting net successes, total successes, and glitch alerts).
+
+---
+
+## OB-134 - Custom Image "Spray" Indicator Tool
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Deploy custom image decals, objective markers, and hazard overlays:
+- Click center point, drag outward with live distance preview to set diameter.
+- When `📌 Persist` is enabled, position and dimensions remain editable with selection, locking `🔒`, and rotation controls.
+
+---
+
+## OB-135 - Universal `.binder` Export/Import Pipeline
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Establish an open, system-agnostic `.binder` (`application/json`) interchange format:
+- Core entities: characters, tokens, props, maps, scenes, and statuses.
+- Namespaced extension blocks under `{ "vtt": {} }` and `{ "brawl": {} }`.
+- Strictly User-Generated Content (UGC) with zero hardcoded copyrighted material bundled.
+- Single-file export and import for campaigns, army rosters, and asset transfer.
+
+---
+
+## OB-136 - Client Architectural Refactoring: Restructure into `src/common`, `src/vtt`, and `src/brawl`
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Reorganize `packages/client/src/` into three distinct domain folders to decouple shared engine infrastructure from game-specific UI and enable clean multi-mode development:
+- `src/common/`: Shared canvas engine (`CanvasEngine`, `Viewport`), generic floating windows, audio/WebRTC mesh, WebSocket signaling, asset storage, drawing/indicator tools, and general utilities.
+- `src/vtt/`: TTRPG-specific client layer (D&D 5e / PF2e character sheets, spellbooks, D&D Beyond sync, TetraCube monster importers, and VTT entrypoint/shell).
+- `src/brawl/`: Tabletop wargaming client layer (Army roster viewer, unit coherency indicators, chess clocks, phase steppers, and Brawl entrypoint/shell).
+- Rules & Boundaries:
+  - `src/common/` must **never** import from `src/vtt/` or `src/brawl/`.
+  - `src/vtt/` and `src/brawl/` import from `src/common/`, but never import from each other.
+- Execution Priority: **ASAP (Step 0)**. Must be executed first upon resuming active development so tasks OB-128 through OB-135 land directly in `src/common/`.
+
+---
+
+## OB-137 - Mobile Touch Hit-Box & Finger Offset Calibration
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
+**Description:**
+
+Add a Touch Slop / Hit Radius Buffer in `CanvasEngine.ts` (`touchHitRadius = Math.max(tokenRadius, 28)` for touch events) to eliminate tap-selection misses on mobile touchscreens. When a touch begins within the expanded radius of a selected token, explicitly lock viewport panning and treat touch-drag as token movement.
+
+---
+
+## OB-138 - Mobile Token Interaction Bar & Left Menu Clipping
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+CSS layout adjustments for mobile viewports:
+- Add `safe-area-inset` padding (`env(safe-area-inset-bottom)`) to floating HUD.
+- Center token action bar at `bottom: 4.5rem; left: 50%; transform: translateX(-50%)` with `max-width: 90vw`.
+- Add `max-height: calc(100dvh - 5rem); overflow-y: auto` to `.floating-hud-toolbar` in landscape media queries.
+
+---
+
+## OB-139 - Reusable Help & Tooltip Component
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Build an accessible `<HelpTip text="..." />` component with a subtle `?` icon and add a hotkey cheat-sheet modal triggered by `?` or `Shift + /`.
+
+---
+
+## OB-140 - Direct JSON Paste / Drop Import for Characters & Monsters
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
+
+Add a "Paste JSON" tab and drag-and-drop listener for pre-exported D&D Beyond or generic character/monster JSON files, enabling instant local import without requiring network scraping or authentication.
+
+---
+
+## OB-141 - `/item` Command with Local Caching & D&D Beyond Fetch
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
+
+Client-side command parser for `/item <query>` and `/item list`, caching fetched D&D Beyond items locally in storage by ID (`slug`) for fast offline access and chat card rendering.
+
+---
+
+## OB-142 - D&D Beyond Monster, Item & Character Direct Fetch by URL/ID
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** [OB-140](#ob-140---direct-json-paste--drop-import-for-characters--monsters)  
+**Description:**
+
+Fetch public D&D Beyond monsters, items, and characters directly by URL or ID (e.g. `https://www.dndbeyond.com/monsters/16939-kobold`), mapping stats into local entities and caching images in local asset storage.
+
+---
+
+## OB-143 - Direct Token Creation from D&D Beyond Monster/Character URL
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** [OB-142](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)  
+**Description:**
+
+Spawn tokens directly onto the active battlemap from D&D Beyond monster or character URLs/IDs, caching the official avatar art and populating the statblock and attack actions on the token.
+
+---
+
+## OB-144 - Pathbuilder 2e (PF2e) Character Import & Ruleset Support
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
+
+Import Pathbuilder 2e characters via build ID URL (`https://pathbuilder2e.com/json.php?id=<build_id>`) or exported `.json` file:
+- Tag character and tokens with `system: 'pf2e'`.
+- Support PF2e 3-action economy glyphs (`◆`, `◆◆`, `◆◆◆`, `↺`, `◇`) on attacks and actions.
+- Support Multiple Attack Penalty (MAP) buttons on strikes (0, -5, -10 or -4, -8 for agile).
+- Support TEML proficiency progression for skills, saving throws, and perception.
+
+---
+
+## OB-145 - Live Video Feed Tokens
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Render a player's live webcam video feed directly inside their controlling token on the canvas battlemap using `ctx.drawImage(videoElement)` within the 60 FPS canvas loop.
+
+---
+
+## OB-146 - WebRTC Webcam Video Mesh with Draggable PIP Tiles
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Floating, draggable picture-in-picture webcam tiles for players with volume sliders, active speaking rings, and minimize/dock controls over the WebRTC peer mesh.
+
+---
+
+## OB-147 - Discord Two-Way Bot Sync Gateway
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** [OB-105](#ob-105---discord-webhook-one-way-chat--roll-sync)  
+**Description:**
+
+Run a persistent Discord gateway bot daemon providing full two-way synchronization: messages typed in Discord text channels are relayed into OldBear room chat, and vice versa.
+
+---
+
+## OB-148 - D&D Beyond CobaltSession Auth & Private Sheets Support
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** [OB-140](#ob-140---direct-json-paste--drop-import-for-characters--monsters)  
+**Description:**
+
+Support importing private character sheets and homebrew content via user-supplied D&D Beyond `CobaltSession` authentication tokens or companion browser extension.
+
+---
+
+## OB-149 - Discord Embedded App SDK Activity Integration
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Embed OldBear directly inside Discord voice channels using the Discord Embedded App SDK so players can launch and join sessions with a single click from their voice call without external links.
+
+---
+
+## OB-150 - System-Agnostic Ruleset Manifest & Characterfiles Integration
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** [OB-135](#ob-135---universal-binder-exportimport-pipeline)  
+**Description:**
+
+Overhaul system handling by loading external system definition manifests (display templates, stat attributes, resource pools, roll expressions) to render character sheets and token overlays dynamically without hardcoding game rules into the core VTT engine.
+
+---
+
+## OB-151 - Switch Container CI/CD to GitHub Container Registry (ghcr.io)
+**Status:** Pending  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Transition the production container publishing pipeline from the private registry to GitHub Container Registry (`ghcr.io`):
+- Update `.github/workflows/docker-ci.yml` to authenticate against `ghcr.io` using the automatic `GITHUB_TOKEN` with `packages: write` permissions.
+- Update `scripts/ci-build.sh` default registry prefix to `ghcr.io/<owner>/`.
+- Update `compose.prod.yaml` image references to pull from `ghcr.io/<owner>/oldbear_*`.
+- Keep images private until ready for public release, accessible to production hosts via GitHub Personal Access Token (PAT).

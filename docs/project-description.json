@@ -1,0 +1,45 @@
+{
+  "id": "oldbearrodeo",
+  "title": "OldBearRodeo",
+  "description": "A lightweight, mobile-friendly virtual tabletop for hosting tabletop roleplaying sessions without mandatory sign-ins.",
+  "docId": "OldBearRodeo",
+  "url": "/projects/oldbearrodeo",
+  "tags": ["featured", "open-source"],
+  "image": {
+    "url": "",
+    "alt": "OldBearRodeo virtual tabletop",
+    "prompt": "Create a polished editorial game-interface illustration for OldBearRodeo, a lightweight fantasy virtual tabletop. Show a warm, rugged bear-themed rodeo emblem integrated with a tactical tabletop map: parchment map tiles, subtle square grid, colorful circular player tokens, a small dice set, and a lantern-lit wooden table. Use a bold palette of oxblood red, ochre, forest green, charcoal, and parchment cream; strong readable silhouettes; restrained texture; no gradients; no UI text; no watermark; wide landscape composition suitable for a project thumbnail.",
+    "width": 0,
+    "height": 0,
+    "backgroundClassName": "bg-surface"
+  },
+  "source": {
+    "type": "github",
+    "url": "https://github.com/headhunter45/OldBearRodeo"
+  },
+  "feedback": {
+    "url": "https://forms.gle/zD9Rmqj4c3Dffpw39"
+  },
+  "features": [
+    "Canvas-based tactical map with pan, zoom, grids, fog of war, pointers, markers, and movement measurement",
+    "WebSocket room synchronization with WebRTC voice communication and server relay support",
+    "Browser-local storage for maps, tokens, audio, character sheets, and session backups",
+    "Token ownership, health bars, status conditions, movement speed tracking, and initiative management",
+    "Dice rolling with advantage and disadvantage support",
+    "D&D Beyond public character sheet integration",
+    "Responsive desktop and mobile navigation",
+    "GM soundboard with synthesized effects and uploaded audio tracks"
+  ],
+  "technology": [
+    "TypeScript",
+    "React",
+    "Vite",
+    "Node.js",
+    "WebSocket",
+    "WebRTC",
+    "HTML5 Canvas",
+    "IndexedDB",
+    "PostgreSQL",
+    "Docker Compose"
+  ]
+}
