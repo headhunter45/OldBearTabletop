@@ -135,16 +135,16 @@
 | OB-132 | Done    | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
 | OB-133 | Done    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
 | OB-134 | Done    | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
-| OB-135 | Pending | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
+| OB-135 | Ready   | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
 | OB-136 | Done    | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
 | OB-137 | Backlog | [Mobile Touch Hit-Box & Finger Offset Calibration](#ob-137---mobile-touch-hit-box--finger-offset-calibration)                                                                  |
 | OB-138 | Backlog | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                |
-| OB-139 | Backlog | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
+| OB-139 | Ready   | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
 | OB-140 | Backlog | [Direct JSON Paste / Drop Import for Characters & Monsters](#ob-140---direct-json-paste--drop-import-for-characters--monsters)                                                 |
 | OB-141 | Backlog | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                           |
 | OB-142 | Backlog | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                              |
 | OB-143 | Backlog | [Direct Token Creation from D&D Beyond Monster/Character URL](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url)                                            |
-| OB-144 | Backlog | [Pathbuilder 2e (PF2e) Character Import & Ruleset Support](#ob-144---pathbuilder-2e-pf2e-character-import--ruleset-support)                                                    |
+| OB-144 | Ready   | [Pathbuilder 2e (PF2e) JSON Character Import](#ob-144---pathbuilder-2e-pf2e-json-character-import)                                                                             |
 | OB-145 | Backlog | [Live Video Feed Tokens](#ob-145---live-video-feed-tokens)                                                                                                                     |
 | OB-146 | Backlog | [WebRTC Webcam Video Mesh with Draggable PIP Tiles](#ob-146---webrtc-webcam-video-mesh-with-draggable-pip-tiles)                                                               |
 | OB-147 | Backlog | [Discord Two-Way Bot Sync Gateway](#ob-147---discord-two-way-bot-sync-gateway)                                                                                                 |
@@ -152,6 +152,18 @@
 | OB-149 | Backlog | [Discord Embedded App SDK Activity Integration](#ob-149---discord-embedded-app-sdk-activity-integration)                                                                       |
 | OB-150 | Backlog | [System-Agnostic Ruleset Manifest & Characterfiles Integration](#ob-150---system-agnostic-ruleset-manifest--characterfiles-integration)                                        |
 | OB-151 | Done    | [Switch Container CI/CD to GitHub Container Registry (ghcr.io)](#ob-151---switch-container-cicd-to-github-container-registry-ghcrio)                                           |
+| OB-152 | Backlog | [Integrate Help & Tooltip Component Across UI](#ob-152---integrate-help--tooltip-component-across-ui)                                                                          |
+| OB-153 | Backlog | [Pathfinder 2e (PF2e) Ruleset Support](#ob-153---pathfinder-2e-pf2e-ruleset-support)                                                                                           |
+| OB-154 | Backlog | [`GAME_MODE` Environment Configuration & Deployment Toggles](#ob-154---game_mode-environment-configuration--deployment-toggles)                                                |
+| OB-155 | Backlog | [Army, Unit, and Model Domain Hierarchy & Disambiguation](#ob-155---army-unit-and-model-domain-hierarchy--disambiguation)                                                      |
+| OB-156 | Backlog | [Unit Coherency Graph Engine & Real-Time Warning Halos](#ob-156---unit-coherency-graph-engine--real-time-warning-halos)                                                        |
+| OB-157 | Backlog | [Battle Round Stepper & Wargaming Phase Engine](#ob-157---battle-round-stepper--wargaming-phase-engine)                                                                        |
+| OB-158 | Backlog | [Dual-Player Chess Clocks with Turn Countdown & Active Switching](#ob-158---dual-player-chess-clocks-with-turn-countdown--active-switching)                                    |
+| OB-159 | Backlog | [Scoreboard & Resource Tracker (VP, CP, Casualties) with Audit Trail](#ob-159---scoreboard--resource-tracker-vp-cp-casualties-with-audit-trail)                                |
+| OB-160 | Backlog | [Objective Marker Control Zone Calculation & Auto-Scoring](#ob-160---objective-marker-control-zone-calculation--auto-scoring)                                                  |
+| OB-161 | Backlog | [Roster Ingestion Pipeline: NewRecruit JSON & BattleScribe `.rosz`](#ob-161---roster-ingestion-pipeline-newrecruit-json--battlescribe-rosz)                                    |
+| OB-162 | Backlog | [Deployment Zones, Casualty Trays & Staging Submap Templates](#ob-162---deployment-zones-casualty-trays--staging-submap-templates)                                             |
+| OB-163 | Backlog | [Tournament Organizer (TO) Mode, Match Privacy & Spectator Controls](#ob-163---tournament-organizer-to-mode-match-privacy--spectator-controls)                                 |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
 
@@ -513,7 +525,7 @@ CSS layout adjustments for mobile viewports:
 **Depends On:** None  
 **Description:**
 
-Build an accessible `<HelpTip text="..." />` component with a subtle `?` icon and add a hotkey cheat-sheet modal triggered by `?` or `Shift + /`.
+Build an accessible, reusable `<HelpTip text="..." />` component with a subtle `?` icon, smooth hover/focus tooltip balloon, and a hotkey cheat-sheet modal triggered by `?` or `Shift + /`. (Integration of tooltips across application views is tracked in follow-up task [OB-152](#ob-152---integrate-help--tooltip-component-across-ui)).
 
 ## OB-140 - Direct JSON Paste / Drop Import for Characters & Monsters
 
@@ -551,7 +563,7 @@ Fetch public D&D Beyond monsters, items, and characters directly by URL or ID (e
 
 Spawn tokens directly onto the active battlemap from D&D Beyond monster or character URLs/IDs, caching the official avatar art and populating the statblock and attack actions on the token.
 
-## OB-144 - Pathbuilder 2e (PF2e) Character Import & Ruleset Support
+## OB-144 - Pathbuilder 2e (PF2e) JSON Character Import
 
 **Status:** Backlog  
 **App:** VTT  
@@ -560,10 +572,139 @@ Spawn tokens directly onto the active battlemap from D&D Beyond monster or chara
 
 Import Pathbuilder 2e characters via build ID URL (`https://pathbuilder2e.com/json.php?id=<build_id>`) or exported `.json` file:
 
-- Tag character and tokens with `system: 'pf2e'`.
-- Support PF2e 3-action economy glyphs (`◆`, `◆◆`, `◆◆◆`, `↺`, `◇`) on attacks and actions.
-- Support Multiple Attack Penalty (MAP) buttons on strikes (0, -5, -10 or -4, -8 for agile).
-- Support TEML proficiency progression for skills, saving throws, and perception.
+- Fetch or parse character JSON schema from Pathbuilder 2e exports.
+- Extract character stats, abilities, saving throws, skills, perception, HP, AC, speed, strikes, and spells.
+- Store imported character in local storage and support spawning ready-to-use tokens with avatar art.
+- (PF2e-specific ruleset mechanics and action economy are tracked in [OB-153](#ob-153---pathfinder-2e-pf2e-ruleset-support)).
+
+The format is described below.
+Pathbuilder 2e does not maintain an official published JSON Schema (such as a standard JSON Schema draft specification), but its character export format (retrieved via `[https://pathbuilder2e.com/json.php?id=](https://pathbuilder2e.com/json.php?id=)<ID>` or web/app export) follows a well-established, standardized JSON structure used widely by VTT importers like Pathmuncher and Foundry VTT.
+
+### Root Object Structure
+
+The top-level JSON contains a status flag and a `build` object housing all character details:
+
+```json
+{
+  "success": true,
+  "build": {
+    "name": "Valeros",
+    "class": "Fighter",
+    "dualClass": null,
+    "level": 5,
+    "ancestry": "Human",
+    "heritage": "Versatile Heritage",
+    "background": "Guard",
+    "alignment": "N",
+    "gender": "Male",
+    "age": "28",
+    "deity": "Gorum",
+    "size": 2,
+    "keyability": "str",
+    "languages": ["Common", "Orcish"],
+    "attributes": {
+      "ancestryhp": 8,
+      "classhp": 10,
+      "bonushp": 0,
+      "bonushpPerLevel": 0,
+      "speed": 25,
+      "speedBonus": 0
+    },
+    "abilities": {
+      "str": 18,
+      "dex": 14,
+      "con": 14,
+      "int": 10,
+      "wis": 12,
+      "cha": 10,
+      "breakdown": {}
+    },
+    "proficiencies": {
+      "classDC": 2,
+      "perception": 4,
+      "fortitude": 4,
+      "reflex": 2,
+      "will": 2,
+      "heavy": 2,
+      "medium": 2,
+      "light": 2,
+      "unarmored": 2,
+      "martial": 4,
+      "simple": 4,
+      "advanced": 0,
+      "unarmed": 4,
+      "castingArcane": 0,
+      "castingDivine": 0,
+      "castingOccult": 0,
+      "castingPrimal": 0,
+      "acrobatics": 0,
+      "arcana": 0,
+      "athletics": 4,
+      "crafting": 0,
+      "deception": 0,
+      "diplomacy": 0,
+      "intimidation": 2,
+      "medicine": 0,
+      "nature": 0,
+      "occultism": 0,
+      "performance": 0,
+      "religion": 0,
+      "society": 0,
+      "stealth": 0,
+      "survival": 0,
+      "thievery": 0
+    },
+    "mods": {},
+    "feats": [
+      ["Sudden Charge", null, "Class Feat", 1],
+      ["Toughness", null, "General Feat", 3]
+    ],
+    "specials": ["Attack of Opportunity", "Shield Block"],
+    "lores": [["Warfare Lore", 2]],
+    "equipment": [
+      ["Longsword", 1],
+      ["Steel Shield", 1],
+      ["Breastplate", 1]
+    ],
+    "weapons": [],
+    "armor": [],
+    "spellCasters": [],
+    "focus": {},
+    "formula": [],
+    "pets": []
+  }
+}
+```
+
+### Core Data Formats & Conventions
+
+- **Proficiency Scaling:**
+  Proficiencies are stored as numeric integers representing proficiency rank:
+- `0` = Untrained
+- `2` = Trained
+- `4` = Expert
+- `6` = Master
+- `8` = Legendary
+
+- **Feats Format (`build.feats`):**
+  Represented as a 2D array of tuples:
+  `[ FeatName (string), ExtraChoice/Sub-selection (string | null), FeatType (string), LevelAcquired (int) ]`
+- _Example:_ `["Natural Ambition", "Sudden Charge", "Ancestry Feat", 1]`
+
+- **Specials (`build.specials`):**
+  An array of strings representing granted class features, ancestry passive traits, and inherent abilities that are not standard selectable feats (e.g., `"Bravery"`, `"Fighter Weapon Mastery"`).
+- **Lores (`build.lores`):**
+  An array of tuples:
+  `[ LoreName (string), ProficiencyRank (int) ]`
+- _Example:_ `[["Warfare Lore", 2], ["Academia Lore", 4]]`
+
+- **Spellcasters (`build.spellCasters`):**
+  Contains an array of spellcasting entries detailing:
+- `name`: Name/source of the casting tradition.
+- `magicTradition`: `"arcane"`, `"divine"`, `"occult"`, or `"primal"`.
+- `spellcastingType`: `"prepared"` or `"spontaneous"`.
+- `ability`: Casting attribute (e.g., `"cha"`).
+- `spells`: An array of objects indexed by spell level containing spell names and prepared/known status.
 
 ## OB-145 - Live Video Feed Tokens
 
@@ -632,3 +773,181 @@ Transition the production container publishing pipeline from the private registr
 - Update `scripts/ci-build.sh` default registry prefix to `ghcr.io/<owner>/`.
 - Update `compose.prod.yaml` image references to pull from `ghcr.io/<owner>/oldbear_*`.
 - Keep images private until ready for public release, accessible to production hosts via GitHub Personal Access Token (PAT).
+
+## OB-152 - Integrate Help & Tooltip Component Across UI
+
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** [OB-139](#ob-139---reusable-help--tooltip-component)  
+**Description:**
+
+Deploy the `<HelpTip />` component across the application once help text is settled:
+
+- Toolbars and drawing tool flyouts.
+- Token controls and persistent marker properties bar.
+- Scene settings, map manager, and asset manager.
+- Dice roller, initiative tracker, and chat commands.
+
+## OB-153 - Pathfinder 2e (PF2e) Ruleset Support
+
+**Status:** Backlog  
+**App:** VTT  
+**Depends On:** [OB-144](#ob-144---pathbuilder-2e-pf2e-json-character-import)  
+**Description:**
+
+Implement PF2e-specific ruleset mechanics and sheet visualization:
+
+- Tag characters and tokens with `system: 'pf2e'`.
+- Support PF2e 3-action economy glyphs (`◆`, `◆◆`, `◆◆◆`, `↺`, `◇`) on attacks and actions.
+- Support Multiple Attack Penalty (MAP) buttons on strikes (0, -5, -10 or -4, -8 for agile).
+- Support TEML (Trained, Expert, Master, Legendary) proficiency progression for skills, saving throws, and perception.
+- PF2e roll modifiers and degree-of-success rules (critical success on DC +10 or nat 20).
+
+## OB-154 - `GAME_MODE` Environment Configuration & Deployment Toggles
+
+**Status:** Backlog  
+**App:** Shared  
+**Depends On:** None  
+**Description:**
+
+Support multi-mode deployment and runtime game mode selection via environment variables (`GAME_MODE=vtt`, `GAME_MODE=brawl`, or `GAME_MODES=vtt,brawl`):
+
+- Single-mode instances restrict the room interface to either VTT or Brawl (ideal for dedicated subdomains like `vtt.oldbear.app` and `brawl.oldbear.app`).
+- Multi-mode instances allow per-room/per-session selection (e.g. room creation dialog or `/room/:id?mode=brawl`).
+- Update top navigation branding, module headers, and feature availability based on active game mode.
+
+## OB-155 - Army, Unit, and Model Domain Hierarchy & Disambiguation
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-154](#ob-154---game_mode-environment-configuration--deployment-toggles)  
+**Description:**
+
+Establish the core tabletop wargaming domain model (`Army` ➔ `Unit` ➔ `Model`):
+
+- **Data Models**:
+  - `Army`: id, name, faction, pointsLimit, ruleCards, units array, and `.binder` export.
+  - `Unit`: id, name, coherencyDistance, baseActions, and models array.
+  - `Model`: id, name, unitId, position, baseShape, collision, attachedIndicators, and action overrides.
+- **Base Geometry**:
+  - Store model base shapes in millimeters (`circle`, `oval`, `rect`, `polygon`).
+  - Calculate true base-to-base (perimeter-to-perimeter) measurements in inches (`"`).
+- **Auto-Naming & Disambiguation**:
+  - Automatic model naming defaulting to `<Unit Name> <Number>` (e.g., `Terminators 1`, `Terminators 2`).
+  - Automatic duplicate unit disambiguation: `Terminators A 1`, `Terminators B 1`.
+- **UI**: Interactive Army Roster Flyout and unit/model inspector panels.
+
+## OB-156 - Unit Coherency Graph Engine & Real-Time Warning Halos
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-155](#ob-155---army-unit-and-model-domain-hierarchy--disambiguation)  
+**Description:**
+
+Real-time graph-based unit coherency validation engine:
+
+- Configurable horizontal and vertical distance thresholds (defaulting to 2″ horizontal, 5″ vertical).
+- Graph connectivity algorithm:
+  - Units of 2–5 models: Each model must be within distance of at least 1 other model in the unit.
+  - Units of 6+ models: Each model must be within distance of at least 2 other models in the unit.
+- Visual feedback on canvas:
+  - Pulsing warning halo on any model violating coherency.
+  - Optional visual tether lines connecting models within valid coherency range.
+  - Real-time evaluation during model dragging and movement.
+
+## OB-157 - Battle Round Stepper & Wargaming Phase Engine
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-154](#ob-154---game_mode-environment-configuration--deployment-toggles)  
+**Description:**
+
+Battle round and turn phase management system for tabletop wargames:
+
+- **Phases**: Standard phase stepper (e.g. Command, Movement, Shooting, Charge, Fight, Morale/Battleshock).
+- **Rounds**: Tracks battle rounds (Rounds 1 through 5) and active player turns (Player 1 vs Player 2).
+- **Announcements**: Animated banner at the top of the canvas and automated chat audit logs upon phase/round transitions.
+- **Turn Lifecycles**: Triggers phase-specific status counter updates and scoring checks.
+
+## OB-158 - Dual-Player Chess Clocks with Turn Countdown & Active Switching
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-132](#ob-132---timers--segmented-pie-wedge-progress-clocks)  
+**Description:**
+
+Dedicated wargaming chess clock system for competitive matches:
+
+- Per-player countdown timers with configurable match limits (e.g. 1 hour 30 minutes per player).
+- Single-click active player clock toggle button.
+- Overtime tracking with visual warning colors when player time expires.
+- Pause/resume controls, audible chime alerts on player switches and low time thresholds.
+- Draggable, floating HUD widget with compact minimization.
+
+## OB-159 - Scoreboard & Resource Tracker (VP, CP, Casualties) with Audit Trail
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-154](#ob-154---game_mode-environment-configuration--deployment-toggles)  
+**Description:**
+
+Multi-metric match scoreboard and game resource tracker:
+
+- Tracks Primary Victory Points (VP), Secondary VP, Command Points (CP), and Casualties for each player.
+- Real-time audit trail: every score or resource modification generates a chat log message and an animated toast notification.
+- Action-tied resource triggers: model or stratagem action buttons can automatically deduct CP or grant VP.
+
+## OB-160 - Objective Marker Control Zone Calculation & Auto-Scoring
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-134](#ob-134---custom-image-spray-indicator-tool), [OB-159](#ob-159---scoreboard--resource-tracker-vp-cp-casualties-with-audit-trail)  
+**Description:**
+
+Interactive objective markers with automated control calculation:
+
+- Deployable objective markers on canvas (e.g. 40mm center with 3″ control radius aura).
+- Calculates model presence and Objective Control (OC) totals per player within the control radius.
+- Automated or on-demand control checks at round start, round end, or scoring phase.
+- Automatically awards VP to the controlling player, logs audit messages in chat, and toasts score updates.
+
+## OB-161 - Roster Ingestion Pipeline: NewRecruit JSON & BattleScribe `.rosz`
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-155](#ob-155---army-unit-and-model-domain-hierarchy--disambiguation)  
+**Description:**
+
+Army roster import pipeline for popular wargaming army builder exports:
+
+- Parse NewRecruit JSON and BattleScribe `.rosz` / `.ros` XML zip archives.
+- Extract army factions, detachments, point totals, units, model counts, weapon profiles, and abilities.
+- Strict UGC adherence: import user roster data without bundling proprietary or copyrighted rule texts in the app codebase.
+- Assign default base shapes/tokens with individual model customization, storing imported armies under the Armies tab in Asset Manager.
+
+## OB-162 - Deployment Zones, Casualty Trays & Staging Submap Templates
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-130](#ob-130---submaps--secondary-logical-maps-per-scene)  
+**Description:**
+
+Pre-configured submap templates tailored for wargaming battle scenes:
+
+- **Deployment Zones**: Shaded, color-coded, and labeled zones matching mission pack deployment maps.
+- **Casualty Tray / Graveyard**: Designated staging submap off the battlefield for eliminated models (enabling easy apothecary revives, reanimation, or casualty counting).
+- **Strategic Reserves & Transports Staging**: Submap area for off-table units, deep strikers, and embarked transport units.
+- One-click model transfers between the primary battlefield and staging submaps.
+
+## OB-163 - Tournament Organizer (TO) Mode, Match Privacy & Spectator Controls
+
+**Status:** Backlog  
+**App:** Brawl  
+**Depends On:** [OB-157](#ob-157---battle-round-stepper--wargaming-phase-engine), [OB-159](#ob-159---scoreboard--resource-tracker-vp-cp-casualties-with-audit-trail)  
+**Description:**
+
+Match administration and spectator management for events and tournaments:
+
+- **Tournament Organizer (TO) Role**: Administrative view with ability to override scores, adjust chess clocks, pause matches, and log official rulings in chat.
+- **Spectator Mode**: Read-only view for spectators with live board and scoreboard access, hiding secret secondary objectives or hidden reserve lists.
+- **Match Report Export**: Export completed match summaries (scores, round history, casualty tallies, and timestamps) in JSON or printable format.
