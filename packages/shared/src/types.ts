@@ -256,6 +256,7 @@ export interface DnDAction {
   range?: string;
   damage?: string;
   description?: string;
+  diceMacro?: string; // Custom dice macro expression tied directly to action button (OB-133)
 }
 
 export function getActivationCategory(item?: {

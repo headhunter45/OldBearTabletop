@@ -10,6 +10,7 @@ import {
   DnDCharacter,
   ScreenMarker,
   ProgressClock,
+  DnDAction,
   ChatMessage,
   generateRandomName,
 } from '@oldbear/shared';
@@ -44,7 +45,12 @@ import { BatchTokenTransferModal } from '../common/components/BatchTokenTransfer
 import { PlayerTokenPickerModal } from '../common/components/PlayerTokenPickerModal.js';
 import { RollAnnouncementBanner } from '../common/components/RollAnnouncementBanner.js';
 import { TurnAnnouncementBanner, TurnAnnouncement } from '../common/components/TurnAnnouncementBanner.js';
-import { ChatPanel } from '../common/components/ChatPanel.js';
+import { ChatPanel, parseDiceExpression } from '../common/components/ChatPanel.js';
+import {
+  isAdvancedDiceExpression,
+  parseAndRollAdvanced,
+  formatRollDetails,
+} from '../common/dice/AdvancedDiceEngine.js';
 import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { MarkerControls } from '../common/components/MarkerControls.js';
@@ -909,6 +915,116 @@ export const AppVtt: React.FC = () => {
     });
     networkRef.current?.send({ type: 'marker-add', marker: clockMarker });
     showToast(`Placed clock "${clock.name}" on canvas map.`);
+  };
+
+  const handleRollAction = (action: DnDAction) => {
+    if (!localPlayer) return;
+
+    // 1. If action has custom dice macro (OB-133)
+    if (action.diceMacro) {
+      if (isAdvancedDiceExpression(action.diceMacro)) {
+        const advResult = parseAndRollAdvanced(action.diceMacro);
+        if (advResult) {
+          const detailsPreview = formatRollDetails(advResult);
+          const rollResult: DiceRollResult = {
+            id: crypto.randomUUID(),
+            userId: localPlayer.id,
+            userName: localPlayer.name,
+            userColor: localPlayer.color,
+            diceType: 'd6',
+            count: advResult.count,
+            modifier: advResult.modifier,
+            rolls: advResult.details.map((d) => d.rawTotal),
+            total: advResult.totalModified,
+            timestamp: Date.now(),
+          };
+          handleRecordRoll(rollResult);
+          networkRef.current?.send({ type: 'dice-roll', roll: rollResult });
+          setActiveRollAnnouncement(rollResult);
+
+          const chatMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            senderId: localPlayer.id,
+            senderName: localPlayer.name,
+            senderColor: localPlayer.color,
+            text: `triggered **${action.name}** [${action.diceMacro}]\n${advResult.summaryText}\n${detailsPreview}`,
+            timestamp: Date.now(),
+            roll: rollResult,
+          };
+          networkRef.current?.send({ type: 'chat-send', message: chatMsg });
+          setChatMessages((prev) => [...prev, chatMsg]);
+          return;
+        }
+      }
+
+      const parsed = parseDiceExpression(action.diceMacro);
+      if (parsed) {
+        const rollResult: DiceRollResult = {
+          id: crypto.randomUUID(),
+          userId: localPlayer.id,
+          userName: localPlayer.name,
+          userColor: localPlayer.color,
+          diceType: parsed.diceType,
+          count: parsed.count,
+          modifier: parsed.modifier,
+          rolls: parsed.rolls,
+          total: parsed.total,
+          timestamp: Date.now(),
+        };
+        handleRecordRoll(rollResult);
+        networkRef.current?.send({ type: 'dice-roll', roll: rollResult });
+        setActiveRollAnnouncement(rollResult);
+
+        const chatMsg: ChatMessage = {
+          id: crypto.randomUUID(),
+          senderId: localPlayer.id,
+          senderName: localPlayer.name,
+          senderColor: localPlayer.color,
+          text: `triggered **${action.name}** [${action.diceMacro}] = **${parsed.total}** [${parsed.rolls.join(', ')}]`,
+          timestamp: Date.now(),
+          roll: rollResult,
+        };
+        networkRef.current?.send({ type: 'chat-send', message: chatMsg });
+        setChatMessages((prev) => [...prev, chatMsg]);
+        return;
+      }
+    }
+
+    // 2. Standard Attack & Damage Roll
+    const hitMod = action.toHitModifier ?? 0;
+    const hitRoll = Math.floor(Math.random() * 20) + 1;
+    const hitTotal = hitRoll + hitMod;
+
+    const dmgExpr = action.damageDice || action.damage || '1d6';
+    const dmgParsed = parseDiceExpression(dmgExpr) || { total: 5, rolls: [5] };
+
+    const rollResult: DiceRollResult = {
+      id: crypto.randomUUID(),
+      userId: localPlayer.id,
+      userName: localPlayer.name,
+      userColor: localPlayer.color,
+      diceType: 'd20',
+      count: 1,
+      modifier: hitMod,
+      rolls: [hitRoll],
+      total: hitTotal,
+      timestamp: Date.now(),
+    };
+    handleRecordRoll(rollResult);
+    networkRef.current?.send({ type: 'dice-roll', roll: rollResult });
+    setActiveRollAnnouncement(rollResult);
+
+    const chatMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      senderId: localPlayer.id,
+      senderName: localPlayer.name,
+      senderColor: localPlayer.color,
+      text: `⚔️ **${action.name}** Attack Roll: **${hitTotal}** (${hitRoll} ${hitMod >= 0 ? `+ ${hitMod}` : `- ${Math.abs(hitMod)}`}) | Damage: **${dmgParsed.total}** [${dmgParsed.rolls.join(', ')}]`,
+      timestamp: Date.now(),
+      roll: rollResult,
+    };
+    networkRef.current?.send({ type: 'chat-send', message: chatMsg });
+    setChatMessages((prev) => [...prev, chatMsg]);
   };
 
   const handleTogglePersistMarkers = (persist: boolean) => {
@@ -1907,6 +2023,7 @@ export const AppVtt: React.FC = () => {
               updates: { dndBeyondCharacter },
             });
           }}
+          onRollAction={handleRollAction}
           onClose={() => setShowCharacterFlyout(false)}
           isGm={isGm}
         />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DnDCharacter, Token, Player, getActivationCategory } from '@oldbear/shared';
+import { DnDCharacter, DnDAction, Token, Player, getActivationCategory } from '@oldbear/shared';
 import {
   User,
   Heart,
@@ -14,6 +14,7 @@ import {
   Link as LinkIcon,
   Coins,
   Flame,
+  Dices,
 } from 'lucide-react';
 import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import {
@@ -37,6 +38,7 @@ interface CharacterFlyoutProps {
   onSyncToken?: (tokenId: string, updates: Partial<Token>) => void;
   onCreateTokenForCharacter?: (char: DnDCharacter) => void;
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
+  onRollAction?: (action: DnDAction) => void;
   onClose: () => void;
   isGm?: boolean;
 }
@@ -48,6 +50,7 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
   onSyncToken,
   onCreateTokenForCharacter,
   onUpdatePlayerChar,
+  onRollAction,
   onClose,
   isGm = false,
 }) => {
@@ -1042,11 +1045,33 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
                               </div>
                             )}
                           </div>
-                          {action.description && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </div>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            {onRollAction && (
+                              <button
+                                className="btn btn-secondary"
+                                style={{
+                                  padding: '0.2rem 0.5rem',
+                                  fontSize: '0.72rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onRollAction(action);
+                                }}
+                                title={`Roll ${action.name}`}
+                              >
+                                <Dices size={13} color="var(--accent-indigo)" />
+                                <span>Roll</span>
+                              </button>
+                            )}
+                            {action.description && (
+                              <div>
+                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {isExpanded && action.description && (

@@ -133,7 +133,7 @@
 | OB-130 | Pending  | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Done     | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
 | OB-132 | Done     | [Timers & Segmented Pie-Wedge Progress Clocks](#ob-132---timers--segmented-pie-wedge-progress-clocks)                                                                          |
-| OB-133 | Ready    | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
+| OB-133 | Done     | [Advanced Dice Expression Engine & Action-Tied Rolls](#ob-133---advanced-dice-expression-engine--action-tied-rolls)                                                            |
 | OB-134 | Ready    | [Custom Image "Spray" Indicator Tool](#ob-134---custom-image-spray-indicator-tool)                                                                                             |
 | OB-135 | Pending  | [Universal `.binder` Export/Import Pipeline](#ob-135---universal-binder-exportimport-pipeline)                                                                                 |
 | OB-136 | Complete | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
@@ -423,7 +423,7 @@ Round timers and Blades in the Dark style progress clocks:
 
 ## OB-133 - Advanced Dice Expression Engine & Action-Tied Rolls
 
-**Status:** Pending  
+**Status:** Complete  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

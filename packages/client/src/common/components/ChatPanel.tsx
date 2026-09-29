@@ -3,6 +3,11 @@ import { Player, ChatMessage, DiceRollResult, DnDCharacter, DieType, DnDAction, 
 import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { parseTimerDuration, formatTimer } from '../timer/timerUtils.js';
+import {
+  isAdvancedDiceExpression,
+  parseAndRollAdvanced,
+  formatRollDetails,
+} from '../dice/AdvancedDiceEngine.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -224,6 +229,45 @@ export function processSlashCommand(
         }
         const advArg = args[1]?.toLowerCase();
         const advMode = advArg === 'adv' || advArg === 'advantage' ? 'advantage' : advArg === 'dis' || advArg === 'disadvantage' ? 'disadvantage' : 'normal';
+
+        // Advanced dice expression: e.g. 40(d6+3), 10(d6+2 >= 5), 10(d6+2)/5 (OB-133)
+        if (isAdvancedDiceExpression(expr)) {
+          const advResult = parseAndRollAdvanced(expr);
+          if (!advResult) {
+            sendPrivateSystemMessage(
+              `Invalid advanced roll syntax: "${expr}". Examples:\n• \`/roll 40(d6+3)\`\n• \`/roll 10(d6+2 >= 5)\`\n• \`/roll 10(d6+2)/5\``,
+              'System',
+              '#f43f5e'
+            );
+            return true;
+          }
+
+          const detailsPreview = formatRollDetails(advResult);
+          const rollResult: DiceRollResult = {
+            id: crypto.randomUUID(),
+            userId: player.id,
+            userName: player.name,
+            userColor: player.color,
+            diceType: 'd6',
+            count: advResult.count,
+            modifier: advResult.modifier,
+            rolls: advResult.details.map((d) => d.rawTotal),
+            total: advResult.totalModified,
+            timestamp: Date.now(),
+          };
+
+          onBroadcastRoll?.(rollResult);
+          onSendMessage({
+            id: crypto.randomUUID(),
+            senderId: player.id,
+            senderName: player.name,
+            senderColor: player.color,
+            text: `rolled **${expr}**\n${advResult.summaryText}\n${detailsPreview}`,
+            timestamp: Date.now(),
+            roll: rollResult,
+          });
+          return true;
+        }
 
         const parsed = parseDiceExpression(expr, advMode);
         if (!parsed) {
