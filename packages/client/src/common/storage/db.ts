@@ -3,7 +3,7 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 export interface StoredAsset {
   id: string;
   name: string;
-  type: 'map' | 'token' | 'prop' | 'audio';
+  type: 'map' | 'token' | 'prop' | 'audio' | 'tile';
   dataUrl: string; // Base64 data URL or Blob URL
   fileSize?: number;
   fileHash?: string;
@@ -18,7 +18,8 @@ export interface StoredAsset {
   monsterData?: any;
   character?: any;
   isProp?: boolean;
-  layer?: 'token' | 'prop';
+  layer?: 'token' | 'prop' | 'map';
+  tags?: string[];
   propWidth?: number;
   propHeight?: number;
   rotation?: number;

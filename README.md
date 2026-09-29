@@ -541,6 +541,17 @@ You can drag and drop files from your desktop directly onto the Old Bear Rodeo w
 
 ---
 
+### Modular / Tileable Maps & Snapping Map Tiles
+- **Modular Map Tiles**: Construct sprawling dungeons, catacombs, and battlefields dynamically using tileable room and corridor assets placed directly on the `map` layer.
+- **Magnetic Edge Snapping**: Moving tiles and map props automatically snap magnetically to the North, South, East, and West boundaries of adjacent tiles when brought within snap proximity.
+- **Asset Manager Tile Bucket**:
+  - Open the **Asset Manager** and select the **Tiles** tab to access the Modular Tile Bucket.
+  - Standard Dungeon Tiles include: Corridors, Chambers, Crossroads, Dead Ends, and Great Halls.
+  - Upload custom tile packs (`.png`, `.jpg`, `.webp`) or drag them straight onto the tabletop.
+  - **In-Play Procedural Tile Generation (Deck)**: Click **"Draw Random Tile (Deck)"** to draw a random tile from the deck and seamlessly append it to the map during live play.
+
+---
+
 ## Configuring Available Colors
 
 To customize the colors available for player pointers, token borders, and drawing markers, edit the color definitions in:

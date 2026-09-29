@@ -128,7 +128,7 @@
 | OB-125 | Done    | Add feedback and GitHub repository links                                                                                                                                       |
 | OB-126 | Done    | Add MIT License file                                                                                                                                                           |
 | OB-127 | Done    | [Window z-index elevation on drag](#ob-127---window-z-index-elevation-on-drag)                                                                                                 |
-| OB-128 | Ready   | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
+| OB-128 | Done    | [Modular / Tileable Maps & Snapping Map Tiles](#ob-128---modular--tileable-maps--snapping-map-tiles)                                                                           |
 | OB-129 | Done    | [Persistent Indicator Properties Bar, Multi-Aura Labeling & Token Tethering](#ob-129---persistent-indicator-properties-bar-multi-aura-labeling--token-tethering)               |
 | OB-130 | Done    | [Submaps & Secondary Logical Maps per Scene](#ob-130---submaps--secondary-logical-maps-per-scene)                                                                              |
 | OB-131 | Done    | [Custom Configurable Statuses with Counters & Turn Lifecycles](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)                                          |
@@ -340,7 +340,7 @@ When dragging any floating non-modal window (chat, initiative tracker, dice roll
 
 ## OB-128 - Modular / Tileable Maps & Snapping Map Tiles
 
-**Status:** Pending  
+**Status:** Done  
 **App:** Shared  
 **Depends On:** [OB-136](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl)  
 **Description:**

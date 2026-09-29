@@ -13,6 +13,7 @@ import { FogRenderer } from './FogRenderer.js';
 import { renderMarkers, hexToRgba, getContrastingAccentColor, getMarkerAnchorPosition } from './PointerSystem.js';
 import { drawRuler, measureDistance, RulerMeasurement } from './Ruler.js';
 import { renderSubmap } from './SubmapManager.js';
+import { snapTileEdgeToEdge, TileRect } from './ModularTileManager.js';
 
 /**
  * -----------------------------------------------------------------------------------------
@@ -952,6 +953,29 @@ export class CanvasEngine {
         );
         newX = snapped.x;
         newY = snapped.y;
+
+        // Magnetic edge-to-edge tile snapping for map tiles and modular props (OB-128)
+        if (isProp || this.draggingToken.layer === 'map') {
+          const otherTileRects: TileRect[] = Object.values(this.session.tokens)
+            .filter((t) => t.id !== this.draggingToken!.id && (t.isProp || t.layer === 'map'))
+            .map((t) => {
+              const w = (t.propWidth !== undefined ? t.propWidth : t.size) * currentMap.gridSize;
+              const h = (t.propHeight !== undefined ? t.propHeight : t.size) * currentMap.gridSize;
+              return { id: t.id, x: t.x, y: t.y, width: w, height: h };
+            });
+
+          if (otherTileRects.length > 0) {
+            const tileSnap = snapTileEdgeToEdge(
+              { x: newX, y: newY, width: propW, height: propH },
+              otherTileRects,
+              Math.max(currentMap.gridSize * 0.7, 30)
+            );
+            if (tileSnap.snapped) {
+              newX = tileSnap.x;
+              newY = tileSnap.y;
+            }
+          }
+        }
       }
 
       const deltaX = newX - this.dragStartPos.x;

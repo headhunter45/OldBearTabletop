@@ -22,10 +22,18 @@ import {
   Shield,
   Package,
   ChevronDown,
+  Grid,
+  Dices,
 } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { GameSession, GameMap, Token, DnDCharacter } from '@oldbear/shared';
 import { exportAllData, downloadBackupFile, importAllData } from '../storage/BackupManager.js';
+import {
+  DEFAULT_MODULAR_TILES,
+  ModularMapTile,
+  drawRandomTile,
+  createModularTileToken,
+} from '../engine/ModularTileManager.js';
 import {
   StoredAsset,
   getAllAssets,
@@ -83,7 +91,7 @@ interface DataBackupModalProps {
   extensions?: AssetManagerExtensions;
 }
 
-export type AssetTab = 'tokens' | 'props' | 'monsters' | 'characters' | 'maps' | 'scenes' | 'audio';
+export type AssetTab = 'tokens' | 'props' | 'tiles' | 'monsters' | 'characters' | 'maps' | 'scenes' | 'audio';
 
 export const DataBackupModal: React.FC<DataBackupModalProps> = ({
   session,
@@ -131,14 +139,16 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     defaultZIndex: 55,
   });
 
-  const handleAssetDragStart = (e: React.DragEvent, asset: StoredAsset, type: 'token' | 'prop' | 'monster' | 'character') => {
-    const isProp = type === 'prop' || Boolean(asset.isProp);
+  const handleAssetDragStart = (e: React.DragEvent, asset: StoredAsset, type: 'token' | 'prop' | 'monster' | 'character' | 'tile') => {
+    const isTile = type === 'tile' || Boolean(asset.tags?.includes('tile'));
+    const isProp = type === 'prop' || isTile || Boolean(asset.isProp);
     const payload = {
       ...asset,
-      type,
+      type: isTile ? 'tile' : type,
       isProp,
-      propWidth: asset.propWidth ?? (isProp ? asset.size ?? 1 : undefined),
-      propHeight: asset.propHeight ?? (isProp ? asset.size ?? 1 : undefined),
+      layer: isTile ? 'map' : (isProp ? 'prop' : 'token'),
+      propWidth: asset.propWidth ?? (isTile ? 4 : (isProp ? asset.size ?? 1 : undefined)),
+      propHeight: asset.propHeight ?? (isTile ? 4 : (isProp ? asset.size ?? 1 : undefined)),
     };
     e.dataTransfer.setData('application/oldbear-asset', JSON.stringify(payload));
     e.dataTransfer.setData('application/json', JSON.stringify(payload));
@@ -290,43 +300,79 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     const mapId = activeMapId || session?.activeMapId || (session?.maps[0]?.id) || 'map-default';
     const spawnX = 350 + (existingList.length % 5) * 60;
     const spawnY = 350 + (existingList.length % 5) * 60;
-    const isProp = asset.type === 'prop' || Boolean(asset.isProp);
+    const isTile = activeTab === 'tiles' || Boolean(asset.tags?.includes('tile')) || (asset.type as string) === 'tile';
+    const isProp = asset.type === 'prop' || Boolean(asset.isProp) || isTile;
     const newToken: Token = {
       id: `token-${crypto.randomUUID()}`,
       mapId,
-      name: asset.name || (isProp ? 'Prop' : 'Token'),
+      name: asset.name || (isTile ? 'Modular Tile' : isProp ? 'Prop' : 'Token'),
       imageUrl: asset.dataUrl,
       x: Math.round(spawnX),
       y: Math.round(spawnY),
-      size: asset.size || 1,
+      size: asset.size || (isTile ? 4 : 1),
       rotation: asset.rotation || 0,
-      ringColor: isProp ? (asset.ringColor || '#94a3b8') : (asset.ringColor || '#3b82f6'),
-      fillColor: asset.fillColor || (isProp ? '#1e293b' : '#1e3a8a'),
-      clipCircle: !isProp,
-      clipShape: isProp ? 'square' : (asset.ringColor ? 'circle' : 'circle'),
-      currentHp: isProp ? (asset.maxHp || 0) : (asset.maxHp || 20),
-      maxHp: isProp ? (asset.maxHp || 0) : (asset.maxHp || 20),
+      ringColor: isTile ? '#38bdf8' : (isProp ? (asset.ringColor || '#94a3b8') : (asset.ringColor || '#3b82f6')),
+      fillColor: asset.fillColor || (isTile ? 'transparent' : isProp ? '#1e293b' : '#1e3a8a'),
+      clipCircle: !isProp && !isTile,
+      clipShape: (isProp || isTile) ? 'square' : (asset.ringColor ? 'circle' : 'circle'),
+      currentHp: (isProp || isTile) ? (asset.maxHp || 100) : (asset.maxHp || 20),
+      maxHp: (isProp || isTile) ? (asset.maxHp || 100) : (asset.maxHp || 20),
       tempHp: 0,
-      speed: isProp ? (asset.speed || 0) : (asset.speed || 30),
+      speed: (isProp || isTile) ? (asset.speed || 0) : (asset.speed || 30),
       conditions: [],
       isProp,
-      layer: isProp ? 'prop' : 'token',
-      propWidth: asset.propWidth,
-      propHeight: asset.propHeight,
+      layer: isTile ? 'map' : (isProp ? 'prop' : 'token'),
+      propWidth: asset.propWidth || (isTile ? 4 : undefined),
+      propHeight: asset.propHeight || (isTile ? 4 : undefined),
       locked: asset.locked,
     };
     onAddToken(newToken);
     setResultMessage({
       type: 'success',
-      text: `Spawned ${isProp ? 'prop' : 'token'} "${newToken.name}" onto the battlemap!`,
+      text: `Spawned ${isTile ? 'modular tile' : isProp ? 'prop' : 'token'} "${newToken.name}" onto the battlemap!`,
     });
   };
 
+  const handleDeployPresetTile = (preset: ModularMapTile) => {
+    if (!onAddToken) return;
+    const mapId = activeMapId || session?.activeMapId || (session?.maps[0]?.id) || 'map-default';
+    const existingList = tokens
+      ? Array.isArray(tokens)
+        ? [...tokens]
+        : Object.values(tokens)
+      : [];
+    const mapTokens = existingList.filter((t) => t.mapId === mapId && t.layer === 'map');
+    let spawnX = 200;
+    let spawnY = 200;
+    if (mapTokens.length > 0) {
+      const rightmost = [...mapTokens].sort((a, b) => (b.x + (b.propWidth || 4) * 50) - (a.x + (a.propWidth || 4) * 50))[0];
+      const gridSize = session?.maps.find((m) => m.id === mapId)?.gridSize || 50;
+      spawnX = rightmost.x + (rightmost.propWidth || 4) * gridSize;
+      spawnY = rightmost.y;
+    }
+    const token = createModularTileToken(preset, mapId, spawnX, spawnY);
+    onAddToken(token);
+    setResultMessage({
+      type: 'success',
+      text: `Spawned modular tile "${preset.name}" onto the battlemap!`,
+    });
+  };
+
+  const handleDrawRandomTile = () => {
+    if (!onAddToken) return;
+    const drawn = drawRandomTile(DEFAULT_MODULAR_TILES);
+    if (!drawn) return;
+    handleDeployPresetTile(drawn);
+  };
+
+  const tileAssets = assets.filter(
+    (a) => (a.type as string) === 'tile' || (a.tags && a.tags.includes('tile'))
+  );
   const monsterAssets = assets.filter((a) => Boolean(a.monsterData || (a.type as string) === 'monster' || (a.character && a.character.actions)));
   const mapAssets = assets.filter((a) => a.type === 'map');
   const audioAssets = assets.filter((a) => a.type === 'audio');
-  const propAssets = assets.filter((a) => (a.type === 'prop' || a.isProp) && !a.monsterData && (!a.character || !a.character.actions));
-  const tokenAssets = assets.filter((a) => a.type === 'token' && !a.isProp && !a.monsterData && (!a.character || !a.character.actions));
+  const propAssets = assets.filter((a) => (a.type === 'prop' || a.isProp) && !a.tags?.includes('tile') && !a.monsterData && (!a.character || !a.character.actions));
+  const tokenAssets = assets.filter((a) => a.type === 'token' && !a.isProp && !a.tags?.includes('tile') && !a.monsterData && (!a.character || !a.character.actions));
 
   const filteredAssets =
     activeTab === 'maps'
@@ -337,7 +383,9 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
           ? audioAssets
           : activeTab === 'props'
             ? propAssets
-            : tokenAssets;
+            : activeTab === 'tiles'
+              ? tileAssets
+              : tokenAssets;
 
   // Multiselect toggles
   const toggleSelect = (id: string) => {
@@ -436,9 +484,10 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
         }
 
         let assetType: 'map' | 'token' | 'prop' | 'audio' = 'token';
+        const isTile = activeTab === 'tiles' || file.name.toLowerCase().includes('tile');
         if (activeTab === 'maps' || file.name.includes('map')) assetType = 'map';
         else if (activeTab === 'audio' || file.type.startsWith('audio/')) assetType = 'audio';
-        else if ((activeTab as string) === 'props' || file.name.toLowerCase().includes('prop')) assetType = 'prop';
+        else if ((activeTab as string) === 'props' || file.name.toLowerCase().includes('prop') || isTile) assetType = 'prop';
 
         await saveAsset({
           id: crypto.randomUUID(),
@@ -447,10 +496,13 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
           dataUrl,
           fileSize: file.size,
           fileHash: hash,
-          isProp: assetType === 'prop',
-          layer: assetType === 'prop' ? 'prop' : 'token',
-          ringColor: assetType === 'prop' ? '#94a3b8' : undefined,
-          clipCircle: assetType !== 'prop',
+          isProp: assetType === 'prop' || isTile,
+          layer: isTile ? 'map' : (assetType === 'prop' ? 'prop' : 'token'),
+          tags: isTile ? ['tile'] : undefined,
+          propWidth: isTile ? 4 : undefined,
+          propHeight: isTile ? 4 : undefined,
+          ringColor: isTile ? '#38bdf8' : (assetType === 'prop' ? '#94a3b8' : undefined),
+          clipCircle: assetType !== 'prop' && !isTile,
           monsterData: activeTab === 'monsters' ? { name: file.name.replace(/\.[^/.]+$/, '') } : undefined,
           createdAt: Date.now(),
         });
@@ -518,9 +570,10 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
         }
 
         let assetType: 'map' | 'token' | 'prop' | 'audio' = 'token';
+        const isTile = activeTab === 'tiles' || file.name.toLowerCase().includes('tile');
         if (activeTab === 'maps' || file.name.includes('map')) assetType = 'map';
         else if (activeTab === 'audio' || file.type.startsWith('audio/')) assetType = 'audio';
-        else if ((activeTab as string) === 'props' || file.name.toLowerCase().includes('prop')) assetType = 'prop';
+        else if ((activeTab as string) === 'props' || file.name.toLowerCase().includes('prop') || isTile) assetType = 'prop';
 
         await saveAsset({
           id: crypto.randomUUID(),
@@ -529,10 +582,13 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
           dataUrl,
           fileSize: file.size,
           fileHash: hash,
-          isProp: assetType === 'prop',
-          layer: assetType === 'prop' ? 'prop' : 'token',
-          ringColor: assetType === 'prop' ? '#94a3b8' : undefined,
-          clipCircle: assetType !== 'prop',
+          isProp: assetType === 'prop' || isTile,
+          layer: isTile ? 'map' : (assetType === 'prop' ? 'prop' : 'token'),
+          tags: isTile ? ['tile'] : undefined,
+          propWidth: isTile ? 4 : undefined,
+          propHeight: isTile ? 4 : undefined,
+          ringColor: isTile ? '#38bdf8' : (assetType === 'prop' ? '#94a3b8' : undefined),
+          clipCircle: assetType !== 'prop' && !isTile,
           createdAt: Date.now(),
         });
         await loadAssets();
@@ -782,6 +838,28 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
           </button>
 
           <button
+            className={`tab-btn ${activeTab === 'tiles' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('tiles');
+              setSelectedAssetIds([]);
+            }}
+            style={{
+              padding: '0.75rem 1.1rem',
+              border: 'none',
+              background: 'none',
+              color: activeTab === 'tiles' ? '#38bdf8' : 'var(--text-secondary)',
+              borderBottom: activeTab === 'tiles' ? '2px solid #38bdf8' : '2px solid transparent',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Grid size={16} /> Tiles ({tileAssets.length})
+          </button>
+
+          <button
             className={`tab-btn ${activeTab === 'monsters' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('monsters');
@@ -934,7 +1012,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
             >
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <label className="btn btn-primary" style={{ cursor: 'pointer', display: 'inline-flex', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                  <Plus size={14} /> Upload {activeTab === 'monsters' ? 'Monster (.monster, .json)' : activeTab === 'characters' ? 'Character (.json)' : activeTab === 'maps' ? 'Map' : activeTab === 'audio' ? 'Sound' : activeTab === 'props' ? 'Prop' : 'Token'}...
+                  <Plus size={14} /> Upload {activeTab === 'monsters' ? 'Monster (.monster, .json)' : activeTab === 'characters' ? 'Character (.json)' : activeTab === 'maps' ? 'Map' : activeTab === 'audio' ? 'Sound' : activeTab === 'tiles' ? 'Tile' : activeTab === 'props' ? 'Prop' : 'Token'}...
                   <input
                     ref={assetUploadRef}
                     type="file"
@@ -952,6 +1030,26 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                     onChange={handleAssetUpload}
                   />
                 </label>
+
+                {activeTab === 'tiles' && onAddToken && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      fontSize: '0.8rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                    }}
+                    onClick={handleDrawRandomTile}
+                    title="Draw a random modular dungeon tile from the deck and place it on the battlemap"
+                  >
+                    <Dices size={14} /> Draw Random Tile (Deck)
+                  </button>
+                )}
 
                 {activeTab !== 'characters' && filteredAssets.length > 0 && (
                   <>
@@ -1299,18 +1397,91 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                 })}
               </div>
             )
-          ) : filteredAssets.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              No {activeTab} uploaded yet. Click Upload above or drag files onto the board!
-            </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: activeTab === 'audio' ? '1fr' : 'repeat(auto-fill, minmax(135px, 1fr))',
-                gap: '0.75rem',
-              }}
-            >
+            <>
+              {activeTab === 'tiles' && (
+                <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: 'var(--radius-md)', padding: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Grid size={15} /> Standard Modular Dungeon Tiles (Deck)
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Drag or deploy onto map layer — edges snap magnetically
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.6rem' }}>
+                    {DEFAULT_MODULAR_TILES.map((preset) => (
+                      <div
+                        key={preset.id}
+                        draggable
+                        onDragStart={(e) => {
+                          const fakeAsset = {
+                            id: preset.id,
+                            name: preset.name,
+                            dataUrl: preset.imageUrl,
+                            type: 'tile',
+                            propWidth: preset.gridTilesX || 4,
+                            propHeight: preset.gridTilesY || 4,
+                            isProp: true,
+                            layer: 'map',
+                            tags: ['tile'],
+                          };
+                          handleAssetDragStart(e, fakeAsset as any, 'tile');
+                        }}
+                        style={{
+                          background: preset.backgroundColor || '#1e293b',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '0.6rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                          cursor: 'grab',
+                        }}
+                      >
+                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {preset.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                          {preset.gridTilesX}×{preset.gridTilesY} tiles ({preset.category})
+                        </div>
+                        {preset.sockets && (
+                          <div style={{ fontSize: '0.65rem', color: '#38bdf8', display: 'flex', gap: '4px' }}>
+                            {preset.sockets.north && <span>N</span>}
+                            {preset.sockets.south && <span>S</span>}
+                            {preset.sockets.east && <span>E</span>}
+                            {preset.sockets.west && <span>W</span>}
+                          </div>
+                        )}
+                        {onAddToken && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.72rem', padding: '0.25rem 0.4rem', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                            onClick={() => handleDeployPresetTile(preset)}
+                          >
+                            <Plus size={11} /> Place Tile
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {filteredAssets.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  {activeTab === 'tiles'
+                    ? 'No custom tile images uploaded yet. Place presets above or click Upload Tile to import custom map tiles.'
+                    : `No ${activeTab} uploaded yet. Click Upload above or drag files onto the board!`}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: activeTab === 'audio' ? '1fr' : 'repeat(auto-fill, minmax(135px, 1fr))',
+                    gap: '0.75rem',
+                  }}
+                >
               {filteredAssets.map((asset) => {
                 const isSelected = selectedAssetIds.includes(asset.id);
                 const isEditing = editingId === asset.id;
@@ -1386,12 +1557,14 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                 return (
                   <div
                     key={asset.id}
-                    draggable={activeTab === 'tokens' || activeTab === 'props'}
+                    draggable={activeTab === 'tokens' || activeTab === 'props' || activeTab === 'tiles'}
                     onDragStart={(e) => {
                       if (activeTab === 'tokens') {
                         handleAssetDragStart(e, asset, 'token');
                       } else if (activeTab === 'props') {
                         handleAssetDragStart(e, asset, 'prop');
+                      } else if (activeTab === 'tiles') {
+                        handleAssetDragStart(e, asset, 'tile');
                       }
                     }}
                     style={{
@@ -1534,7 +1707,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                       </div>
                     )}
 
-                    {(activeTab === 'tokens' || activeTab === 'props') && onAddToken && (
+                    {(activeTab === 'tokens' || activeTab === 'props' || activeTab === 'tiles') && onAddToken && (
                       <button
                         className="btn btn-secondary"
                         style={{
@@ -1548,7 +1721,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                           gap: '4px',
                         }}
                         onClick={() => handleDeployToken(asset)}
-                        title={activeTab === 'props' ? 'Spawn prop onto the battlemap' : 'Spawn token onto the battlemap'}
+                        title={activeTab === 'tiles' ? 'Spawn modular tile onto the map layer' : activeTab === 'props' ? 'Spawn prop onto the battlemap' : 'Spawn token onto the battlemap'}
                       >
                         <Plus size={12} /> Deploy to Map
                       </button>
@@ -1578,7 +1751,9 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
               })}
             </div>
           )}
-        </div>
+        </>
+      )}
+    </div>
 
         {/* Bottom Section: Export & Import under Asset Manager (Bug #31) */}
         <div

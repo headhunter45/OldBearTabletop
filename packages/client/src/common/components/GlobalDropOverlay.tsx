@@ -147,7 +147,33 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
           const asset = JSON.parse(internalAssetJson);
           if (asset && (asset.id || asset.name) && (asset.type || asset.dataUrl)) {
             let newToken: Token;
-            if (asset.isProp || asset.type === 'prop') {
+            if (asset.type === 'tile' || asset.layer === 'map') {
+              newToken = {
+                id: `tile-${crypto.randomUUID()}`,
+                name: asset.name || 'Modular Tile',
+                mapId: activeMapId,
+                x: worldPos.x,
+                y: worldPos.y,
+                size: Math.max(asset.propWidth || 4, asset.propHeight || 4),
+                imageUrl: asset.dataUrl || '',
+                ringColor: asset.ringColor || '#38bdf8',
+                fillColor: asset.fillColor || '#1e293b',
+                currentHp: 100,
+                maxHp: 100,
+                conditions: [],
+                rotation: asset.rotation || 0,
+                clipCircle: false,
+                clipShape: 'square',
+                tempHp: 0,
+                speed: 0,
+                elevation: 0,
+                isProp: true,
+                layer: 'map',
+                propWidth: asset.propWidth || 4,
+                propHeight: asset.propHeight || 4,
+                locked: asset.locked,
+              };
+            } else if (asset.isProp || asset.type === 'prop') {
               newToken = {
                 id: `token-${crypto.randomUUID()}`,
                 name: asset.name || 'Prop',
