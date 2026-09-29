@@ -408,13 +408,10 @@ function handleMessage(ws: ClientSocket, msg: ClientToServerMessage) {
       if (!ws.roomId) return;
       const session = getSession(ws.roomId);
       if (session) {
-        session.markers.push(msg.marker);
-        // keep maximum 100 markers, but don't drop persistent markers if possible
-        if (session.markers.length > 100) {
-          const firstNonPersistIdx = session.markers.findIndex((m) => !m.persist);
-          if (firstNonPersistIdx !== -1) {
-            session.markers.splice(firstNonPersistIdx, 1);
-          } else {
+        // Only persist markers that have persist: true. Ephemeral pings and shapes should not pollute room session
+        if (msg.marker.persist) {
+          session.markers.push(msg.marker);
+          if (session.markers.length > 100) {
             session.markers.shift();
           }
         }

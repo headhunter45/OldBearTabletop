@@ -1114,7 +1114,11 @@ export class CanvasEngine {
 
     // Finish Marker or Fog drawing
     if (this.isDrawing && this.drawStart && this.drawCurrent) {
-      this.finishDrawing(e);
+      try {
+        this.finishDrawing(e);
+      } catch (err) {
+        console.warn('[CanvasEngine] Error finishing drawing:', err);
+      }
     }
 
     this.isDrawing = false;
@@ -1199,6 +1203,8 @@ export class CanvasEngine {
         createdAt: Date.now(),
       });
     } else if (this.activeTool === 'arrow') {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      if (dist < 5) return;
       const isPersistent = this.persistMarkersMode ? !(e && e.shiftKey) : Boolean(e && e.shiftKey);
       this.broadcastMarker({
         id: crypto.randomUUID(),
@@ -1217,6 +1223,7 @@ export class CanvasEngine {
       });
     } else if (this.activeTool === 'circle') {
       const radius = Math.hypot(x2 - x1, y2 - y1);
+      if (radius < 5) return;
       const isPersistent = this.persistMarkersMode ? !(e && e.shiftKey) : Boolean(e && e.shiftKey);
       this.broadcastMarker({
         id: crypto.randomUUID(),
@@ -1233,6 +1240,9 @@ export class CanvasEngine {
         createdAt: Date.now(),
       });
     } else if (this.activeTool === 'rectangle') {
+      const width = Math.abs(x2 - x1);
+      const height = Math.abs(y2 - y1);
+      if (width < 5 && height < 5) return;
       const isPersistent = this.persistMarkersMode ? !(e && e.shiftKey) : Boolean(e && e.shiftKey);
       this.broadcastMarker({
         id: crypto.randomUUID(),
@@ -1242,8 +1252,8 @@ export class CanvasEngine {
         color: this.localPlayer.color,
         x: Math.min(x1, x2),
         y: Math.min(y1, y2),
-        width: Math.abs(x2 - x1),
-        height: Math.abs(y2 - y1),
+        width: Math.max(10, width),
+        height: Math.max(10, height),
         mapId: currentMap?.id,
         persist: isPersistent,
         durationMs: isPersistent ? 0 : 6000,
@@ -1320,27 +1330,30 @@ export class CanvasEngine {
         const startToken = startTokens[0];
         const endToken = endTokens[0];
 
-        this.broadcastMarker({
-          id: crypto.randomUUID(),
-          type: 'tether',
-          userId: this.localPlayer.id,
-          userName: this.localPlayer.name,
-          color: this.localPlayer.color,
-          x: x1,
-          y: y1,
-          targetX: x2,
-          targetY: y2,
-          attachedTokenId: startToken?.id,
-          tetherTargetId: endToken?.id,
-          tetherStyle: 'straight',
-          tetherFrequency: 24,
-          tetherAmplitude: 10,
-          strokeWidth: 2.5,
-          mapId: currentMap?.id,
-          persist: true,
-          durationMs: 0,
-          createdAt: Date.now(),
-        });
+        // Tether must only be usable between things like tokens and props (OB-165)
+        if (startToken && endToken && startToken.id !== endToken.id) {
+          this.broadcastMarker({
+            id: crypto.randomUUID(),
+            type: 'tether',
+            userId: this.localPlayer.id,
+            userName: this.localPlayer.name,
+            color: this.localPlayer.color,
+            x: x1,
+            y: y1,
+            targetX: x2,
+            targetY: y2,
+            attachedTokenId: startToken.id,
+            tetherTargetId: endToken.id,
+            tetherStyle: 'straight',
+            tetherFrequency: 24,
+            tetherAmplitude: 10,
+            strokeWidth: 2.5,
+            mapId: currentMap?.id,
+            persist: true,
+            durationMs: 0,
+            createdAt: Date.now(),
+          });
+        }
       }
     } else if (this.activeTool.startsWith('fog')) {
       const mode = this.activeTool === 'fog-reveal' ? 'reveal' : 'hide';

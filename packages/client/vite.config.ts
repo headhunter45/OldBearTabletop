@@ -60,11 +60,11 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         '/api': {
-          target: `http://localhost:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
+          target: `http://127.0.0.1:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
           changeOrigin: true,
         },
         '/ws': {
-          target: `ws://localhost:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
+          target: `ws://127.0.0.1:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
           ws: true,
         },
       },

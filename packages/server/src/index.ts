@@ -130,7 +130,7 @@ setupWebSocket(wss);
 
 async function start() {
   // Start HTTP and WebSocket server immediately so clients and proxies can connect without delay
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`[OldBear Server] Running on http://localhost:${PORT}`);
     console.log(`[OldBear Server] WebSocket listening on ws://localhost:${PORT}`);
     console.log(`[OldBear Server] Database mode: ${isDbConnected() ? 'PostgreSQL (Persistent)' : 'In-Memory'}`);

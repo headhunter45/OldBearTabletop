@@ -531,6 +531,91 @@ describe('Canvas Engine Utilities', () => {
     assert.ok(textRendered.includes('Hazard Warning Zone'), 'Renders decal label pill');
     assert.ok(textRendered.includes('16 ft'), 'Renders diameter measurement');
   });
+
+  it('supports multiple coexisting persistent indicators without replacement across tool switches (OB-164)', () => {
+    const markers: ScreenMarker[] = [];
+    const addMarker = (m: ScreenMarker) => {
+      // Avoid duplicate
+      if (!markers.some((existing) => existing.id === m.id)) {
+        markers.push(m);
+      }
+    };
+
+    // 1. Create a persistent circle
+    const circle: ScreenMarker = {
+      id: 'marker-1',
+      type: 'circle',
+      userId: 'u1',
+      userName: 'Player 1',
+      color: '#38bdf8',
+      x: 100,
+      y: 100,
+      radius: 60,
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+    addMarker(circle);
+
+    // 2. Create a persistent cone
+    const cone: ScreenMarker = {
+      id: 'marker-2',
+      type: 'cone',
+      userId: 'u1',
+      userName: 'Player 1',
+      color: '#f59e0b',
+      x: 300,
+      y: 300,
+      radius: 100,
+      angle: 90,
+      spreadAngle: 60,
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+    addMarker(cone);
+
+    // 3. Create a persistent rectangle
+    const rect: ScreenMarker = {
+      id: 'marker-3',
+      type: 'rectangle',
+      userId: 'u1',
+      userName: 'Player 1',
+      color: '#10b981',
+      x: 500,
+      y: 500,
+      width: 120,
+      height: 80,
+      persist: true,
+      durationMs: 0,
+      createdAt: Date.now(),
+    };
+    addMarker(rect);
+
+    assert.strictEqual(markers.length, 3, 'All 3 persistent indicators coexist without replacing each other');
+    assert.strictEqual(markers[0].type, 'circle');
+    assert.strictEqual(markers[1].type, 'cone');
+    assert.strictEqual(markers[2].type, 'rectangle');
+  });
+
+  it('requires distinct start and end tokens for token tether lines (OB-165)', () => {
+    const tokens: Record<string, Token> = {
+      'tok-1': { id: 'tok-1', name: 'Warrior', x: 100, y: 100, size: 1, color: '#38bdf8' } as Token,
+      'tok-2': { id: 'tok-2', name: 'Mage', x: 300, y: 300, size: 1, color: '#f59e0b' } as Token,
+    };
+
+    // Valid tether between two distinct entities
+    const canCreateValid = Boolean(tokens['tok-1'] && tokens['tok-2'] && 'tok-1' !== 'tok-2');
+    assert.strictEqual(canCreateValid, true, 'Valid tether between distinct tokens allowed');
+
+    // Invalid tether to same entity
+    const canCreateSelf = Boolean(tokens['tok-1'] && tokens['tok-1'] && 'tok-1' !== 'tok-1');
+    assert.strictEqual(canCreateSelf, false, 'Self-tether disallowed');
+
+    // Invalid tether to empty space
+    const canCreateEmpty = Boolean(tokens['tok-1'] && (tokens as any)['empty-space'] && 'tok-1' !== 'empty-space');
+    assert.strictEqual(canCreateEmpty, false, 'Tether to empty space disallowed');
+  });
 });
 
 

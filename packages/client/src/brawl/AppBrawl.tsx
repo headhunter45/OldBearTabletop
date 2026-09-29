@@ -169,6 +169,28 @@ export const AppBrawl: React.FC = () => {
       onMarkerSelect: (marker) => {
         setSelectedMarker(marker);
       },
+      onMarkerAdd: (marker) => {
+        setSession((prev) => {
+          if (!prev) return prev;
+          if (prev.markers?.some((m) => m.id === marker.id)) return prev;
+          return { ...prev, markers: [...(prev.markers || []), marker] };
+        });
+        if (marker.persist) {
+          setSelectedMarker(marker);
+          if (engineRef.current) engineRef.current.selectedMarkerId = marker.id;
+        }
+        networkRef.current?.send({ type: 'marker-add', marker });
+      },
+      onMarkerDelete: (id) => {
+        networkRef.current?.send({ type: 'marker-delete', id });
+        setSession((prev) => (prev ? { ...prev, markers: (prev.markers || []).filter((m) => m.id !== id) } : prev));
+        setSelectedMarker((cur) => (cur?.id === id ? null : cur));
+      },
+      onMarkerUpdate: (id, updates) => {
+        networkRef.current?.send({ type: 'marker-update', id, updates });
+        setSession((prev) => (prev ? { ...prev, markers: (prev.markers || []).map((m) => (m.id === id ? { ...m, ...updates } : m)) } : prev));
+        setSelectedMarker((cur) => (cur?.id === id ? { ...cur, ...updates } : cur));
+      },
     };
 
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
@@ -243,6 +265,12 @@ export const AppBrawl: React.FC = () => {
           setActiveTool(tool);
           if (engineRef.current) {
             engineRef.current.activeTool = tool;
+            if (engineRef.current.isDrawing) {
+              engineRef.current.isDrawing = false;
+              engineRef.current.drawStart = null;
+              engineRef.current.drawCurrent = null;
+              engineRef.current.laserPoints = [];
+            }
           }
         }}
         isGm={isOrganizer}

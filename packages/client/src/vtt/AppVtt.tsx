@@ -399,11 +399,24 @@ export const AppVtt: React.FC = () => {
         case 'marker-added': {
           setSession((prev) => {
             if (!prev) return prev;
+            if (prev.markers?.some((m) => m.id === msg.marker.id)) return prev;
             return {
               ...prev,
               markers: [...prev.markers, msg.marker],
             };
           });
+          if (!msg.marker.persist && msg.marker.durationMs > 0) {
+            const elapsed = Date.now() - msg.marker.createdAt;
+            const remaining = Math.max(0, msg.marker.durationMs - elapsed);
+            setTimeout(() => {
+              setSession((prev) => prev ? { ...prev, markers: prev.markers.filter((m) => m.id !== msg.marker.id) } : prev);
+              if (engineRef.current?.session) {
+                engineRef.current.session.markers = (engineRef.current.session.markers || []).filter(
+                  (m) => m.id !== msg.marker.id
+                );
+              }
+            }, remaining + 100);
+          }
           break;
         }
 
@@ -734,6 +747,29 @@ export const AppVtt: React.FC = () => {
         setActiveTool(tool);
       },
       onMarkerAdd: (marker) => {
+        setSession((prev) => {
+          if (!prev) return prev;
+          if (prev.markers?.some((m) => m.id === marker.id)) return prev;
+          return {
+            ...prev,
+            markers: [...(prev.markers || []), marker],
+          };
+        });
+        if (marker.persist) {
+          setSelectedMarker(marker);
+          if (engineRef.current) {
+            engineRef.current.selectedMarkerId = marker.id;
+          }
+        } else if (marker.durationMs > 0) {
+          setTimeout(() => {
+            setSession((prev) => prev ? { ...prev, markers: prev.markers.filter((m) => m.id !== marker.id) } : prev);
+            if (engineRef.current?.session) {
+              engineRef.current.session.markers = (engineRef.current.session.markers || []).filter(
+                (m) => m.id !== marker.id
+              );
+            }
+          }, marker.durationMs + 100);
+        }
         networkRef.current?.send({
           type: 'marker-add',
           marker,
@@ -801,8 +837,16 @@ export const AppVtt: React.FC = () => {
     if (activeTool !== 'measure') {
       engineRef.current.measuringTape = null;
     }
+    // Cancel drawing preview when switching tools
+    if (engineRef.current.isDrawing) {
+      engineRef.current.isDrawing = false;
+      engineRef.current.drawStart = null;
+      engineRef.current.drawCurrent = null;
+      engineRef.current.laserPoints = [];
+    }
+    engineRef.current.persistMarkersMode = persistMarkersMode;
     engineRef.current.snapEnabled = snapEnabled;
-  }, [session, localPlayer, isGm, gmPreviewMapId, activeTool, snapEnabled]);
+  }, [session, localPlayer, isGm, gmPreviewMapId, activeTool, snapEnabled, persistMarkersMode]);
 
   // Token Actions with Optimistic Local Updates
   const handleUpdateToken = (id: string, updates: Partial<Token>) => {
