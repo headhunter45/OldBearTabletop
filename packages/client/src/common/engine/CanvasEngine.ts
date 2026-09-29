@@ -1601,7 +1601,16 @@ export class CanvasEngine {
         if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
       } else if (m.type === 'spray') {
         const rad = m.radius || 50;
-        if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
+        if (m.sprayShape === 'square') {
+          const rotRad = ((m.rotation ?? m.angle ?? 0) * Math.PI) / 180;
+          const dx = worldPos.x - mx;
+          const dy = worldPos.y - my;
+          const localX = Math.cos(-rotRad) * dx - Math.sin(-rotRad) * dy;
+          const localY = Math.sin(-rotRad) * dx + Math.cos(-rotRad) * dy;
+          if (Math.abs(localX) <= rad && Math.abs(localY) <= rad) return m;
+        } else {
+          if (Math.hypot(worldPos.x - mx, worldPos.y - my) <= rad) return m;
+        }
       }
     }
     return null;

@@ -194,6 +194,7 @@ export interface ScreenMarker {
   segments?: number; // for clock: number of pie wedges (default 8)
   filled?: number; // for clock: number of active/filled wedges
   imageUrl?: string; // for spray: custom image decal, hazard overlay, or objective marker asset (OB-134)
+  sprayShape?: 'circle' | 'square'; // for spray: circle vs square decal shape (OB-169)
   rotation?: number; // for spray: rotation angle in degrees (OB-134)
   persist?: boolean; // stays on map until deleted
   locked?: boolean; // locked from accidental movement

@@ -163,8 +163,8 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
         padding: '0.6rem 1rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '1rem',
-        maxWidth: '75vw',
+        gap: '0.65rem',
+        maxWidth: '85vw',
         overflowX: 'auto',
       }}
     >
@@ -235,74 +235,76 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
         </div>
       </div>
 
-      {/* HP Quick Controls & Temp HP (Only for characters/monsters, not props - Task #115) */}
+      {/* HP Quick Controls & Temp HP (Only for characters/monsters, not props - Task #115 & OB-168) */}
       {!token.isProp && (
         <>
           <div style={{ width: '1px', height: '32px', background: 'var(--border-subtle)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Heart size={16} color="#ef4444" />
-            <button
-              className="btn-icon"
-              style={{ width: '28px', height: '28px' }}
-              onClick={() => handleHpDelta(-5)}
-              title="Take 5 Damage"
-            >
-              -5
-            </button>
-            <button
-              className="btn-icon"
-              style={{ width: '28px', height: '28px' }}
-              onClick={() => handleHpDelta(-1)}
-              title="Take 1 Damage"
-            >
-              <Minus size={14} />
-            </button>
-            <span style={{ minWidth: '46px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              {token.currentHp}/{token.maxHp}
-            </span>
-            <button
-              className="btn-icon"
-              style={{ width: '28px', height: '28px' }}
-              onClick={() => handleHpDelta(1)}
-              title="Heal 1 HP"
-            >
-              <Plus size={14} />
-            </button>
-            <button
-              className="btn-icon"
-              style={{ width: '28px', height: '28px' }}
-              onClick={() => handleHpDelta(5)}
-              title="Heal 5 HP"
-            >
-              +5
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <span title="Temp HP" style={{ display: 'inline-flex' }}>
-              <Shield size={16} color="#0ea5e9" />
-            </span>
-            <span style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: '600' }}>
-              +{token.tempHp || 0}
-            </span>
-            <button
-              className="btn-icon"
-              style={{ width: '24px', height: '24px' }}
-              onClick={() => onUpdateToken(token.id, { tempHp: (token.tempHp || 0) + 1 })}
-              title="Add 1 Temp HP"
-            >
-              <Plus size={12} />
-            </button>
-            {(token.tempHp || 0) > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', justifyContent: 'center' }}>
+            {/* HP Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Heart size={14} color="#ef4444" style={{ flexShrink: 0 }} />
               <button
                 className="btn-icon"
-                style={{ width: '24px', height: '24px' }}
-                onClick={() => onUpdateToken(token.id, { tempHp: Math.max(0, (token.tempHp || 0) - 1) })}
-                title="Subtract 1 Temp HP"
+                style={{ width: '22px', height: '22px', fontSize: '0.7rem', padding: 0 }}
+                onClick={() => handleHpDelta(-5)}
+                title="Take 5 Damage"
               >
-                <Minus size={12} />
+                -5
               </button>
-            )}
+              <button
+                className="btn-icon"
+                style={{ width: '22px', height: '22px', fontSize: '0.7rem', padding: 0 }}
+                onClick={() => handleHpDelta(-1)}
+                title="Take 1 Damage"
+              >
+                <Minus size={11} />
+              </button>
+              <span style={{ minWidth: '44px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                {token.currentHp}/{token.maxHp}
+              </span>
+              <button
+                className="btn-icon"
+                style={{ width: '22px', height: '22px', fontSize: '0.7rem', padding: 0 }}
+                onClick={() => handleHpDelta(1)}
+                title="Heal 1 HP"
+              >
+                <Plus size={11} />
+              </button>
+              <button
+                className="btn-icon"
+                style={{ width: '22px', height: '22px', fontSize: '0.7rem', padding: 0 }}
+                onClick={() => handleHpDelta(5)}
+                title="Heal 5 HP"
+              >
+                +5
+              </button>
+            </div>
+
+            {/* Temp HP Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Shield size={14} color="#0ea5e9" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: '600', minWidth: '44px' }}>
+                +{token.tempHp || 0} Temp
+              </span>
+              <button
+                className="btn-icon"
+                style={{ width: '20px', height: '20px', fontSize: '0.7rem', padding: 0 }}
+                onClick={() => onUpdateToken(token.id, { tempHp: (token.tempHp || 0) + 1 })}
+                title="Add 1 Temp HP"
+              >
+                <Plus size={10} />
+              </button>
+              {(token.tempHp || 0) > 0 && (
+                <button
+                  className="btn-icon"
+                  style={{ width: '20px', height: '20px', fontSize: '0.7rem', padding: 0 }}
+                  onClick={() => onUpdateToken(token.id, { tempHp: Math.max(0, (token.tempHp || 0) - 1) })}
+                  title="Subtract 1 Temp HP"
+                >
+                  <Minus size={10} />
+                </button>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -378,8 +380,8 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
 
       <div style={{ width: '1px', height: '32px', background: 'var(--border-subtle)' }} />
 
-      {/* Rotation Control with Degree Input & Drag Compass (Task #114 & #115) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+      {/* Rotation Control stacked vertically (Task #114, #115 & OB-168) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
         <RotationCompass
           rotation={token.rotation || 0}
           onChange={(deg) => {
@@ -390,7 +392,7 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
             }
           }}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
           <input
             type="number"
             min={0}
@@ -405,9 +407,10 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
               }
             }}
             style={{
-              width: '42px',
-              padding: '2px 4px',
-              fontSize: '0.78rem',
+              width: '36px',
+              height: '18px',
+              padding: '1px 2px',
+              fontSize: '0.72rem',
               borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-surface-elevated)',
               border: '1px solid var(--border-subtle)',
@@ -416,7 +419,7 @@ export const TokenControls: React.FC<TokenControlsProps> = ({
             }}
             title="Rotation in degrees (0 - 360°)"
           />
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>°</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>°</span>
         </div>
       </div>
 
