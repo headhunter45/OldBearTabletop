@@ -52,7 +52,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry (ghcr.io)
-        if: ${{ !secrets.REGISTRY_URL }}
+        if: env.CUSTOM_REGISTRY_URL == ''
+        env:
+          CUSTOM_REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -60,7 +62,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Custom Container Registry (if configured)
-        if: ${{ secrets.REGISTRY_URL != '' && secrets.REGISTRY_PASSWORD != '' }}
+        if: env.CUSTOM_REGISTRY_URL != '' && env.CUSTOM_REGISTRY_PASSWORD != ''
+        env:
+          CUSTOM_REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
+          CUSTOM_REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.REGISTRY_URL }}
@@ -70,9 +75,11 @@ jobs:
       - name: Run CI Build Script
         env:
           IMAGE_REGISTRY: ${{ inputs.registry || secrets.REGISTRY_PREFIX || format('ghcr.io/{0}/', github.repository_owner) }}
+          INPUT_PUSH: ${{ inputs.push }}
+          GITHUB_REF: ${{ github.ref }}
         run: |
           PUSH_FLAG=""
-          if [ "${{ inputs.push || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
+          if [ "$INPUT_PUSH" = "true" ] || [ "$GITHUB_REF" = "refs/heads/main" ] || [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             PUSH_FLAG="--push"
           fi
           bash scripts/ci-build.sh ${PUSH_FLAG}
