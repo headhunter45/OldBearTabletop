@@ -179,4 +179,40 @@ describe('Universal .binder Export/Import Pipeline (OB-135)', () => {
       /Invalid .binder file/
     );
   });
+
+  it('uses showSaveFilePicker when available to avoid browser keep warnings (OB-166)', async () => {
+    const { downloadBinderFile } = await import('./BinderPipeline.js');
+    let pickerCalled = false;
+    let writtenBlob: any = null;
+
+    (globalThis as any).window = {
+      showSaveFilePicker: async (opts: any) => {
+        pickerCalled = true;
+        assert.ok(opts.types[0].accept['application/json'].includes('.binder'));
+        return {
+          createWritable: async () => ({
+            write: async (b: any) => { writtenBlob = b; },
+            close: async () => {},
+          }),
+        };
+      },
+    };
+
+    const dummyBlob = new Blob(['{}'], { type: 'application/json' });
+    const saved = await downloadBinderFile(dummyBlob, 'test-export.binder');
+    assert.strictEqual(saved, true);
+    assert.strictEqual(pickerCalled, true);
+    assert.strictEqual(writtenBlob, dummyBlob);
+
+    // Test AbortError handling when user cancels
+    (globalThis as any).window.showSaveFilePicker = async () => {
+      const err = new Error('The user aborted a request.');
+      err.name = 'AbortError';
+      throw err;
+    };
+    const cancelled = await downloadBinderFile(dummyBlob, 'test-export.binder');
+    assert.strictEqual(cancelled, false);
+
+    delete (globalThis as any).window;
+  });
 });

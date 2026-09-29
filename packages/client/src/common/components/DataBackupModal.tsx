@@ -664,11 +664,13 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     setResultMessage(null);
     try {
       const blob = await exportToBinderBlob({ session });
-      downloadBinderFile(blob);
-      setResultMessage({
-        type: 'success',
-        text: 'Universal .binder interchange file successfully exported and downloaded!',
-      });
+      const saved = await downloadBinderFile(blob);
+      if (saved) {
+        setResultMessage({
+          type: 'success',
+          text: 'Universal .binder interchange file successfully exported and saved!',
+        });
+      }
     } catch (err: any) {
       setResultMessage({
         type: 'error',

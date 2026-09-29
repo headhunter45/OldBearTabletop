@@ -186,11 +186,40 @@ export async function exportToBinderBlob(options: BinderExportOptions = {}): Pro
 }
 
 /**
- * Triggers a client-side file download for a .binder file.
+ * Triggers a client-side file save/download for a .binder file.
+ * Uses window.showSaveFilePicker when available to allow native OS destination selection
+ * and prevent Chromium/Brave unknown-extension "Keep" download warnings (OB-166).
  */
-export function downloadBinderFile(blob: Blob, customName?: string) {
+export async function downloadBinderFile(blob: Blob, customName?: string): Promise<boolean> {
   const dateStr = new Date().toISOString().slice(0, 10);
   const fileName = customName || `oldbear-collection-${dateStr}.binder`;
+
+  // Use File System Access API if supported (Brave, Chrome, Edge)
+  if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+    try {
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: 'Universal .binder Collection (*.binder)',
+            accept: {
+              'application/json': ['.binder', '.json'],
+            },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        return false;
+      }
+      // Fall through to link click fallback
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -199,6 +228,7 @@ export function downloadBinderFile(blob: Blob, customName?: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  return true;
 }
 
 /**
