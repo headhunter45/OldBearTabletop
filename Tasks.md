@@ -139,7 +139,7 @@
 | OB-136 | Done    | [Client Architectural Refactoring: Restructure into src/common, src/vtt, src/brawl](#ob-136---client-architectural-refactoring-restructure-into-srccommon-srcvtt-and-srcbrawl) |
 | OB-137 | Backlog | [Mobile Touch Hit-Box & Finger Offset Calibration](#ob-137---mobile-touch-hit-box--finger-offset-calibration)                                                                  |
 | OB-138 | Backlog | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                |
-| OB-139 | Ready   | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
+| OB-139 | Done    | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                |
 | OB-140 | Backlog | [Direct JSON Paste / Drop Import for Characters & Monsters](#ob-140---direct-json-paste--drop-import-for-characters--monsters)                                                 |
 | OB-141 | Backlog | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                           |
 | OB-142 | Backlog | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                              |
@@ -520,7 +520,7 @@ CSS layout adjustments for mobile viewports:
 
 ## OB-139 - Reusable Help & Tooltip Component
 
-**Status:** Backlog  
+**Status:** Done  
 **App:** Shared  
 **Depends On:** None  
 **Description:**

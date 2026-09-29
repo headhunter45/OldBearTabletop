@@ -508,6 +508,13 @@ You can drag and drop files from your desktop directly onto the Old Bear Rodeo w
 
 ---
 
+### Help & Keyboard Shortcuts
+- Press **`?`** (or **`Shift + /`**) anywhere on the virtual tabletop to open the searchable **Keyboard Shortcuts & Hotkeys Cheat Sheet**.
+- Access shortcuts via mobile drawer or desktop drawer at any time.
+- Integrated **`<HelpTip />`** components provide instant contextual assistance and hotkey badges throughout the UI.
+
+---
+
 ## Configuring Available Colors
 
 To customize the colors available for player pointers, token borders, and drawing markers, edit the color definitions in:

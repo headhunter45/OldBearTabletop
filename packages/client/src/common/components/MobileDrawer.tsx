@@ -18,6 +18,7 @@ import {
   MessageSquareHeart,
   Plus,
   PieChart,
+  Keyboard,
 } from 'lucide-react';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../network/VoiceManager.js';
@@ -39,6 +40,7 @@ interface MobileDrawerProps {
   onOpenSoundboard: () => void;
   onOpenBackup?: () => void;
   onOpenClocks?: () => void;
+  onOpenHotkeys?: () => void;
   onToggleChat?: () => void;
   isChatOpen?: boolean;
   unreadChatCount?: number;
@@ -65,6 +67,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onOpenSoundboard,
   onOpenBackup,
   onOpenClocks,
+  onOpenHotkeys,
   onToggleChat,
   isChatOpen,
   unreadChatCount,
@@ -355,6 +358,20 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               }}
             >
               <PieChart size={18} color="var(--accent-indigo)" /> Progress Clocks
+            </button>
+          )}
+
+          {/* 6c. Keyboard Shortcuts (OB-139) */}
+          {onOpenHotkeys && (
+            <button
+              className="btn btn-secondary"
+              style={{ justifyContent: 'flex-start', padding: '0.65rem' }}
+              onClick={() => {
+                onClose();
+                onOpenHotkeys();
+              }}
+            >
+              <Keyboard size={18} color="var(--primary, #38bdf8)" /> Keyboard Shortcuts (?)
             </button>
           )}
 

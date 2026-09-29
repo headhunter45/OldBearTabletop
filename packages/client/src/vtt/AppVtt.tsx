@@ -36,6 +36,7 @@ import {
 import { MapManagerModal } from '../common/components/MapManagerModal.js';
 import { SoundboardModal } from '../common/components/SoundboardModal.js';
 import { MobileDrawer } from '../common/components/MobileDrawer.js';
+import { HotkeyCheatSheetModal } from '../common/components/HotkeyCheatSheetModal.js';
 import { VoiceManager, VoiceState } from '../common/network/VoiceManager.js';
 import { VoiceSettingsModal } from '../common/components/VoiceSettingsModal.js';
 import { DataBackupModal, AssetTab, AssetManagerExtensions } from '../common/components/DataBackupModal.js';
@@ -138,6 +139,7 @@ export const AppVtt: React.FC = () => {
   const [timerLabel, setTimerLabel] = useState<string>('Round Timer');
   const [isTimerOpen, setIsTimerOpen] = useState<boolean>(false);
   const [isClocksModalOpen, setIsClocksModalOpen] = useState<boolean>(false);
+  const [isHotkeysModalOpen, setIsHotkeysModalOpen] = useState<boolean>(false);
 
   // GM Preview Map vs Player Active Map
   const [gmPreviewMapId, setGmPreviewMapId] = useState<string>('');
@@ -1605,6 +1607,13 @@ export const AppVtt: React.FC = () => {
         return;
       }
 
+      // Help & Hotkeys Cheat Sheet (?)
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setIsHotkeysModalOpen((v) => !v);
+        return;
+      }
+
       // Highlight controls (1-5)
       if (e.key === '1') {
         e.preventDefault();
@@ -2336,7 +2345,17 @@ export const AppVtt: React.FC = () => {
         onToggleMute={handleToggleMute}
         onToggleDeafen={handleToggleDeafen}
         onOpenVoiceSettings={() => setShowVoiceSettings(true)}
+        onOpenHotkeys={() => {
+          setShowMobileDrawer(false);
+          setIsHotkeysModalOpen(true);
+        }}
         isGm={isGm}
+      />
+
+      {/* Keyboard Shortcuts Cheat Sheet Modal (OB-139) */}
+      <HotkeyCheatSheetModal
+        isOpen={isHotkeysModalOpen}
+        onClose={() => setIsHotkeysModalOpen(false)}
       />
 
       {/* Toast Notification */}
