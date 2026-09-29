@@ -428,4 +428,65 @@ describe('Dice Parser & Slash Command Utilities', () => {
     assert.ok(sentMessages[3].text.includes('Discord webhook sync has been disabled'));
     assert.strictEqual(sentMessages[3].isEphemeral, true);
   });
+
+  it('cycles through previous messages/commands with Up/Down and preserves drafts (OB-179)', async () => {
+    const { createChatHistory } = await import('./useChatHistory.js');
+    const historyManager = createChatHistory();
+
+    // 1. Initial state
+    assert.strictEqual(historyManager.navigateUp(''), null);
+    assert.strictEqual(historyManager.navigateDown(), null);
+    assert.strictEqual(historyManager.isNavigating(), false);
+
+    // 2. Add sent commands/messages
+    historyManager.addToHistory('/roll 1d20+5 adv');
+    historyManager.addToHistory('/attack 1');
+    historyManager.addToHistory('/spell magic-missile');
+
+    // Consecutive duplicates should be deduplicated
+    historyManager.addToHistory('/spell magic-missile');
+    assert.strictEqual(historyManager.getHistory().length, 3);
+
+    // 3. User types an in-progress draft before pressing Up
+    const draftText = 'fixing a typo /spel';
+    const firstUp = historyManager.navigateUp(draftText);
+    assert.strictEqual(firstUp, '/spell magic-missile');
+    assert.strictEqual(historyManager.isNavigating(), true);
+    assert.strictEqual(historyManager.getDraft(), draftText);
+
+    // 4. Pressing Up again cycles backward
+    const secondUp = historyManager.navigateUp(firstUp!);
+    assert.strictEqual(secondUp, '/attack 1');
+
+    const thirdUp = historyManager.navigateUp(secondUp!);
+    assert.strictEqual(thirdUp, '/roll 1d20+5 adv');
+
+    // 5. Pressing Up at the oldest entry stays at the oldest entry
+    const fourthUp = historyManager.navigateUp(thirdUp!);
+    assert.strictEqual(fourthUp, '/roll 1d20+5 adv');
+
+    // 6. Pressing Down cycles forward
+    const firstDown = historyManager.navigateDown();
+    assert.strictEqual(firstDown, '/attack 1');
+
+    const secondDown = historyManager.navigateDown();
+    assert.strictEqual(secondDown, '/spell magic-missile');
+
+    // 7. Pressing Down at the newest entry restores the user's saved draft
+    const restoredDraft = historyManager.navigateDown();
+    assert.strictEqual(restoredDraft, draftText);
+    assert.strictEqual(historyManager.isNavigating(), false);
+
+    // 8. Pressing Down when not navigating returns null
+    assert.strictEqual(historyManager.navigateDown(), null);
+
+    // 9. Fixing a typo and submitting resets navigation and adds to history
+    historyManager.navigateUp(''); // cycle back to /spell magic-missile
+    assert.strictEqual(historyManager.isNavigating(), true);
+    historyManager.addToHistory('/spell magic-missile 2');
+    assert.strictEqual(historyManager.isNavigating(), false);
+    assert.strictEqual(historyManager.getHistory().length, 4);
+    assert.strictEqual(historyManager.getHistory()[3], '/spell magic-missile 2');
+  });
 });
+

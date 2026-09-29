@@ -9,6 +9,7 @@ import {
   parseAndRollAdvanced,
   formatRollDetails,
 } from '../dice/AdvancedDiceEngine.js';
+import { useChatHistory } from './useChatHistory.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -823,6 +824,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const {
+    draft,
+    isNavigating,
+    addToHistory,
+    navigateUp,
+    navigateDown,
+    resetNavigation,
+  } = useChatHistory();
   const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
     storageKey: 'obr_chat_pos',
     defaultZIndex: 50,
@@ -870,8 +880,47 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+    addToHistory(inputText);
     handleCommand(inputText);
     setInputText('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp') {
+      const isAtStart = e.currentTarget.selectionStart === 0 && e.currentTarget.selectionEnd === 0;
+      const isEmpty = inputText.trim() === '';
+      if (isNavigating || isAtStart || isEmpty) {
+        e.preventDefault();
+        const prev = navigateUp(inputText);
+        if (prev !== null) {
+          setInputText(prev);
+          requestAnimationFrame(() => {
+            if (inputRef.current) {
+              inputRef.current.setSelectionRange(prev.length, prev.length);
+            }
+          });
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (isNavigating) {
+        e.preventDefault();
+        const next = navigateDown();
+        if (next !== null) {
+          setInputText(next);
+          requestAnimationFrame(() => {
+            if (inputRef.current) {
+              inputRef.current.setSelectionRange(next.length, next.length);
+            }
+          });
+        }
+      }
+    } else if (e.key === 'Escape') {
+      if (isNavigating) {
+        e.preventDefault();
+        setInputText(draft);
+        resetNavigation();
+      }
+    }
   };
 
   return (
@@ -936,28 +985,44 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           >
             <span
               style={{ cursor: 'pointer', color: 'var(--accent-indigo)' }}
-              onClick={() => setInputText('/roll 1d20+5 adv')}
+              onClick={() => {
+                resetNavigation();
+                setInputText('/roll 1d20+5 adv');
+                inputRef.current?.focus();
+              }}
             >
               /roll 1d20+5 adv
             </span>
             <span>•</span>
             <span
               style={{ cursor: 'pointer', color: 'var(--accent-emerald)' }}
-              onClick={() => setInputText('/attack ')}
+              onClick={() => {
+                resetNavigation();
+                setInputText('/attack ');
+                inputRef.current?.focus();
+              }}
             >
               /attack
             </span>
             <span>•</span>
             <span
               style={{ cursor: 'pointer', color: '#f59e0b' }}
-              onClick={() => setInputText('/skill ')}
+              onClick={() => {
+                resetNavigation();
+                setInputText('/skill ');
+                inputRef.current?.focus();
+              }}
             >
               /skill
             </span>
             <span>•</span>
             <span
               style={{ cursor: 'pointer', color: '#a855f7' }}
-              onClick={() => setInputText('/spell ')}
+              onClick={() => {
+                resetNavigation();
+                setInputText('/spell ');
+                inputRef.current?.focus();
+              }}
             >
               /spell
             </span>
@@ -1038,10 +1103,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             }}
           >
             <input
+              ref={inputRef}
               type="text"
               placeholder="Chat or /roll, /attack, /skill..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
               style={{
                 flex: 1,
                 padding: '0.45rem 0.6rem',
