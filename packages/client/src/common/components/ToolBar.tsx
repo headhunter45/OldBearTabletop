@@ -93,6 +93,16 @@ export const ToolBar: React.FC<ToolBarProps> = ({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showSelectMenu, showFogMenu, showHighlightMenu, showGridMenu]);
+
+  // Enforce mode-specific tool visibility (OB-170):
+  // Laser is only for non-persistent Quick Ping mode; Spray is only for Persistent mode.
+  useEffect(() => {
+    if (persistMarkersMode && activeTool === 'laser') {
+      onSelectTool('arrow');
+    } else if (!persistMarkersMode && activeTool === 'spray') {
+      onSelectTool('circle');
+    }
+  }, [persistMarkersMode, activeTool, onSelectTool]);
   return (
     <div
       className="floating-hud floating-hud-toolbar glass-panel"
@@ -250,25 +260,27 @@ export const ToolBar: React.FC<ToolBarProps> = ({
               minWidth: '160px',
             }}
           >
-            <button
-              className={`btn btn-secondary ${activeTool === 'laser' ? 'active' : ''}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.35rem 0.6rem',
-                fontSize: '0.8rem',
-                justifyContent: 'flex-start',
-              }}
-              onClick={() => {
-                onSelectTool('laser');
-                setShowHighlightMenu(false);
-              }}
-              title="Laser Pointer (1)"
-            >
-              <Sparkles size={16} />
-              <span>Laser Pointer (1)</span>
-            </button>
+            {!persistMarkersMode && (
+              <button
+                className={`btn btn-secondary ${activeTool === 'laser' ? 'active' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.35rem 0.6rem',
+                  fontSize: '0.8rem',
+                  justifyContent: 'flex-start',
+                }}
+                onClick={() => {
+                  onSelectTool('laser');
+                  setShowHighlightMenu(false);
+                }}
+                title="Laser Pointer (1)"
+              >
+                <Sparkles size={16} />
+                <span>Laser Pointer (1)</span>
+              </button>
+            )}
 
             <button
               className={`btn btn-secondary ${activeTool === 'arrow' ? 'active' : ''}`}
@@ -390,25 +402,27 @@ export const ToolBar: React.FC<ToolBarProps> = ({
               <span>Token Tether (7)</span>
             </button>
 
-            <button
-              className={`btn btn-secondary ${activeTool === 'spray' ? 'active' : ''}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.35rem 0.6rem',
-                fontSize: '0.8rem',
-                justifyContent: 'flex-start',
-              }}
-              onClick={() => {
-                onSelectTool('spray');
-                setShowHighlightMenu(false);
-              }}
-              title="Custom Image Spray Decal / Hazard (8)"
-            >
-              <Stamp size={16} />
-              <span>Spray Decal (8)</span>
-            </button>
+            {persistMarkersMode && (
+              <button
+                className={`btn btn-secondary ${activeTool === 'spray' ? 'active' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.35rem 0.6rem',
+                  fontSize: '0.8rem',
+                  justifyContent: 'flex-start',
+                }}
+                onClick={() => {
+                  onSelectTool('spray');
+                  setShowHighlightMenu(false);
+                }}
+                title="Custom Image Spray Decal / Hazard (8)"
+              >
+                <Stamp size={16} />
+                <span>Spray Decal (8)</span>
+              </button>
+            )}
 
             <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.2rem 0' }} />
 
@@ -422,7 +436,15 @@ export const ToolBar: React.FC<ToolBarProps> = ({
                 fontSize: '0.8rem',
                 justifyContent: 'flex-start',
               }}
-              onClick={() => onTogglePersistMarkers?.(!persistMarkersMode)}
+              onClick={() => {
+                const nextMode = !persistMarkersMode;
+                onTogglePersistMarkers?.(nextMode);
+                if (nextMode && activeTool === 'laser') {
+                  onSelectTool('arrow');
+                } else if (!nextMode && activeTool === 'spray') {
+                  onSelectTool('circle');
+                }
+              }}
               title={
                 persistMarkersMode
                   ? 'Persistent Mode: Drawings remain permanently on map. Hold Shift while drawing to invert to Quick Ping.'

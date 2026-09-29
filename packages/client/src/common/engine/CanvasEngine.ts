@@ -1422,7 +1422,8 @@ export class CanvasEngine {
       const radius = Math.hypot(x2 - x1, y2 - y1);
       if (radius > 5) {
         const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-        const isPersistent = this.persistMarkersMode ? !(e && e.shiftKey) : Boolean(e && e.shiftKey);
+        // Spray decals always act in persistent mode (OB-170)
+        const isPersistent = true;
         this.broadcastMarker({
           id: crypto.randomUUID(),
           type: 'spray',
@@ -1437,7 +1438,7 @@ export class CanvasEngine {
           imageUrl: this.activeSprayImage || undefined,
           mapId: currentMap?.id,
           persist: isPersistent,
-          durationMs: isPersistent ? 0 : 8000,
+          durationMs: 0,
           createdAt: Date.now(),
         });
       }

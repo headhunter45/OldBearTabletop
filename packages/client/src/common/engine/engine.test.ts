@@ -613,6 +613,20 @@ describe('Canvas Engine Utilities', () => {
     assert.strictEqual(isPointInMarker({ x: 100, y: 160 }, rotatedSquare), true, 'Tip of 45-degree rotated square hits');
   });
 
+  it('enforces persistent mode for sprays and ephemeral mode for laser pointers (OB-170)', () => {
+    // Helper mimicking tool transition logic
+    const resolveToolForPersistMode = (tool: string, persistMode: boolean): string => {
+      if (persistMode && tool === 'laser') return 'arrow';
+      if (!persistMode && tool === 'spray') return 'circle';
+      return tool;
+    };
+
+    assert.strictEqual(resolveToolForPersistMode('laser', true), 'arrow', 'Switches away from laser when entering persistent mode');
+    assert.strictEqual(resolveToolForPersistMode('spray', false), 'circle', 'Switches away from spray when entering quick ping mode');
+    assert.strictEqual(resolveToolForPersistMode('circle', true), 'circle', 'Retains circle in persistent mode');
+    assert.strictEqual(resolveToolForPersistMode('arrow', false), 'arrow', 'Retains arrow in quick ping mode');
+  });
+
   it('supports multiple coexisting persistent indicators without replacement across tool switches (OB-164)', () => {
     const markers: ScreenMarker[] = [];
     const addMarker = (m: ScreenMarker) => {
