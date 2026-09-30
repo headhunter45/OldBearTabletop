@@ -141,8 +141,8 @@
 | OB-138 | Backlog  | [Mobile Token Interaction Bar & Left Menu Clipping](#ob-138---mobile-token-interaction-bar--left-menu-clipping)                                                                                                                                                                                                                                                                                                                                                                      |
 | OB-139 | Done     | [Reusable Help & Tooltip Component](#ob-139---reusable-help--tooltip-component)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | OB-140 | Done     | [Direct JSON Paste / Drop Import for Characters & Monsters](#ob-140---direct-json-paste--drop-import-for-characters--monsters)                                                                                                                                                                                                                                                                                                                                                       |
-| OB-141 | Ready    | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                                                                                                                                                                                                                                                                                                                                 |
-| OB-142 | Ready    | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                                                                                                                                                                                                                                                                                                                                    |
+| OB-141 | Done     | [`/item` Command with Local Caching & D&D Beyond Fetch](#ob-141---item-command-with-local-caching--dnd-beyond-fetch)                                                                                                                                                                                                                                                                                                                                                                 |
+| OB-142 | Done     | [D&D Beyond Monster, Item & Character Direct Fetch by URL/ID](#ob-142---dnd-beyond-monster-item--character-direct-fetch-by-urlid)                                                                                                                                                                                                                                                                                                                                                    |
 | OB-143 | Ready    | [Direct Token Creation from D&D Beyond Monster/Character URL](#ob-143---direct-token-creation-from-dnd-beyond-monstercharacter-url)                                                                                                                                                                                                                                                                                                                                                  |
 | OB-144 | Done     | [Pathbuilder 2e (PF2e) JSON Character Import](#ob-144---pathbuilder-2e-pf2e-json-character-import)                                                                                                                                                                                                                                                                                                                                                                                   |
 | OB-145 | Backlog  | [Live Video Feed Tokens](#ob-145---live-video-feed-tokens)                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -180,8 +180,8 @@
 | OB-177 | Ready    | Pull pf2e imported data on spells and items from https://github.com/foundryvtt/pf2e/tree/v14-dev/packs directly? Or maybe fetch it from aonprd?                                                                                                                                                                                                                                                                                                                                      |
 | OB-178 | Done     | Make draggable windows use a common title bar component that contains an icon on the left then title text left aligned and ellipsized if it cant fit, followed by the minimize and close buttons. the minimize action should know what height to animate to based on the height of this component and possibly some extra padding/margin. Give an opinion on whether this should be part of a window component or something similar or if we should just have the title bar for now. |
 | OB-179 | Done     | Up and down in the chat message box should cycle through previous messages/commands. To make fixing a typo in a command easier.                                                                                                                                                                                                                                                                                                                                                      |
-| OB-180 | Ready    | [System-Agnostic EntityAction Schema & Statblock Card Renderer](#ob-180---system-agnostic-entityaction-schema--statblock-card-renderer)                                                                                                                                                                                                                                                                                                                                               |
-| OB-181 | Ready    | [Statblock Inspection Syntax (`?`) for Chat Commands](#ob-181---statblock-inspection-syntax--for-chat-commands)                                                                                                                                                                                                                                                                                                                                                                       |
+| OB-180 | Done     | [System-Agnostic EntityAction Schema & Statblock Card Renderer](#ob-180---system-agnostic-entityaction-schema--statblock-card-renderer)                                                                                                                                                                                                                                                                                                                                               |
+| OB-181 | Done     | [Statblock Inspection Syntax (`?`) for Chat Commands](#ob-181---statblock-inspection-syntax--for-chat-commands)                                                                                                                                                                                                                                                                                                                                                                       |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
 
@@ -556,21 +556,21 @@ Add a drag-and-drop listener for pre-exported D&D Beyond or generic character/mo
 
 ## OB-141 - `/item` Command with Local Caching & D&D Beyond Fetch
 
-**Status:** Ready  
+**Status:** Done  
 **App:** VTT  
 **Depends On:** None  
 **Description:**
 
-Client-side command parser for `/item <query>` and `/item list`, caching fetched D&D Beyond items locally in storage by ID (`slug`) for fast offline access and chat card rendering.
+Client-side command parser for `/item <query>`, `/item? <query>`, and `/item list`, caching fetched D&D Beyond / Open5e items locally in storage by ID (`slug`) for fast offline access and chat card rendering.
 
 ## OB-142 - D&D Beyond Monster, Item & Character Direct Fetch by URL/ID
 
-**Status:** Ready  
+**Status:** Done  
 **App:** VTT  
 **Depends On:** [OB-140](#ob-140---direct-json-paste--drop-import-for-characters--monsters)  
 **Description:**
 
-Fetch public D&D Beyond monsters, items, and characters directly by URL or ID (e.g. `https://www.dndbeyond.com/monsters/16939-kobold`), mapping stats into local entities and caching images in local asset storage.
+Fetch public D&D Beyond / Open5e monsters, items, and characters directly by URL, ID, or `/monster? <query>`, mapping stats into local entities and caching images in local asset storage.
 
 ## OB-143 - Direct Token Creation from D&D Beyond Monster/Character URL
 
@@ -1051,7 +1051,7 @@ Enable cycling through sent chat messages and commands in the chat panel input b
 
 ## OB-180 - System-Agnostic EntityAction Schema & Statblock Card Renderer
 
-**Status:** Ready  
+**Status:** Done  
 **App:** Shared / VTT  
 **Depends On:** None  
 **Description:**
@@ -1064,7 +1064,7 @@ Create a unified, system-agnostic action and reference schema ([docs/system-agno
 
 ## OB-181 - Statblock Inspection Syntax (`?`) for Chat Commands
 
-**Status:** Ready  
+**Status:** Done  
 **App:** VTT  
 **Depends On:** [OB-180](#ob-180---system-agnostic-entityaction-schema--statblock-card-renderer)  
 **Description:**

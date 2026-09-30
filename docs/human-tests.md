@@ -388,9 +388,41 @@ All tasks in your requested sequence have been implemented, tested, and individu
 | **OB-173** | `0f6cde3` | Overhauled progress clocks into floating screen widgets ([ClockWidget.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ClockWidget.tsx)), bottom interaction bar ([ClockWidgetBar.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ClockWidgetBar.tsx)), standardized "steps" terminology, live session sync, and cross-scene persistence in [ProgressClockModal.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ProgressClockModal.tsx). |
 | **OB-174** | `61f60a1` | Aligned `.binder` collection card exports with [card.json](file:///Users/tom/Projects/OldBearVTT/docs/schema/card.json), supported duplicate card instances with unique IDs, preserved third-party collections/dashboards non-destructively, and disabled collections fallback import in [BinderPipeline.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/storage/BinderPipeline.ts). |
 | **OB-179** | Pending | Added Up/Down arrow key message and command history cycling in [ChatPanel.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ChatPanel.tsx) with draft preservation in [useChatHistory.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/useChatHistory.ts). |
-| **OB-140** | Pending | Universal drag-and-drop listener with auto-routing for D&D Beyond ([dndBeyondParser.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/vtt/utils/dndBeyondParser.ts)), Pathbuilder, TetraCube, MonsterCards, and [ImportConfirmationModal.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ImportConfirmationModal.tsx) for large packages (>250KB) and .binder bundles. |
+| **OB-140** | `f7199b0` | Universal drag-and-drop listener with auto-routing for D&D Beyond ([dndBeyondParser.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/vtt/utils/dndBeyondParser.ts)), Pathbuilder, TetraCube, MonsterCards, and [ImportConfirmationModal.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ImportConfirmationModal.tsx) for large packages (>250KB) and .binder bundles. |
+| **OB-180** | Pending | System-agnostic [EntityAction](file:///Users/tom/Projects/OldBearVTT/packages/shared/src/types.ts) and [EntityStatBlock](file:///Users/tom/Projects/OldBearVTT/packages/shared/src/types.ts) schema with action cost glyphs (`◆`, `◆◆`, `◆◆◆`, `↺`, `◇`, `Action`, `Bonus Action`, `Reaction`), trait pills, and glassmorphic [StatBlockCard.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/StatBlockCard.tsx) renderer. |
+| **OB-181** | Pending | Statblock inspection syntax (`?`) for `/spell?`, `/item?`, `/attack?`, `/ability?`, `/monster?` in [ChatPanel.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/ChatPanel.tsx) with Open5e client-side reference fetcher ([open5eFetcher.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/utils/open5eFetcher.ts)), non-rolling inspection mode, and `[+ Add to Sheet]` integration. |
 
 ---
+
+### How to Test OB-180 and OB-181 in the UI
+
+#### 1. OB-180 & OB-181 — Chat Statblock Inspection (`?`) & Rich Card Renderer
+- **Where to find it:** The chat input box in the **Table Chat & Dice** drawer.
+- **How to test:**
+  1. **Attack Inspection without Rolling:**
+     - Type `/attack? 1` or `/attack? Longsword` and press **Enter**.
+     - Notice that **no dice roll is made** and no to-hit calculation is broadcast.
+     - A formatted `<StatBlockCard />` appears in chat displaying:
+       - Weapon name (`Longsword`), attack type badge (`ATTACK`), and action cost (`Action` or `◆`).
+       - To-Hit formula badge (e.g. `1d20+6`) and damage formula (e.g. `1d8+4 slashing`).
+       - `[Attack / Roll]` button (clicking it rolls the attack).
+       - `[+ Add to Sheet]` button (if available to attach to character).
+  2. **Spell Inspection (Sheet & Open5e API):**
+     - Type `/spell? magic-missile` (or `/spell? fireball`) and press **Enter**.
+     - It fetches the spell directly from the Open5e reference database (or local sheet) and renders:
+       - Title, Level & School (`Level 1 (Evocation)` or `Level 3 (Evocation)`).
+       - Trait pills (e.g. `Evocation`, `Concentration`).
+       - Range (`120 feet`), Duration (`Instantaneous`), and full markdown spell rules text.
+       - Click `[+ Add to Sheet]`: Notice it toasts confirmation and instantly adds the spell to your active character sheet!
+  3. **Item Inspection (Inventory & Open5e API):**
+     - Type `/item? potion of healing` and press **Enter**.
+     - It displays the item card with rarity (`Common`), consumable rules text, and a `[+ Add to Sheet]` button.
+  4. **Monster Statblock Inspection:**
+     - Type `/monster? goblin` and press **Enter**.
+     - It fetches the full Goblin statblock card showing AC (`15`), HP (`7 (2d6)`), Speed (`30 ft.`), CR (`CR 1/4`), 6 ability scores with modifiers, and sub-actions (`Scimitar`, `Nimble Escape`).
+     - Click `[Spawn Token]`: A ready-to-fight goblin token appears on the active battlemap with all stats pre-populated!
+  5. **Contrast with Standard Roll Commands:**
+     - Type `/attack 1` (without `?`): It executes the actual d20 to-hit roll and damage roll as normal.
 
 ### How to Test OB-179 and OB-140 in the UI
 

@@ -9,6 +9,7 @@ import {
   DiceRollResult,
   SoundTrack,
   ProgressClock,
+  EntityStatBlock,
 } from './types.js';
 
 export type ClientToServerMessage =
@@ -51,6 +52,7 @@ export interface ChatMessage {
   isCommand?: boolean;
   isEphemeral?: boolean;
   recipientId?: string;
+  statBlock?: EntityStatBlock;
 }
 
 export type ServerToClientMessage =

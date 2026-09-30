@@ -1,5 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Player, ChatMessage, DiceRollResult, DnDCharacter, DieType, DnDAction, DnDSpell, Token, getActivationCategory } from '@oldbear/shared';
+import {
+  Player,
+  ChatMessage,
+  DiceRollResult,
+  DnDCharacter,
+  DieType,
+  DnDAction,
+  DnDSpell,
+  DnDItem,
+  Token,
+  getActivationCategory,
+  EntityAction,
+  EntityStatBlock,
+  getActionCostGlyph,
+  convertDnDActionToEntityAction,
+  convertDnDSpellToEntityAction,
+  convertDnDItemToEntityAction,
+  convertCharacterToMonsterStatBlock,
+} from '@oldbear/shared';
 import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { DraggableWindowTitleBar } from './DraggableWindow.js';
@@ -10,6 +28,12 @@ import {
   formatRollDetails,
 } from '../dice/AdvancedDiceEngine.js';
 import { useChatHistory } from './useChatHistory.js';
+import { StatBlockCard } from './StatBlockCard.js';
+import {
+  fetchOpen5eSpell,
+  fetchOpen5eMonster,
+  fetchOpen5eItem,
+} from '../utils/open5eFetcher.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -20,6 +44,7 @@ export interface ChatPanelProps {
   onBroadcastRoll?: (roll: DiceRollResult) => void;
   onSyncToken?: (tokenId: string, updates: Partial<Token>) => void;
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
+  onSpawnMonsterToken?: (statBlock: EntityStatBlock) => void;
   fetchCharacterFn?: (charIdOrUrl: string) => Promise<DnDCharacter>;
   onConfigureDiscordWebhook?: (webhookUrl?: string) => void;
   onStartTimer?: (durationSeconds: number, label?: string) => void;
@@ -79,6 +104,7 @@ export interface ProcessSlashCommandContext {
   onBroadcastRoll?: (roll: DiceRollResult) => void;
   onSyncToken?: (tokenId: string, updates: Partial<Token>) => void;
   onUpdatePlayerChar?: (char: DnDCharacter) => void;
+  onSpawnMonsterToken?: (statBlock: EntityStatBlock) => void;
   fetchCharacterFn?: (charIdOrUrl: string) => Promise<DnDCharacter>;
   onConfigureDiscordWebhook?: (webhookUrl?: string) => void;
   onStartTimer?: (durationSeconds: number, label?: string) => void;
@@ -115,7 +141,7 @@ export function processSlashCommand(
   // 1. /help
   if (cmd === 'help') {
     sendPrivateSystemMessage(
-      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s, /timer 2.5m)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet (e.g. /attack 1 or /attack Longsword)\n• /skill [skill or index] [adv|dis] - Roll a character skill check (e.g. /skill 1 or /skill Stealth dis)\n• /spell [spell or index] [adv|dis] - Roll a spell attack from character sheet (e.g. /spell 1)\n• /item [item or index] - Use/inspect item from inventory (e.g. /item 1)\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
+      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet\n• /attack? [name or index] - Inspect attack statblock card without rolling\n• /skill [skill or index] [adv|dis] - Roll a character skill check\n• /spell [spell or index] [adv|dis] - Roll a spell attack from sheet\n• /spell? [name or index] - Inspect spell reference card (e.g. /spell? magic-missile)\n• /item [item or index] - Use item from inventory\n• /item? [name or index] - Inspect item reference card (e.g. /item? potion of healing)\n• /ability? [name] - Inspect class ability or trait\n• /monster? [name] - Inspect creature statblock (e.g. /monster? goblin)\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
     );
     return true;
   }
@@ -309,6 +335,65 @@ export function processSlashCommand(
         return true;
       }
 
+      // 3a. /attack? [name or index] - Inspection mode (OB-180, OB-181)
+      if (cmd === 'attack?' || (cmd === 'attack' && args[0] === '?')) {
+        const queryArgs = cmd === 'attack?' ? args : args.slice(1);
+        const attackQuery = queryArgs.join(' ').trim();
+
+        const availableAttacks: DnDAction[] = (character?.actions && character.actions.length > 0)
+          ? character.actions
+          : [
+              { name: 'Melee Attack', type: 'melee', toHitModifier: 5, damageDice: '1d8+3' },
+              { name: 'Ranged Attack', type: 'ranged', toHitModifier: 5, damageDice: '1d6+3' },
+              { name: 'Unarmed Strike', type: 'melee', toHitModifier: 5, damageDice: '4' },
+            ];
+
+        if (!attackQuery) {
+          const listText = availableAttacks
+            .map((a, idx) => {
+              const cat = getActivationCategory(a);
+              const badge = cat === 'bonus' ? ' [Bonus Action]' : cat === 'reaction' ? ' [Reaction]' : '';
+              return `${idx + 1}. ${a.name}${badge}${a.reach ? ` (${a.reach})` : a.range ? ` (${a.range})` : ''}`;
+            })
+            .join('\n');
+          sendPrivateSystemMessage(
+            `No attack specified. Available attacks${character ? ` for ${character.name}` : ''}:\n${listText}\n\nUsage: /attack? [name or index]`
+          );
+          return true;
+        }
+
+        let found: DnDAction | undefined;
+        const numIdx = parseInt(attackQuery, 10);
+        if (!isNaN(numIdx) && String(numIdx) === attackQuery && numIdx >= 1 && numIdx <= availableAttacks.length) {
+          found = availableAttacks[numIdx - 1];
+        } else {
+          found = availableAttacks.find((a) =>
+            a.name.toLowerCase().includes(attackQuery.toLowerCase())
+          );
+        }
+
+        if (!found) {
+          sendPrivateSystemMessage(
+            `Could not find attack matching "${attackQuery}".`,
+            'System',
+            '#f43f5e'
+          );
+          return true;
+        }
+
+        const statBlock = convertDnDActionToEntityAction(found, '5e');
+        onSendMessage({
+          id: crypto.randomUUID(),
+          senderId: player.id,
+          senderName: player.name,
+          senderColor: player.color,
+          text: `inspects attack: **${found.name}**`,
+          timestamp: Date.now(),
+          statBlock,
+        });
+        return true;
+      }
+
       // 3. /attack [name] [adv|dis]
       if (cmd === 'attack') {
         const lastArg = args[args.length - 1]?.toLowerCase();
@@ -409,6 +494,77 @@ export function processSlashCommand(
           text: `attacks with ${found.name}${attackTag}! To Hit: ${hitTotal} (${hitRoll.rolls.join('/')}${toHitMod >= 0 ? `+${toHitMod}` : toHitMod}) | Damage: ${dmgParsed.total} [${dmgExpr}]`,
           timestamp: Date.now(),
           roll: rollResult,
+        });
+        return true;
+      }
+
+      // 4a. /spell? [name or index] - Inspection mode (OB-180, OB-181, OB-141)
+      if (cmd === 'spell?' || (cmd === 'spell' && args[0] === '?')) {
+        const queryArgs = cmd === 'spell?' ? args : args.slice(1);
+        const spellQuery = queryArgs.join(' ').trim();
+        const availableSpells = character?.spells || [];
+
+        if (!spellQuery) {
+          if (availableSpells.length === 0) {
+            sendPrivateSystemMessage(
+              'Usage: `/spell? <name>`\nInspects a spell from your sheet or reference database (e.g. `/spell? magic-missile`, `/spell? fireball`).',
+              'Spell Inspection'
+            );
+            return true;
+          }
+          const listText = availableSpells
+            .map((s, idx) => `${idx + 1}. ${s.name} (${s.level === 0 ? 'Cantrip' : `Level ${s.level}`})`)
+            .join('\n');
+          sendPrivateSystemMessage(
+            `No spell specified. Spells for ${character?.name || 'character'}:\n${listText}\n\nUsage: /spell? [name or index]`
+          );
+          return true;
+        }
+
+        // 1. Check character sheet
+        let found: DnDSpell | undefined;
+        const numIdx = parseInt(spellQuery, 10);
+        if (!isNaN(numIdx) && String(numIdx) === spellQuery && numIdx >= 1 && numIdx <= availableSpells.length) {
+          found = availableSpells[numIdx - 1];
+        } else {
+          found = availableSpells.find((s) =>
+            s.name.toLowerCase().includes(spellQuery.toLowerCase())
+          );
+        }
+
+        if (found) {
+          const statBlock = convertDnDSpellToEntityAction(found, '5e');
+          onSendMessage({
+            id: crypto.randomUUID(),
+            senderId: player.id,
+            senderName: player.name,
+            senderColor: player.color,
+            text: `inspects spell: **${found.name}**`,
+            timestamp: Date.now(),
+            statBlock,
+          });
+          return true;
+        }
+
+        // 2. Fetch from Open5e reference
+        fetchOpen5eSpell(spellQuery).then((open5eBlock) => {
+          if (open5eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects spell: **${open5eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: open5eBlock,
+            });
+          } else {
+            sendPrivateSystemMessage(
+              `Could not find spell matching "${spellQuery}" on sheet or Open5e database.`,
+              'System',
+              '#f43f5e'
+            );
+          }
         });
         return true;
       }
@@ -614,6 +770,77 @@ export function processSlashCommand(
         return true;
       }
 
+      // 5.4 /item? [name or index] - Inspection mode (OB-180, OB-181, OB-141)
+      if (cmd === 'item?' || (cmd === 'item' && args[0] === '?')) {
+        const queryArgs = cmd === 'item?' ? args : args.slice(1);
+        const itemQuery = queryArgs.join(' ').trim();
+        const availableItems = character?.items || [];
+
+        if (!itemQuery) {
+          if (availableItems.length === 0) {
+            sendPrivateSystemMessage(
+              'Usage: `/item? <name>`\nInspects an item from your inventory or reference database (e.g. `/item? potion of healing`, `/item? bag of holding`).',
+              'Item Inspection'
+            );
+            return true;
+          }
+          const listText = availableItems
+            .map((it, idx) => `${idx + 1}. ${it.name}${it.quantity ? ` (x${it.quantity})` : ''}`)
+            .join('\n');
+          sendPrivateSystemMessage(
+            `No item specified. Items for ${character?.name || 'character'}:\n${listText}\n\nUsage: /item? [name or index]`
+          );
+          return true;
+        }
+
+        // 1. Check character inventory
+        let found: typeof availableItems[0] | undefined;
+        const numIdx = parseInt(itemQuery, 10);
+        if (!isNaN(numIdx) && String(numIdx) === itemQuery && numIdx >= 1 && numIdx <= availableItems.length) {
+          found = availableItems[numIdx - 1];
+        } else {
+          found = availableItems.find((it) =>
+            it.name.toLowerCase().includes(itemQuery.toLowerCase())
+          );
+        }
+
+        if (found) {
+          const statBlock = convertDnDItemToEntityAction(found, '5e');
+          onSendMessage({
+            id: crypto.randomUUID(),
+            senderId: player.id,
+            senderName: player.name,
+            senderColor: player.color,
+            text: `inspects item: **${found.name}**`,
+            timestamp: Date.now(),
+            statBlock,
+          });
+          return true;
+        }
+
+        // 2. Fetch from Open5e reference
+        fetchOpen5eItem(itemQuery).then((open5eBlock) => {
+          if (open5eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects item: **${open5eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: open5eBlock,
+            });
+          } else {
+            sendPrivateSystemMessage(
+              `Could not find item matching "${itemQuery}" in inventory or Open5e database.`,
+              'System',
+              '#f43f5e'
+            );
+          }
+        });
+        return true;
+      }
+
       // 5.5 /item [name or index]
       if (cmd === 'item') {
         const itemQuery = args.join(' ').trim();
@@ -647,23 +874,144 @@ export function processSlashCommand(
           found = availableItems.find((it) => it.name.toLowerCase().includes(itemQuery.toLowerCase()));
         }
 
-        if (!found) {
-          const listText = availableItems.map((it, idx) => `${idx + 1}. ${it.name}`).join('\n');
+        if (found) {
+          onSendMessage({
+            id: crypto.randomUUID(),
+            senderId: player.id,
+            senderName: player.name,
+            senderColor: player.color,
+            text: `uses/inspects item: ${found.name}${found.quantity ? ` (x${found.quantity})` : ''}${found.description ? `\n"${found.description}"` : ''}`,
+            timestamp: Date.now(),
+          });
+          return true;
+        }
+
+        // OB-141: If not in local character sheet, attempt Open5e item fetch
+        fetchOpen5eItem(itemQuery).then((open5eItem) => {
+          if (open5eItem) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects item: **${open5eItem.name}**`,
+              timestamp: Date.now(),
+              statBlock: open5eItem,
+            });
+          } else {
+            const listText = availableItems.map((it, idx) => `${idx + 1}. ${it.name}`).join('\n');
+            sendPrivateSystemMessage(
+              `Could not find item matching "${itemQuery}". Available options:\n${listText}`,
+              'System',
+              '#f43f5e'
+            );
+          }
+        });
+        return true;
+      }
+
+      // 5.6 /ability? [name] - Inspection mode (OB-180, OB-181)
+      if (cmd === 'ability?' || (cmd === 'ability' && args[0] === '?')) {
+        const queryArgs = cmd === 'ability?' ? args : args.slice(1);
+        const abilityQuery = queryArgs.join(' ').trim();
+        const availableActions = character?.actions || [];
+
+        if (!abilityQuery) {
+          const listText = availableActions
+            .map((a, idx) => `${idx + 1}. ${a.name}`)
+            .join('\n');
           sendPrivateSystemMessage(
-            `Could not find item matching "${itemQuery}". Available options:\n${listText}`,
+            `No ability specified. Available abilities:\n${listText || '(None)'}\n\nUsage: /ability? [name or index]`
+          );
+          return true;
+        }
+
+        let found = availableActions.find((a) =>
+          a.name.toLowerCase().includes(abilityQuery.toLowerCase())
+        );
+        if (!found) {
+          sendPrivateSystemMessage(
+            `Could not find ability matching "${abilityQuery}".`,
             'System',
             '#f43f5e'
           );
           return true;
         }
 
+        const statBlock = convertDnDActionToEntityAction(found, '5e');
+        statBlock.type = 'ability';
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
           senderName: player.name,
           senderColor: player.color,
-          text: `uses/inspects item: ${found.name}${found.quantity ? ` (x${found.quantity})` : ''}${found.description ? `\n"${found.description}"` : ''}`,
+          text: `inspects ability: **${found.name}**`,
           timestamp: Date.now(),
+          statBlock,
+        });
+        return true;
+      }
+
+      // 5.7 /monster? [name] - Monster statblock inspection (OB-180, OB-181, OB-142)
+      if (cmd === 'monster?' || cmd === 'monster' || (cmd === 'monster' && args[0] === '?')) {
+        const queryArgs = (cmd === 'monster?' || cmd === 'monster') && args[0] !== '?' ? args : args.slice(1);
+        const monsterQuery = queryArgs.join(' ').trim();
+
+        if (!monsterQuery) {
+          const sceneTokens = (context.tokens || []).filter(
+            (t) => t.customProps?.character || (t as any).monsterData || t.character
+          );
+          const names = Array.from(new Set(sceneTokens.map((t) => t.name)));
+          sendPrivateSystemMessage(
+            `Usage: \`/monster? <name>\`\nExamples: \`/monster? goblin\`, \`/monster? ankheg\`${
+              names.length > 0 ? `\n\nCreatures on current map:\n• ${names.join('\n• ')}` : ''
+            }`,
+            'Monster Inspection'
+          );
+          return true;
+        }
+
+        // 1. Check scene tokens
+        const matchedToken = (context.tokens || []).find((t) =>
+          t.name.toLowerCase().includes(monsterQuery.toLowerCase())
+        );
+        if (matchedToken) {
+          const char = matchedToken.customProps?.character || matchedToken.character;
+          if (char) {
+            const statBlock = convertCharacterToMonsterStatBlock(char, '5e');
+            statBlock.name = matchedToken.name;
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects creature: **${statBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock,
+            });
+            return true;
+          }
+        }
+
+        // 2. Query Open5e monsters
+        fetchOpen5eMonster(monsterQuery).then((open5eBlock) => {
+          if (open5eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects monster: **${open5eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: open5eBlock,
+            });
+          } else {
+            sendPrivateSystemMessage(
+              `Could not find monster matching "${monsterQuery}" on canvas or Open5e database.`,
+              'System',
+              '#f43f5e'
+            );
+          }
         });
         return true;
       }
@@ -815,6 +1163,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onBroadcastRoll,
   onSyncToken,
   onUpdatePlayerChar,
+  onSpawnMonsterToken,
   fetchCharacterFn,
   onConfigureDiscordWebhook,
   onStartTimer,
@@ -858,6 +1207,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         onBroadcastRoll,
         onSyncToken,
         onUpdatePlayerChar,
+        onSpawnMonsterToken,
         fetchCharacterFn,
         onConfigureDiscordWebhook,
         onStartTimer,
@@ -1081,9 +1431,131 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ color: '#ffffff', whiteSpace: 'pre-wrap' }}>
-                      {m.text}
-                    </div>
+                    {m.text && (
+                      <div style={{ color: '#ffffff', whiteSpace: 'pre-wrap', marginBottom: m.statBlock ? '0.4rem' : 0 }}>
+                        {m.text}
+                      </div>
+                    )}
+
+                    {m.statBlock && (
+                      <StatBlockCard
+                        statBlock={m.statBlock}
+                        compact
+                        onAddToCharacter={
+                          onUpdatePlayerChar && character
+                            ? (block) => {
+                                if (block.type === 'spell') {
+                                  const newSpell: DnDSpell = {
+                                    id: block.id || crypto.randomUUID(),
+                                    name: block.name,
+                                    level: (block as EntityStatBlock).level ?? 0,
+                                    school: (block as EntityStatBlock).school || block.traits?.[0] || 'Universal',
+                                    castingTime: (block as EntityStatBlock).castingTime || getActionCostGlyph(block.cost) || '1 action',
+                                    range: block.range || 'Self',
+                                    duration: block.duration || 'Instantaneous',
+                                    description: block.description || '',
+                                    dndBeyondUrl: block.sourceUrl || '',
+                                  };
+                                  onUpdatePlayerChar({
+                                    ...character,
+                                    spells: [...(character.spells || []), newSpell],
+                                  });
+                                  onSendMessage({
+                                    id: crypto.randomUUID(),
+                                    senderId: 'system',
+                                    senderName: 'VTT Guide',
+                                    senderColor: '#10b981',
+                                    text: `✅ Added spell **${block.name}** to ${character.name}'s character sheet.`,
+                                    timestamp: Date.now(),
+                                    isEphemeral: true,
+                                    recipientId: player.id,
+                                  });
+                                } else if (block.type === 'item') {
+                                  const newItem: DnDItem = {
+                                    id: block.id || crypto.randomUUID(),
+                                    name: block.name,
+                                    description: block.description,
+                                    dndBeyondUrl: block.sourceUrl,
+                                    quantity: 1,
+                                  };
+                                  onUpdatePlayerChar({
+                                    ...character,
+                                    items: [...(character.items || []), newItem],
+                                  });
+                                  onSendMessage({
+                                    id: crypto.randomUUID(),
+                                    senderId: 'system',
+                                    senderName: 'VTT Guide',
+                                    senderColor: '#10b981',
+                                    text: `✅ Added item **${block.name}** to ${character.name}'s inventory.`,
+                                    timestamp: Date.now(),
+                                    isEphemeral: true,
+                                    recipientId: player.id,
+                                  });
+                                } else {
+                                  const newAction: DnDAction = {
+                                    name: block.name,
+                                    type: block.type,
+                                    activationType: block.cost,
+                                    damageDice: block.damageFormula,
+                                    range: block.range,
+                                    description: block.description,
+                                  };
+                                  onUpdatePlayerChar({
+                                    ...character,
+                                    actions: [...(character.actions || []), newAction],
+                                  });
+                                  onSendMessage({
+                                    id: crypto.randomUUID(),
+                                    senderId: 'system',
+                                    senderName: 'VTT Guide',
+                                    senderColor: '#10b981',
+                                    text: `✅ Added action **${block.name}** to ${character.name}'s actions.`,
+                                    timestamp: Date.now(),
+                                    isEphemeral: true,
+                                    recipientId: player.id,
+                                  });
+                                }
+                              }
+                            : undefined
+                        }
+                        onRoll={(block) => {
+                          const expr = block.damageFormula || block.rollFormula || '1d20';
+                          const parsed = parseDiceExpression(expr);
+                          if (parsed) {
+                            const rollResult: DiceRollResult = {
+                              id: crypto.randomUUID(),
+                              userId: player.id,
+                              userName: player.name,
+                              userColor: player.color,
+                              diceType: parsed.diceType,
+                              count: parsed.count,
+                              modifier: parsed.modifier,
+                              rolls: parsed.rolls,
+                              total: parsed.total,
+                              timestamp: Date.now(),
+                            };
+                            onBroadcastRoll?.(rollResult);
+                            onSendMessage({
+                              id: crypto.randomUUID(),
+                              senderId: player.id,
+                              senderName: player.name,
+                              senderColor: player.color,
+                              text: `rolls **${block.name}** (${expr}) = ${parsed.total} [${parsed.rolls.join(', ')}]`,
+                              timestamp: Date.now(),
+                              roll: rollResult,
+                            });
+                          }
+                        }}
+                        onSpawnToken={
+                          onSpawnMonsterToken
+                            ? (block) => {
+                                onSpawnMonsterToken(block);
+                              }
+                            : undefined
+                        }
+                      />
+                    )}
                   </div>
                 );
               })

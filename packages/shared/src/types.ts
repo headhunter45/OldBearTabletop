@@ -402,3 +402,306 @@ export interface GameSession {
   discordWebhookUrl?: string;
   clocks?: ProgressClock[];
 }
+
+export type ActionType =
+  | 'attack'
+  | 'spell'
+  | 'item'
+  | 'ability'
+  | 'trait'
+  | 'feat'
+  | 'monster';
+
+export type ActionCostType =
+  // D&D 5e / Generic
+  | 'action'
+  | 'bonus_action'
+  | 'reaction'
+  | 'free'
+  | 'minute'
+  | 'hour'
+  // PF2e / SF2e Action Economy
+  | '1_action' // [◆] or [1A]
+  | '2_actions' // [◆◆] or [2A]
+  | '3_actions' // [◆◆◆] or [3A]
+  | 'reaction_pf2e' // [↺] or [R]
+  | 'free_pf2e'; // [◇] or [FA]
+
+export interface EntityAction {
+  id: string;
+  name: string;
+  type: ActionType;
+  description: string;
+  cost?: ActionCostType; // Display glyph / badge
+  traits?: string[]; // e.g. ["Evocation", "Force", "Agile", "Finesse", "Concentration"]
+  range?: string; // e.g. "120 ft.", "Touch", "Self"
+  target?: string; // e.g. "1 creature", "20-foot radius sphere"
+  duration?: string; // e.g. "Instantaneous", "1 minute"
+  savingThrow?: {
+    ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+    dc?: number;
+  };
+  rollFormula?: string; // e.g. "1d20+5" or "3d4+3"
+  damageFormula?: string; // e.g. "1d8+3"
+  damageType?: string; // e.g. "slashing", "fire", "force"
+  sourceUrl?: string; // Origin reference link
+  sourceSystem?: '5e' | 'pf2e' | 'generic';
+}
+
+export interface EntityStatBlock extends EntityAction {
+  subtitle?: string; // e.g. "Medium humanoid, lawful good" or "1st-level evocation"
+  level?: number;
+  school?: string;
+  castingTime?: string;
+  rarity?: string;
+  price?: string;
+  armorClass?: number | string;
+  hp?: number | string;
+  speed?: string;
+  stats?: {
+    str: number;
+    dex: number;
+    con: number;
+    int: number;
+    wis: number;
+    cha: number;
+  };
+  skills?: string;
+  senses?: string;
+  languages?: string;
+  challenge?: string; // CR or creature level
+  actions?: EntityAction[];
+  reactions?: EntityAction[];
+  specialAbilities?: EntityAction[];
+}
+
+/**
+ * Returns the recognizable visual display string / glyph for an action cost.
+ */
+export function getActionCostGlyph(cost?: ActionCostType | string): string {
+  if (!cost) return '';
+  switch (cost) {
+    case '1_action':
+      return '◆';
+    case '2_actions':
+      return '◆◆';
+    case '3_actions':
+      return '◆◆◆';
+    case 'reaction_pf2e':
+      return '↺';
+    case 'free_pf2e':
+      return '◇';
+    case 'action':
+      return 'Action';
+    case 'bonus_action':
+      return 'Bonus Action';
+    case 'reaction':
+      return 'Reaction';
+    case 'free':
+      return 'Free';
+    case 'minute':
+      return '1 Min';
+    case 'hour':
+      return '1 Hour';
+    default:
+      return cost;
+  }
+}
+
+/**
+ * Parses raw text, glyphs, or keywords into an ActionCostType.
+ */
+export function parseActionCost(
+  raw?: string,
+  system?: '5e' | 'pf2e' | 'generic'
+): ActionCostType | undefined {
+  if (!raw) return undefined;
+  const s = raw.trim().toLowerCase();
+
+  // Explicit PF2e system requested or PF2e-specific glyphs/brackets
+  if (system === 'pf2e') {
+    if (s === '◆◆◆' || s === '[3a]' || s === '3_actions' || s === '3 actions' || s === '3 action' || s === '3') {
+      return '3_actions';
+    }
+    if (s === '◆◆' || s === '[2a]' || s === '2_actions' || s === '2 actions' || s === '2 action' || s === '2') {
+      return '2_actions';
+    }
+    if (s === '◆' || s === '[1a]' || s === '1_action' || s === '1 action' || s === '1') {
+      return '1_action';
+    }
+    if (s === '↺' || s === '[r]' || s === 'reaction_pf2e' || s === 'reaction') {
+      return 'reaction_pf2e';
+    }
+    if (s === '◇' || s === '[fa]' || s === 'free_pf2e' || s === 'free' || s === 'free action') {
+      return 'free_pf2e';
+    }
+  }
+
+  // Visual glyphs and specific bracket notation regardless of system
+  if (s === '◆◆◆' || s === '[3a]' || s === '3_actions') {
+    return '3_actions';
+  }
+  if (s === '◆◆' || s === '[2a]' || s === '2_actions') {
+    return '2_actions';
+  }
+  if (s === '◆' || s === '[1a]' || s === '1_action') {
+    return '1_action';
+  }
+  if (s === '↺' || s === '[r]' || s === 'reaction_pf2e') {
+    return 'reaction_pf2e';
+  }
+  if (s === '◇' || s === '[fa]' || s === 'free_pf2e') {
+    return 'free_pf2e';
+  }
+
+  // 5e / generic
+  if (s.includes('bonus') || s === 'ba' || s === 'bonus_action') {
+    return 'bonus_action';
+  }
+  if (s.includes('reaction')) {
+    return 'reaction';
+  }
+  if (s === 'action' || s === '1 action' || s === 'standard') {
+    return 'action';
+  }
+  if (s === 'free' || s === 'free action') {
+    return 'free';
+  }
+  if (s.includes('minute')) {
+    return 'minute';
+  }
+  if (s.includes('hour')) {
+    return 'hour';
+  }
+
+  // PF2e text notation fallback
+  if (s === '3 actions' || s === '3 action' || s === '3') {
+    return '3_actions';
+  }
+  if (s === '2 actions' || s === '2 action' || s === '2') {
+    return '2_actions';
+  }
+  if (s === '1') {
+    return '1_action';
+  }
+
+  return undefined;
+}
+
+/**
+ * Converts a standard DnDAction into an EntityAction.
+ */
+export function convertDnDActionToEntityAction(
+  action: DnDAction,
+  sourceSystem: '5e' | 'pf2e' | 'generic' = '5e'
+): EntityAction {
+  const cat = getActivationCategory(action);
+  let cost: ActionCostType = 'action';
+  if (cat === 'bonus') cost = 'bonus_action';
+  else if (cat === 'reaction') cost = 'reaction';
+  else if (action.activationType) {
+    const parsed = parseActionCost(action.activationType);
+    if (parsed) cost = parsed;
+  }
+
+  const rollFormula =
+    action.diceMacro ||
+    (action.toHitModifier !== undefined
+      ? `1d20${action.toHitModifier >= 0 ? `+${action.toHitModifier}` : action.toHitModifier}`
+      : undefined);
+
+  return {
+    id: crypto.randomUUID(),
+    name: action.name,
+    type: action.type === 'spell' ? 'spell' : 'attack',
+    description: action.description || '',
+    cost,
+    range: action.range || action.reach,
+    rollFormula,
+    damageFormula: action.damageDice || action.damage,
+    sourceSystem,
+  };
+}
+
+/**
+ * Converts a DnDSpell into an EntityStatBlock.
+ */
+export function convertDnDSpellToEntityAction(
+  spell: DnDSpell,
+  sourceSystem: '5e' | 'pf2e' | 'generic' = '5e'
+): EntityStatBlock {
+  const cost =
+    parseActionCost(spell.castingTime) ||
+    (spell.castingTime?.toLowerCase().includes('bonus')
+      ? 'bonus_action'
+      : spell.castingTime?.toLowerCase().includes('reaction')
+      ? 'reaction'
+      : 'action');
+
+  const traits: string[] = [];
+  if (spell.school) traits.push(spell.school);
+
+  return {
+    id: spell.id || crypto.randomUUID(),
+    name: spell.name,
+    type: 'spell',
+    description: spell.description,
+    cost,
+    traits,
+    range: spell.range,
+    duration: spell.duration,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    subtitle:
+      spell.level === 0
+        ? `Cantrip (${spell.school || 'Magic'})`
+        : `Level ${spell.level} (${spell.school || 'Magic'})`,
+    sourceUrl: spell.dndBeyondUrl,
+    sourceSystem,
+  };
+}
+
+/**
+ * Converts a DnDItem into an EntityStatBlock.
+ */
+export function convertDnDItemToEntityAction(
+  item: DnDItem,
+  sourceSystem: '5e' | 'pf2e' | 'generic' = '5e'
+): EntityStatBlock {
+  return {
+    id: item.id || crypto.randomUUID(),
+    name: item.name,
+    type: 'item',
+    description: item.description || '',
+    sourceUrl: item.dndBeyondUrl,
+    subtitle: item.quantity && item.quantity > 1 ? `Item (Qty: ${item.quantity})` : 'Item',
+    sourceSystem,
+  };
+}
+
+/**
+ * Converts a DnDCharacter into an EntityStatBlock (e.g. for monster statblock inspection).
+ */
+export function convertCharacterToMonsterStatBlock(
+  char: DnDCharacter,
+  sourceSystem: '5e' | 'pf2e' | 'generic' = '5e'
+): EntityStatBlock {
+  const actions: EntityAction[] = (char.actions || []).map((a) =>
+    convertDnDActionToEntityAction(a, sourceSystem)
+  );
+
+  return {
+    id: char.id,
+    name: char.name,
+    type: 'monster',
+    description: `${char.race || ''} ${char.classes || ''}`.trim() || 'Creature',
+    subtitle: `${char.race || ''} ${char.classes || ''}`.trim() || 'Creature',
+    armorClass: char.armorClass,
+    hp: `${char.currentHp}/${char.maxHp}`,
+    speed: `${char.speed} ft.`,
+    stats: char.stats,
+    actions,
+    sourceSystem,
+  };
+}

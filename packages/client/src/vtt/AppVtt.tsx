@@ -2039,6 +2039,67 @@ export const AppVtt: React.FC = () => {
               networkRef.current?.send({ type: 'chat-send', message: m });
             }
           }}
+          onSpawnMonsterToken={(statBlock) => {
+            if (!session?.activeMapId) return;
+            const hpParsed = typeof statBlock.hp === 'number'
+              ? statBlock.hp
+              : parseInt(String(statBlock.hp || '10'), 10) || 10;
+            const acParsed = typeof statBlock.armorClass === 'number'
+              ? statBlock.armorClass
+              : parseInt(String(statBlock.armorClass || '10'), 10) || 10;
+
+            const char: DnDCharacter = {
+              id: statBlock.id || crypto.randomUUID(),
+              name: statBlock.name,
+              level: 1,
+              classes: statBlock.subtitle || 'Monster',
+              race: 'Monster',
+              currentHp: hpParsed,
+              maxHp: hpParsed,
+              tempHp: 0,
+              speed: parseInt(String(statBlock.speed || '30'), 10) || 30,
+              armorClass: acParsed,
+              passivePerception: 10 + Math.floor(((statBlock.stats?.wis || 10) - 10) / 2),
+              stats: statBlock.stats || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+              spells: [],
+              actions: (statBlock.actions || []).map((a) => ({
+                name: a.name,
+                type: a.type,
+                activationType: a.cost,
+                damageDice: a.damageFormula,
+                description: a.description,
+              })),
+            };
+
+            const newToken: Token = {
+              id: crypto.randomUUID(),
+              name: statBlock.name,
+              x: 300,
+              y: 300,
+              size: 1,
+              mapId: session.activeMapId,
+              color: '#10b981',
+              hp: hpParsed,
+              maxHp: hpParsed,
+              ac: acParsed,
+              ownerId: '',
+              visibleToPlayers: true,
+              isLocked: false,
+              customProps: {
+                character: char,
+                statBlock,
+              },
+            };
+
+            setSession((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                tokens: { ...prev.tokens, [newToken.id]: newToken },
+              };
+            });
+            networkRef.current?.send({ type: 'token-add', token: newToken });
+          }}
           onBroadcastRoll={(r) => {
             handleRecordRoll(r);
             networkRef.current?.send({ type: 'dice-roll', roll: r });

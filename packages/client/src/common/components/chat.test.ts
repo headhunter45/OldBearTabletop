@@ -488,5 +488,192 @@ describe('Dice Parser & Slash Command Utilities', () => {
     assert.strictEqual(historyManager.getHistory().length, 4);
     assert.strictEqual(historyManager.getHistory()[3], '/spell magic-missile 2');
   });
+
+  it('handles statblock inspection syntax (?) without rolling dice (OB-180, OB-181)', () => {
+    const testPlayer = {
+      id: 'p-1',
+      name: 'Tom',
+      role: 'player' as const,
+      color: '#6366f1',
+      connected: true,
+      assignedTokenIds: [],
+    };
+
+    const testChar = {
+      id: 'char-tom',
+      name: 'Valeros',
+      level: 3,
+      classes: 'Fighter 3',
+      race: 'Human',
+      currentHp: 28,
+      maxHp: 28,
+      tempHp: 0,
+      speed: 30,
+      armorClass: 18,
+      passivePerception: 11,
+      spells: [
+        {
+          id: 'sp-1',
+          name: 'Magic Missile',
+          level: 1,
+          school: 'Evocation',
+          castingTime: '1 action',
+          range: '120 feet',
+          duration: 'Instantaneous',
+          description: 'Three glowing darts of magical force.',
+          dndBeyondUrl: 'https://www.dndbeyond.com/spells/magic-missile',
+        },
+      ],
+      actions: [
+        {
+          name: 'Longsword',
+          type: 'melee',
+          activationType: 'action',
+          toHitModifier: 6,
+          damageDice: '1d8+4',
+          reach: '5 ft.',
+          description: 'Versatile martial weapon.',
+        },
+        {
+          name: 'Second Wind',
+          type: 'ability',
+          activationType: 'bonus',
+          description: 'Regain 1d10 + fighter level HP once per short rest.',
+        },
+      ],
+      items: [
+        {
+          id: 'it-1',
+          name: 'Potion of Healing',
+          quantity: 2,
+          description: 'Regain 2d4 + 2 HP.',
+          dndBeyondUrl: 'https://www.dndbeyond.com/magic-items/potion-of-healing',
+        },
+      ],
+      stats: { str: 18, dex: 14, con: 16, int: 10, wis: 12, cha: 10 },
+    };
+
+    const testTokens = [
+      {
+        id: 'tok-goblin',
+        name: 'Goblin Archer',
+        x: 100,
+        y: 100,
+        size: 1,
+        mapId: 'map-1',
+        color: '#10b981',
+        hp: 7,
+        maxHp: 7,
+        ac: 15,
+        ownerId: '',
+        visibleToPlayers: true,
+        isLocked: false,
+        customProps: {
+          character: {
+            id: 'goblin-char',
+            name: 'Goblin Archer',
+            level: 1,
+            classes: 'Small humanoid (goblinoid)',
+            race: 'Goblin',
+            currentHp: 7,
+            maxHp: 7,
+            tempHp: 0,
+            speed: 30,
+            armorClass: 15,
+            passivePerception: 9,
+            stats: { str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8 },
+            spells: [],
+            actions: [
+              {
+                name: 'Shortbow',
+                type: 'ranged',
+                toHitModifier: 4,
+                damageDice: '1d6+2',
+                range: '80/320 ft.',
+                description: 'Ranged attack.',
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const sentMessages: any[] = [];
+    const broadcastRolls: any[] = [];
+
+    const ctx = {
+      player: testPlayer,
+      character: testChar as any,
+      tokens: testTokens as any,
+      onSendMessage: (msg: any) => sentMessages.push(msg),
+      onBroadcastRoll: (roll: any) => broadcastRolls.push(roll),
+    };
+
+    // 1. /attack? Longsword (Inspection)
+    const attackHandled = processSlashCommand('/attack? Longsword', ctx);
+    assert.strictEqual(attackHandled, true);
+    // Inspection MUST NOT roll any dice!
+    assert.strictEqual(broadcastRolls.length, 0);
+    assert.strictEqual(sentMessages.length, 1);
+    assert.ok(sentMessages[0].statBlock);
+    assert.strictEqual(sentMessages[0].statBlock.name, 'Longsword');
+    assert.strictEqual(sentMessages[0].statBlock.type, 'attack');
+    assert.strictEqual(sentMessages[0].statBlock.damageFormula, '1d8+4');
+    assert.strictEqual(sentMessages[0].statBlock.rollFormula, '1d20+6');
+    assert.strictEqual(sentMessages[0].statBlock.cost, 'action');
+
+    // 2. /spell? Magic Missile (Inspection)
+    const spellHandled = processSlashCommand('/spell? 1', ctx);
+    assert.strictEqual(spellHandled, true);
+    assert.strictEqual(broadcastRolls.length, 0);
+    assert.strictEqual(sentMessages.length, 2);
+    assert.ok(sentMessages[1].statBlock);
+    assert.strictEqual(sentMessages[1].statBlock.name, 'Magic Missile');
+    assert.strictEqual(sentMessages[1].statBlock.type, 'spell');
+    assert.strictEqual(sentMessages[1].statBlock.level, 1);
+    assert.deepStrictEqual(sentMessages[1].statBlock.traits, ['Evocation']);
+    assert.strictEqual(sentMessages[1].statBlock.subtitle, 'Level 1 (Evocation)');
+
+    // 3. /item? Potion of Healing (Inspection)
+    const itemHandled = processSlashCommand('/item? Potion', ctx);
+    assert.strictEqual(itemHandled, true);
+    assert.strictEqual(broadcastRolls.length, 0);
+    assert.strictEqual(sentMessages.length, 3);
+    assert.ok(sentMessages[2].statBlock);
+    assert.strictEqual(sentMessages[2].statBlock.name, 'Potion of Healing');
+    assert.strictEqual(sentMessages[2].statBlock.type, 'item');
+    assert.strictEqual(sentMessages[2].statBlock.subtitle, 'Item (Qty: 2)');
+
+    // 4. /ability? Second Wind (Inspection)
+    const abilityHandled = processSlashCommand('/ability? Second Wind', ctx);
+    assert.strictEqual(abilityHandled, true);
+    assert.strictEqual(broadcastRolls.length, 0);
+    assert.strictEqual(sentMessages.length, 4);
+    assert.ok(sentMessages[3].statBlock);
+    assert.strictEqual(sentMessages[3].statBlock.name, 'Second Wind');
+    assert.strictEqual(sentMessages[3].statBlock.type, 'ability');
+    assert.strictEqual(sentMessages[3].statBlock.cost, 'bonus_action');
+
+    // 5. /monster? Goblin Archer (Inspection from canvas token)
+    const monsterHandled = processSlashCommand('/monster? Goblin', ctx);
+    assert.strictEqual(monsterHandled, true);
+    assert.strictEqual(broadcastRolls.length, 0);
+    assert.strictEqual(sentMessages.length, 5);
+    assert.ok(sentMessages[4].statBlock);
+    assert.strictEqual(sentMessages[4].statBlock.name, 'Goblin Archer');
+    assert.strictEqual(sentMessages[4].statBlock.type, 'monster');
+    assert.strictEqual(sentMessages[4].statBlock.armorClass, 15);
+    assert.strictEqual(sentMessages[4].statBlock.hp, '7/7');
+    assert.strictEqual(sentMessages[4].statBlock.actions?.length, 1);
+    assert.strictEqual(sentMessages[4].statBlock.actions?.[0].name, 'Shortbow');
+
+    // 6. Contrast with active roll: /attack 1
+    const activeAttack = processSlashCommand('/attack 1', ctx);
+    assert.strictEqual(activeAttack, true);
+    // Active attack MUST roll dice!
+    assert.strictEqual(broadcastRolls.length, 1);
+    assert.strictEqual(broadcastRolls[0].modifier, 6);
+  });
 });
+
 
