@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Shield, X, Plus, Trash2, Swords, Crosshair, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import { WargameArmy, WargameUnit } from '../types/brawl.js';
+import { disambiguateArmy } from '../domain/armyManager.js';
 
 interface ArmyRosterFlyoutProps {
   onClose: () => void;
-  onDeployUnit?: (unit: WargameUnit) => void;
+  onDeployUnit?: (unit: WargameUnit, army: WargameArmy) => void;
 }
 
 export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onDeployUnit }) => {
@@ -15,7 +16,7 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
     defaultZIndex: 50,
   });
 
-  const [activeArmy, setActiveArmy] = useState<WargameArmy>({
+  const [rawArmy, setRawArmy] = useState<WargameArmy>({
     id: 'army_1',
     name: 'Strike Force Alpha',
     faction: 'Space Marines',
@@ -28,11 +29,11 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
         points: 80,
         coherencyDistanceInches: 2.0,
         models: [
-          { id: 'm1', name: 'Intercessor 1', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
-          { id: 'm2', name: 'Intercessor 2', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
-          { id: 'm3', name: 'Intercessor 3', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
-          { id: 'm4', name: 'Intercessor 4', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
-          { id: 'm5', name: 'Intercessor 5', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
+          { id: 'm1', name: '', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
+          { id: 'm2', name: '', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
+          { id: 'm3', name: '', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
+          { id: 'm4', name: '', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
+          { id: 'm5', name: '', unitId: 'unit_1', x: 0, y: 0, baseShape: { type: 'circle', widthMm: 32 } },
         ],
         baseActions: [
           { id: 'a1', name: 'Bolt Rifle', type: 'ranged', rangeInches: 24, attacks: 2, skill: '3+', strength: 4, ap: -1, damage: 1 },
@@ -49,6 +50,8 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
       },
     ],
   });
+
+  const activeArmy = disambiguateArmy(rawArmy);
 
   const [expandedUnitId, setExpandedUnitId] = useState<string | null>('unit_1');
 
@@ -176,7 +179,7 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
                         color: '#000',
                         fontWeight: 700,
                       }}
-                      onClick={() => onDeployUnit(unit)}
+                      onClick={() => onDeployUnit(unit, activeArmy)}
                     >
                       <Plus size={12} /> Deploy Unit to Battlemap
                     </button>

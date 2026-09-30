@@ -27,6 +27,7 @@ A lightweight, zero-install, mobile-friendly virtual tabletop (VTT) and tactical
    - [Soundboard & Custom Audio](#soundboard--custom-audio)
    - [Dice Roller & Initiative Tracker](#dice-roller--initiative-tracker)
    - [Chat Commands & Token Association](#chat-commands--token-association)
+   - [Tabletop Wargaming & Army Rosters (Brawl)](#tabletop-wargaming--army-rosters-brawl)
    - [Full Data Backup & Browser Migration](#full-data-backup--browser-migration)
    - [Global Drag and Drop](#global-drag-and-drop)
 7. [Configuring Available Colors](#configuring-available-colors)
@@ -538,6 +539,21 @@ The in-game chat panel supports full token association, enabling players and GMs
    - When a token is associated, rolls and messages display attribution in the format `Player Name (Token Name)` and display the token avatar.
 3. **Command History Navigation**:
    - Press **Up Arrow** / **Down Arrow** in the chat message input to cycle through previously executed commands and messages.
+
+---
+
+### Tabletop Wargaming & Army Rosters (Brawl)
+Old Bear Brawl provides a dedicated competitive tabletop wargaming environment with:
+1. **Army ➔ Unit ➔ Model Hierarchy**:
+   - Organize armies with points limits, factions, and unit rosters.
+   - Automatic unit disambiguation: Duplicate squads are automatically labeled `A`, `B`, etc. (e.g. `Terminators A`, `Terminators B`).
+   - Automatic model numbering: Models default to `<Unit Name> <Number>` (e.g., `Terminators A 1`, `Terminators A 2`).
+2. **True Base-to-Base Geometry**:
+   - Model base shapes defined in millimeters (`circle`, `oval`, `rect`, `polygon`).
+   - True perimeter-to-perimeter edge distance calculations in inches (`"`).
+3. **One-Click Unit Deployment**:
+   - Open the **Army Roster Flyout** (shield icon in Brawl top bar) to view unit datasheets, points, weapons, and model profiles.
+   - Click **`Deploy Unit to Battlemap`** to deploy the entire squad onto the canvas in formation.
 
 ---
 

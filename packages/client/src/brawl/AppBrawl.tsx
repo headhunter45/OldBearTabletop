@@ -33,6 +33,7 @@ import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { BrawlTopBar } from './components/BrawlTopBar.js';
 import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
+import { modelToToken } from './domain/armyManager.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const PHASES: WargamePhase[] = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight', 'Morale'];
@@ -297,8 +298,32 @@ export const AppBrawl: React.FC = () => {
       {showArmyRoster && (
         <ArmyRosterFlyout
           onClose={() => setShowArmyRoster(false)}
-          onDeployUnit={(unit) => {
-            showToast(`Deploying ${unit.name} (${unit.models.length} models) to battlefield!`);
+          onDeployUnit={(unit, army) => {
+            const startX = 250;
+            const startY = 250;
+            const spacing = 70;
+            const newTokens = unit.models.map((model, idx) => {
+              const positionedModel = {
+                ...model,
+                x: startX + (idx % 5) * spacing,
+                y: startY + Math.floor(idx / 5) * spacing,
+              };
+              return modelToToken(positionedModel, unit, army);
+            });
+
+            setSession((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                tokens: [...prev.tokens, ...newTokens],
+              };
+            });
+
+            newTokens.forEach((tok) => {
+              networkRef.current?.send({ type: 'token-add', token: tok });
+            });
+
+            showToast(`Deployed ${unit.name} (${unit.models.length} models) to battlefield!`);
           }}
         />
       )}

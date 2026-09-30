@@ -562,3 +562,16 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - Launch with `VITE_GAME_MODE=brawl` (or `VITE_GAME_MODE=vtt`).
      - Notice the Mode Switcher button is automatically hidden from the TopBar.
      - Attempting to pass `?mode=vtt` into a `brawl`-locked deployment is ignored and strictly retains Brawl mode.
+
+#### 8. OB-155 — Army, Unit, and Model Hierarchy & Disambiguation
+- **Where to find it:** The **Army Roster Flyout** in Brawl mode (`?mode=brawl`).
+- **How to test:**
+  1. Open Old Bear Brawl by appending `?mode=brawl` to the URL.
+  2. Click the **Shield** icon in the Brawl top bar to open the **Army Roster Flyout**.
+  3. Notice the army points summary (e.g. `80 / 2000 pts`) and unit listing.
+  4. Expand the **Intercessor Squad** to inspect its datasheet stats (M 6", T 4, Sv 3+, W 2, Ld 6+, OC 2) and weapon actions.
+  5. Click **`Deploy Unit to Battlemap`**:
+     - Notice a toast confirmation: `Deployed Intercessor Squad (5 models) to battlefield!`.
+     - 5 ready-to-fight tokens are instantiated on the canvas in formation.
+     - Tokens are auto-numbered `Intercessor Squad 1` through `Intercessor Squad 5` with wound profiles matching the datasheet.
+  6. Duplicate squads are disambiguated as `Squad A` and `Squad B` automatically.
