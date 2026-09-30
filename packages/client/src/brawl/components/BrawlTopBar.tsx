@@ -16,6 +16,8 @@ import { VoiceState } from '../../common/network/VoiceManager.js';
 import { FULL_VERSION_STRING } from '../../common/config/version.js';
 import { WargamePhase } from '../types/brawl.js';
 import { switchGameMode, isSingleGameModeEnforced } from '../../App.js';
+import { formatChessClock, getClockWarningStatus } from '../domain/chessClock.js';
+import { ExternalLink } from 'lucide-react';
 
 interface BrawlTopBarProps {
   roomName: string;
@@ -39,16 +41,11 @@ interface BrawlTopBarProps {
   onOpenBackup: () => void;
   onAddNewModel: () => void;
   onToggleMobileDrawer: () => void;
+  onToggleChessClockHUD?: () => void;
   voiceState?: VoiceState;
 }
 
 const PHASES: WargamePhase[] = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight', 'Morale'];
-
-function formatClock(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
 
 export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   roomName,
@@ -178,62 +175,88 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
           </button>
         </div>
 
-        {/* Chess Clock Indicator */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            background: isClockRunning ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.25)',
-            border: `1px solid ${isClockRunning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
-            padding: '3px 8px',
-            borderRadius: '6px',
-          }}
-        >
-          <Timer size={13} style={{ color: isClockRunning ? '#10b981' : 'var(--text-secondary)' }} />
-          <span
-            style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              color: activePlayerIndex === 1 ? '#38bdf8' : 'var(--text-secondary)',
-            }}
-          >
-            P1: {formatClock(p1ClockSeconds)}
-          </span>
-          <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>/</span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              color: activePlayerIndex === 2 ? '#ef4444' : 'var(--text-secondary)',
-            }}
-          >
-            P2: {formatClock(p2ClockSeconds)}
-          </span>
-          <button
-            className="btn-icon"
-            style={{ width: '22px', height: '22px' }}
-            onClick={onToggleClock}
-            title={isClockRunning ? 'Pause Clock' : 'Start Clock'}
-          >
-            {isClockRunning ? <Pause size={11} /> : <Play size={11} />}
-          </button>
-          <button
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              fontSize: '0.7rem',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              padding: '0 2px',
-            }}
-            onClick={onSwitchActivePlayer}
-            title="Pass turn to opponent"
-          >
-            Pass Turn
-          </button>
-        </div>
+        {/* Chess Clock Indicator (OB-158) */}
+        {(() => {
+          const p1Fmt = formatChessClock(p1ClockSeconds);
+          const p2Fmt = formatChessClock(p2ClockSeconds);
+          const p1Warn = getClockWarningStatus(p1ClockSeconds);
+          const p2Warn = getClockWarningStatus(p2ClockSeconds);
+
+          const getTextColor = (warn: string, isCurrent: boolean, defaultColor: string) => {
+            if (warn === 'overtime') return '#ef4444';
+            if (warn === 'danger') return '#ea580c';
+            if (warn === 'warning') return '#f59e0b';
+            return isCurrent ? defaultColor : 'var(--text-secondary)';
+          };
+
+          return (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: isClockRunning ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.25)',
+                border: `1px solid ${isClockRunning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
+                padding: '3px 8px',
+                borderRadius: '6px',
+              }}
+            >
+              <Timer size={13} style={{ color: isClockRunning ? '#10b981' : 'var(--text-secondary)' }} />
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: getTextColor(p1Warn, activePlayerIndex === 1, '#38bdf8'),
+                }}
+              >
+                P1: {p1Fmt.formatted} {p1Fmt.isOvertime ? 'OT' : ''}
+              </span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>/</span>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: getTextColor(p2Warn, activePlayerIndex === 2, '#ec4899'),
+                }}
+              >
+                P2: {p2Fmt.formatted} {p2Fmt.isOvertime ? 'OT' : ''}
+              </span>
+              <button
+                className="btn-icon"
+                style={{ width: '22px', height: '22px' }}
+                onClick={onToggleClock}
+                title={isClockRunning ? 'Pause Clock' : 'Start Clock'}
+              >
+                {isClockRunning ? <Pause size={11} /> : <Play size={11} />}
+              </button>
+              <button
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.7rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: '0 2px',
+                }}
+                onClick={onSwitchActivePlayer}
+                title="Pass turn to opponent"
+              >
+                Pass Turn
+              </button>
+              {onToggleChessClockHUD && (
+                <button
+                  className="btn-icon"
+                  style={{ width: '20px', height: '20px', padding: 0 }}
+                  onClick={onToggleChessClockHUD}
+                  title="Pop out Floating Chess Clock HUD"
+                >
+                  <ExternalLink size={11} />
+                </button>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       <div className="top-bar-right">

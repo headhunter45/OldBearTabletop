@@ -564,6 +564,13 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Animated phase transition banners with custom phase icons and subtitles.
    - Synchronized chat audit logs and toast notifications whenever turns or phases advance.
    - Command Point (CP) grants upon turn turnover (+1 CP per round start).
+6. **Dual-Player Wargaming Chess Clocks**:
+   - Independent countdown clocks per player with configurable match time presets (60m, 75m, 90m, 105m, 120m).
+   - Single-click active player clock swapping with mechanical switch sounds.
+   - Dynamic warning colors for remaining time thresholds (yellow under 10m, bright orange under 5m).
+   - Audio alerts at 5 minutes, 1 minute, and overtime alarm.
+   - Negative overtime tracking (`-MM:SS OT`) with pulsing red indicators without hard-clamping time.
+   - Floating draggable HUD widget (`ChessClockWidget`) with compact minimization mode and popout toggle in top bar.
 
 ---
 

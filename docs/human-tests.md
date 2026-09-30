@@ -603,3 +603,28 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - Chat logs the turn handover and CP grant.
   6. Stepping Player 2 through Morale completes Round 1 and begins `BATTLE ROUND 2` with Player 1's Command Phase.
   7. Alternatively, clicking **Pass Turn** immediately hands over the active turn to the opponent at Command Phase with audit logging.
+
+#### 11. OB-158 — Dual-Player Chess Clocks with Turn Countdown & Active Switching
+- **Where to find it:** The Brawl top bar chess clock section and the popout floating HUD widget (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`).
+  2. In the top bar, note the dual clock display: `P1: 1:30:00 / P2: 1:30:00`.
+  3. Click the Play button:
+     - Player 1's clock begins counting down every second.
+     - The background glows green indicating the clock is active.
+  4. Click the popout icon (`ExternalLink`) next to "Pass Turn":
+     - The floating draggable `ChessClockWidget` appears on screen.
+     - Grab the header to drag it anywhere on the canvas.
+     - Note the dual large digital clock displays with active player highlighted in cyan/pink.
+  5. In the floating widget or top bar, click **Pass Turn** (or click the active player's clock face):
+     - An audible mechanical clock switch click sounds.
+     - The active clock swaps immediately to Player 2 and begins ticking down Player 2's time.
+  6. Click the settings gear in the floating widget:
+     - Presets appear: `60 Min`, `75 Min`, `90 Min`, `105 Min`, `120 Min`.
+     - Selecting a preset resets both players' clocks to that limit.
+  7. Minimization:
+     - Click the minimize icon to collapse the widget into a sleek, floating pill indicator.
+     - Click the maximize icon to restore the full dual-face widget.
+  8. Overtime tracking:
+     - When a player's clock drops below 10 minutes, the timer turns amber. Below 5 minutes, it turns bright orange.
+     - When time drops past zero, it displays `-MM:SS OT` in pulsing red without stopping or clamping.

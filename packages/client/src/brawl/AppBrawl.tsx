@@ -33,10 +33,12 @@ import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { BrawlTopBar } from './components/BrawlTopBar.js';
 import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
 import { PhaseAnnouncementBanner } from './components/PhaseAnnouncementBanner.js';
+import { ChessClockWidget } from './components/ChessClockWidget.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
 import { advanceWargamePhase, WARGAME_PHASES, PhaseTransitionEvent } from './domain/phaseEngine.js';
+import { playLowTimeWarningSound, playOvertimeAlarmSound, playClockSwitchSound } from './domain/chessClock.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const PHASES: WargamePhase[] = WARGAME_PHASES;
@@ -81,6 +83,7 @@ export const AppBrawl: React.FC = () => {
 
   // Modals & Flyouts
   const [showArmyRoster, setShowArmyRoster] = useState(false);
+  const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [showMapManager, setShowMapManager] = useState(false);
   const [showSoundboard, setShowSoundboard] = useState(false);
@@ -113,14 +116,24 @@ export const AppBrawl: React.FC = () => {
 
   const currentMap = session?.maps.find((m) => m.id === (session.activeMapId || '')) || session?.maps[0];
 
-  // Chess Clock Tick Effect
+  // Chess Clock Tick Effect (OB-158)
   useEffect(() => {
     if (!isClockRunning) return;
     const interval = setInterval(() => {
       if (activePlayerIndex === 1) {
-        setP1ClockSeconds((prev) => Math.max(0, prev - 1));
+        setP1ClockSeconds((prev) => {
+          const next = prev - 1;
+          if (next === 300 || next === 60) playLowTimeWarningSound();
+          if (next === 0) playOvertimeAlarmSound();
+          return next;
+        });
       } else {
-        setP2ClockSeconds((prev) => Math.max(0, prev - 1));
+        setP2ClockSeconds((prev) => {
+          const next = prev - 1;
+          if (next === 300 || next === 60) playLowTimeWarningSound();
+          if (next === 0) playOvertimeAlarmSound();
+          return next;
+        });
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -162,6 +175,7 @@ export const AppBrawl: React.FC = () => {
   };
 
   const handleSwitchActivePlayer = () => {
+    playClockSwitchSound();
     const nextPlayer = activePlayerIndex === 1 ? 2 : 1;
     setActivePlayerIndex(nextPlayer);
     setCurrentPhaseIndex(0); // Start at Command phase for newly active player
@@ -321,6 +335,7 @@ export const AppBrawl: React.FC = () => {
         onOpenBackup={() => setShowBackupModal(true)}
         onAddNewModel={() => setShowTokenPickerModal(true)}
         onToggleMobileDrawer={() => setIsMobileDrawerOpen(true)}
+        onToggleChessClockHUD={() => setShowChessClockHUD((prev) => !prev)}
         voiceState={voiceState}
       />
 
@@ -441,6 +456,27 @@ export const AppBrawl: React.FC = () => {
           onRoll={(roll) => {
             networkRef.current?.send({ type: 'dice-roll', roll });
           }}
+        />
+      )}
+
+      {/* Floating Chess Clock HUD Widget (OB-158) */}
+      {showChessClockHUD && (
+        <ChessClockWidget
+          p1Seconds={p1ClockSeconds}
+          p2Seconds={p2ClockSeconds}
+          activePlayer={activePlayerIndex}
+          isRunning={isClockRunning}
+          p1Name={session ? Object.values(session.players)[0]?.name || 'Player 1' : 'Player 1'}
+          p2Name={session ? Object.values(session.players)[1]?.name || 'Player 2' : 'Player 2'}
+          onToggleRunning={() => setIsClockRunning((prev) => !prev)}
+          onSwitchPlayer={handleSwitchActivePlayer}
+          onResetClock={(secs) => {
+            setP1ClockSeconds(secs);
+            setP2ClockSeconds(secs);
+            setIsClockRunning(false);
+            showToast(`Match clocks reset to ${secs / 60} minutes`);
+          }}
+          onClose={() => setShowChessClockHUD(false)}
         />
       )}
 
