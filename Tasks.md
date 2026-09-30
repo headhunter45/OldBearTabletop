@@ -185,7 +185,7 @@
 | OB-182 | Testing | [Associate Controllable Token with Chat Panel](#ob-182---associate-controllable-token-with-chat-panel)                                                                                                                                                                                                                                                                                                                                               |
 | OB-183 | Testing | [Codebase Simplification & Refactoring Plan (docs/refactor-1.md)](#ob-183---codebase-simplification--refactoring-plan-docsrefactor-1md)                                                                                                                                                                                                            |
 | OB-184 | Testing | [HelpTip Component & Placement Guide (docs/helptip-locations.md)](#ob-184---helptip-component--placement-guide-docshelptip-locationsmd)                                                                                                                                                                                                            |
-| OB-185 | Ready   | Do some research on our backlog tasks and create a doc with your notes, implementation suggestions, and task sugestions for each in docs/\*.md                                                                                                                                                                                                                                                                                                                                       |
+| OB-185 | Testing | [Backlog Research & Implementation Guide (docs/backlog-implementation-guide.md)](#ob-185---backlog-research--implementation-guide-docsbacklog-implementation-guidemd)                                                                                                                                                                             |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
 
@@ -1130,6 +1130,24 @@ Audit the user interface across all modals, panels, and toolbars and create [doc
 - Catalogs 9 core application areas: Map Settings (`MapSettingsModal`), Token Interaction Bar (`TokenControls`), Chat Panel (`ChatPanel`), Initiative Tracker (`InitiativeTracker`), Floating Clocks & Timers (`ClockWidgetBar`, `TimerHUD`), Character Sheet (`CharacterFlyout`), Canvas Tools (`ToolBar`, `MarkerControls`), Data Backup (`DataBackupModal`), and Audio Streaming (`VoiceSettingsModal`, `SoundboardModal`).
 - Specifies placement properties (`title`, `placement`, `shortcut`, and exact copy) for each location with High, Medium, and Low priorities.
 - Details a 3-phase execution roadmap prioritizing high-traffic onboarding friction points (grid alignment, token status lifecycles, and chat commands).
+
+## OB-185 - Backlog Research & Implementation Guide (docs/backlog-implementation-guide.md)
+
+**Status:** Testing  
+**App:** Shared / Client / Server  
+**Depends On:** None  
+**Description:**
+
+Perform in-depth architectural and technical research across all backlog tasks and compile [docs/backlog-implementation-guide.md](docs/backlog-implementation-guide.md):
+
+- **WebRTC Video Mesh & Tokens (OB-145, OB-146)**: Media renegotiation in `VoiceManager.ts`, resolution limits for mesh peer scaling, canvas `<video>` token avatars via `TokenRenderer.ts`, and floating PIP tiles.
+- **Discord Integrations (OB-147, OB-149)**: Discord bot gateway architecture for two-way chat/roll sync and Discord Embedded App SDK activity authorization for one-click launching inside voice channels.
+- **D&D Beyond Auth & Private Sheets (OB-148)**: Analysis of `Cobalt-Session` cookie auth, local client storage vs ephemeral proxy header forwarding, and browser companion extension options.
+- **System-Agnostic Ruleset Manifests (OB-150)**: Schema design for dynamic attributes, pools, and dice engines, decoupling sheets from hardcoded 5e/PF2e code.
+- **Pathfinder 2e Mechanics (OB-153)**: Multiple Attack Penalty (MAP) calculation buttons, 4-tier degrees of success (+10/-10 DC thresholds), and turn condition tracking.
+- **Mobile Touch Usability (OB-137, OB-138)**: Ergonomic finger touch offset (-40px) to prevent finger occlusion during token drags, and mobile interaction bar safe-area insets.
+- **Wargaming Engine Roadmap (OB-154 through OB-163)**: Multi-mode deployment (`GAME_MODE`), BattleScribe/NewRecruit roster ingestion, unit coherency graph checks, dual chess clocks, and objective zone scoring.
+
 
 
 
