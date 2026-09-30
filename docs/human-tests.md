@@ -545,3 +545,20 @@ All tasks in your requested sequence have been implemented, tested, and individu
   7. Test token clearing:
      - Click **`Reset to Player`** or type `/token clear`.
      - Notice speaking identity resets to your player name.
+
+#### 7. OB-154 — Multi-Mode & Single-Mode Game Deployment Toggles
+- **Where to find it:** The application TopBar and URL search parameters.
+- **How to test:**
+  1. **URL Parameter Dispatching**:
+     - Navigate to `http://localhost:3000/?mode=brawl`.
+     - Verify the application loads **Old Bear Brawl** with the wargaming header, chess clocks, and army roster tools.
+     - Navigate to `http://localhost:3000/?mode=vtt`.
+     - Verify the application loads **Old Bear Rodeo** with standard RPG tools, character sheet flyout, and initiative tracker.
+  2. **TopBar One-Click Mode Switcher**:
+     - When running in default multi-mode (`GAME_MODES=vtt,brawl`), locate the mode switch pill button in the TopBar:
+       - In VTT mode, click **`⚔️ Brawl`** next to the map title. The browser switches into Brawl mode and persists preference in `localStorage`.
+       - In Brawl mode, click **`🐻 VTT`** in the top bar. The browser switches back into VTT mode.
+  3. **Strict Single-Mode Lockdown**:
+     - Launch with `VITE_GAME_MODE=brawl` (or `VITE_GAME_MODE=vtt`).
+     - Notice the Mode Switcher button is automatically hidden from the TopBar.
+     - Attempting to pass `?mode=vtt` into a `brawl`-locked deployment is ignored and strictly retains Brawl mode.

@@ -15,6 +15,7 @@ import { Player } from '@oldbear/shared';
 import { VoiceState } from '../../common/network/VoiceManager.js';
 import { FULL_VERSION_STRING } from '../../common/config/version.js';
 import { WargamePhase } from '../types/brawl.js';
+import { switchGameMode, isSingleGameModeEnforced } from '../../App.js';
 
 interface BrawlTopBarProps {
   roomName: string;
@@ -116,6 +117,29 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
             {FULL_VERSION_STRING}
           </span>
         </div>
+
+        {!isSingleGameModeEnforced() && (
+          <button
+            className="btn-glass"
+            onClick={() => switchGameMode('vtt')}
+            title="Switch to Tabletop RPG Mode (VTT)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: '#38bdf8',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              background: 'rgba(56, 189, 248, 0.12)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <span>🐻 VTT</span>
+          </button>
+        )}
 
         {/* Round & Phase Bar */}
         <div

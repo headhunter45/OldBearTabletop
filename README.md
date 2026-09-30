@@ -324,6 +324,8 @@ Old Bear Rodeo is configured using environment variables defined in `.env` (or `
 |:---|:---:|:---|:---|
 | `NODE_ENV` | `development` | Node.js execution environment | `development`, `production` |
 | `LOG_LEVEL` | `info` | Server console log verbosity | `debug`, `info`, `warn`, `error` |
+| `GAME_MODE` | *None* | Strict single-mode deployment locking instance to VTT or Brawl (ideal for dedicated subdomains like `brawl.domain.com`) | `vtt`, `brawl` |
+| `GAME_MODES` | `vtt,brawl` | Comma-separated list of enabled modes allowing runtime switching via URL parameter (`?mode=brawl`) or TopBar button | `vtt,brawl`, `vtt`, `brawl` |
 
 #### 4. Upload & Storage Limits
 

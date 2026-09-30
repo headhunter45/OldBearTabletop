@@ -4,10 +4,12 @@ import {
   Menu,
   Check,
   MessageSquareHeart,
+  Swords,
 } from 'lucide-react';
 import { Player, GameMap } from '@oldbear/shared';
 import { VoiceState } from '../network/VoiceManager.js';
 import { FULL_VERSION_STRING } from '../config/version.js';
+import { switchGameMode, isSingleGameModeEnforced } from '../../App.js';
 
 interface TopBarProps {
   roomName: string;
@@ -147,6 +149,30 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span style={{ color: 'var(--text-muted)' }}>Map:</span>
           <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{activeMapName}</span>
         </div>
+
+        {!isSingleGameModeEnforced() && (
+          <button
+            className="btn-glass"
+            onClick={() => switchGameMode('brawl')}
+            title="Switch to Wargaming Mode (Brawl)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: '#f59e0b',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              background: 'rgba(245, 158, 11, 0.12)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <Swords size={12} />
+            <span>Brawl</span>
+          </button>
+        )}
 
         {voiceState?.isAudioStreaming && (
           <div
