@@ -554,6 +554,10 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
 3. **One-Click Unit Deployment**:
    - Open the **Army Roster Flyout** (shield icon in Brawl top bar) to view unit datasheets, points, weapons, and model profiles.
    - Click **`Deploy Unit to Battlemap`** to deploy the entire squad onto the canvas in formation.
+4. **Real-Time Unit Coherency Graph Engine**:
+   - Evaluates tabletop squad coherency in real time as models move (2″ horizontal distance threshold).
+   - Enforces graph rules: squads of 2–5 models require each model within distance of $\ge 1$ neighbor; squads of 6+ models require $\ge 2$ neighbors.
+   - Models violating coherency display a pulsing red warning halo directly on the battlemap canvas.
 
 ---
 

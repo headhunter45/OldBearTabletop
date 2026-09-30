@@ -154,6 +154,29 @@ export function renderToken(
     ctx.shadowBlur = 0;
   }
 
+  // Coherency Warning Halo (OB-156)
+  if (token.isOutOfCoherency) {
+    ctx.save();
+    traceTokenShape(ctx, shape, radius + 7);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 10;
+    ctx.setLineDash([5, 3]);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Unit Squad Halo (OB-156)
+  if (token.unitHaloColor) {
+    ctx.save();
+    traceTokenShape(ctx, shape, radius + 2);
+    ctx.strokeStyle = token.unitHaloColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // 2. Token Base Background Fill
   traceTokenShape(ctx, shape, radius);
   ctx.fillStyle = token.fillColor || '#1e293b';

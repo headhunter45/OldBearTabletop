@@ -122,6 +122,8 @@ export interface Token {
   propHeight?: number; // custom decimal height in grid units (e.g. 3.24)
   locked?: boolean; // locked tokens/props can be selected but not moved
   statusCounters?: Record<string, number>; // current numeric counters for conditions (OB-131)
+  isOutOfCoherency?: boolean; // real-time unit coherency warning (OB-156)
+  unitHaloColor?: string; // visual unit squad grouping halo color (OB-156)
 }
 
 export interface StatusCounterConfig {

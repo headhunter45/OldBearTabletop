@@ -575,3 +575,14 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - 5 ready-to-fight tokens are instantiated on the canvas in formation.
      - Tokens are auto-numbered `Intercessor Squad 1` through `Intercessor Squad 5` with wound profiles matching the datasheet.
   6. Duplicate squads are disambiguated as `Squad A` and `Squad B` automatically.
+
+#### 9. OB-156 — Unit Coherency Graph Engine & Real-Time Warning Halos
+- **Where to find it:** The battlemap canvas in Brawl mode (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`) and deploy a unit of 5 models from the Army Roster Flyout.
+  2. Initially, all 5 models are in close formation within 2″ coherency distance. None of the models display a warning halo.
+  3. Click and drag one of the models away from the unit (greater than 2″ / ~100px away).
+  4. Notice:
+     - As soon as the model exceeds the 2″ perimeter distance, a pulsing red dashed warning halo renders around the isolated model.
+     - Moving the model back within 2″ of any unit member immediately clears the warning halo.
+  5. For units of 6+ models, daisy-chaining models in a single line causes the two end models to display warning halos (because 6+ model units require $\ge 2$ neighbors in range). Bringing the models into a triangular or clustered formation clears the halos.

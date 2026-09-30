@@ -34,6 +34,7 @@ import { BrawlTopBar } from './components/BrawlTopBar.js';
 import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
+import { updateTokensCoherency } from './domain/coherencyEngine.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const PHASES: WargamePhase[] = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight', 'Morale'];
@@ -144,7 +145,8 @@ export const AppBrawl: React.FC = () => {
   useEffect(() => {
     if (!engineRef.current) return;
     if (session) {
-      engineRef.current.setSession(session);
+      const coherentTokens = updateTokensCoherency(session.tokens);
+      engineRef.current.setSession({ ...session, tokens: coherentTokens });
       const mapIdToView = session.activeMapId || session.maps[0]?.id || '';
       if (mapIdToView && engineRef.current.currentMapId !== mapIdToView) {
         engineRef.current.setActiveMap(mapIdToView);
@@ -166,6 +168,14 @@ export const AppBrawl: React.FC = () => {
     engine.callbacks = {
       onTokenSelect: (token) => {
         setSelectedTokens(token ? [token] : []);
+      },
+      onTokenMove: (token) => {
+        setSession((prev) => {
+          if (!prev) return prev;
+          const nextTokens = prev.tokens.map((t) => (t.id === token.id ? { ...t, x: token.x, y: token.y } : t));
+          return { ...prev, tokens: updateTokensCoherency(nextTokens) };
+        });
+        networkRef.current?.send({ type: 'token-update', id: token.id, updates: { x: token.x, y: token.y } });
       },
       onMarkerSelect: (marker) => {
         setSelectedMarker(marker);
