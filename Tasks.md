@@ -182,7 +182,7 @@
 | OB-179 | Done    | Up and down in the chat message box should cycle through previous messages/commands. To make fixing a typo in a command easier.                                                                                                                                                                                                                                                                                                                                                      |
 | OB-180 | Testing | [System-Agnostic EntityAction Schema & Statblock Card Renderer](#ob-180---system-agnostic-entityaction-schema--statblock-card-renderer)                                                                                                                                                                                                                                                                                                                                              |
 | OB-181 | Done    | [Statblock Inspection Syntax (`?`) for Chat Commands](#ob-181---statblock-inspection-syntax--for-chat-commands)                                                                                                                                                                                                                                                                                                                                                                      |
-| OB-182 | Ready   | I need a way to associate a token with my chat for commands like /attack                                                                                                                                                                                                                                                                                                                                                                                                             |
+| OB-182 | Testing | [Associate Controllable Token with Chat Panel](#ob-182---associate-controllable-token-with-chat-panel)                                                                                                                                                                                                                                                                                                                                               |
 | OB-183 | Ready   | Review the codebase and create docs/refactor-1.md containing a list of tasks like this one to simplify or refactor the codebase to combine classes/types/files.                                                                                                                                                                                                                                                                                                                      |
 | OB-184 | Ready   | Create a doc with suggested components/locations for HelpTips.                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | OB-185 | Ready   | Do some research on our backlog tasks and create a doc with your notes, implementation suggestions, and task sugestions for each in docs/\*.md                                                                                                                                                                                                                                                                                                                                       |
@@ -1078,3 +1078,25 @@ Add a trailing question mark (`?`) convention to chat commands to display refere
 - Support `/spell? <name>`, `/item? <name>`, `/attack? <name>`, `/ability? <name>`, and `/monster? <name>`.
 - Standard usage without `?` performs the active roll/cast (e.g. `/spell magic-missile` makes the damage/attack roll).
 - Inspection mode displays the formatted `<StatBlockCard />` in chat (or local popover) with action cost, traits, full rules text, and a `[+ Add to Character]` button.
+
+## OB-182 - Associate Controllable Token with Chat Panel
+
+**Status:** Testing  
+**App:** VTT  
+**Depends On:** None  
+**Description:**
+
+Enable associating a controllable token with the chat panel so commands like `/attack`, `/spell`, rolls, and in-character speech are attributed directly to that token:
+
+- Added **Speaking as:** selector bar above chat message input displaying controllable tokens and a `[Bind Selected]` button for the actively selected canvas token.
+- Added `/token` slash commands:
+  - `/token`: Lists controllable tokens with index numbers.
+  - `/token <index|name>`: Associates speaking identity with that token.
+  - `/token clear`: Clears the association back to player name.
+  - `/as <name> <message>`: One-off in-character speech.
+- Attributed chat actions:
+  - `/attack [name]` and `/attack? [name]`: Uses the token's character sheet or monster actions.
+  - `/spell [name]` and `/spell? [name]`: Casts or inspects spells from the associated token.
+  - `/roll d20+init`: Automatically rolls initiative using the associated token's initiative bonus / dexterity modifier.
+  - Attributed rolls and messages display `Player (TokenName)` and render the token's avatar image.
+

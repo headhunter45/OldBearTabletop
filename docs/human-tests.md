@@ -520,3 +520,28 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - A private ephemeral chat message confirms: `✨ Spawned token for Goblin on the canvas.`.
      - A ready-to-fight token is instantiated on the canvas with appropriate size (e.g. Tiny = 0.8, Medium = 1, Large = 2, Huge = 3, Gargantuan = 4), populated HP, AC, and attacks on the token.
      - Spawning multiple tokens staggers placement so they do not overlap.
+
+#### 6. OB-182 — Associating Controllable Tokens with Chat Panel & Token-Attributed Actions
+- **Where to find it:** The **Chat Panel** on the right side of the screen.
+- **How to test:**
+  1. Ensure at least one token is placed on the map (or spawn one via token library or `/monster? goblin` -> `[Spawn Token]`).
+  2. Open the Chat Panel.
+  3. Notice the **"Speaking as:"** bar directly above the message input:
+     - Shows the currently bound speaking identity (default: your player name).
+     - Contains a dropdown of all controllable tokens on the map.
+     - Contains a **`Bind Selected`** button if a token is currently clicked/selected on the canvas.
+  4. Test command association via `/token`:
+     - Type `/token` to see the numbered list of available controllable tokens.
+     - Type `/token 1` (or `/token <name>`).
+     - Observe system message: `Now speaking and acting as: <Token Name>`.
+     - The dropdown updates to reflect the bound token, and a `[Reset to Player]` button appears.
+  5. Test token-attributed attacks:
+     - Type `/attack` to see the token's available weapons/actions.
+     - Type `/attack Scimitar` (or whatever weapon the token possesses).
+     - Notice the roll message appears in chat with the token's avatar, attributing the roll to `Player Name (Token Name)`.
+  6. Test token initiative roll:
+     - Type `/roll d20+init`.
+     - Notice it rolls using the bound token's initiative bonus / dexterity modifier and displays the token name.
+  7. Test token clearing:
+     - Click **`Reset to Player`** or type `/token clear`.
+     - Notice speaking identity resets to your player name.

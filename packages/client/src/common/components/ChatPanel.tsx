@@ -44,6 +44,9 @@ export interface ChatPanelProps {
   player: Player;
   character?: DnDCharacter | null;
   tokens?: Token[];
+  associatedToken?: Token | null;
+  onSetAssociatedToken?: (token: Token | null) => void;
+  selectedToken?: Token | null;
   messages: ChatMessage[];
   onSendMessage: (msg: ChatMessage) => void;
   onBroadcastRoll?: (roll: DiceRollResult) => void;
@@ -105,6 +108,8 @@ export interface ProcessSlashCommandContext {
   player: Player;
   character?: DnDCharacter;
   tokens?: Token[];
+  associatedToken?: Token | null;
+  onSetAssociatedToken?: (token: Token | null) => void;
   onSendMessage: (msg: ChatMessage) => void;
   onBroadcastRoll?: (roll: DiceRollResult) => void;
   onSyncToken?: (tokenId: string, updates: Partial<Token>) => void;
@@ -126,7 +131,72 @@ export function processSlashCommand(
   const parts = text.slice(1).split(/\s+/);
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
-  const { player, character, onSendMessage, onBroadcastRoll } = context;
+  const { player, character, tokens, associatedToken, onSetAssociatedToken, onSendMessage, onBroadcastRoll } = context;
+
+  // Resolve effective character: if associatedToken has character or actions, use it; otherwise fall back to character
+  const resolveEffectiveCharacter = (): DnDCharacter | undefined => {
+    if (associatedToken?.character) {
+      return associatedToken.character;
+    }
+    if (associatedToken) {
+      const monsterData = (associatedToken as any).monsterData;
+      if (monsterData) {
+        const mActions: DnDAction[] = (monsterData.actions || []).map((a: any) => ({
+          name: a.name,
+          type: a.attack_bonus !== undefined || /attack/i.test(a.desc || '') ? 'melee' : 'action',
+          toHitModifier: a.attack_bonus ?? a.toHitModifier ?? 0,
+          damageDice: a.damage_dice || a.damageDice || '',
+          description: a.desc || a.description || '',
+          reach: a.reach,
+          range: a.range,
+        }));
+        return {
+          id: associatedToken.id,
+          name: associatedToken.name,
+          level: 1,
+          classes: monsterData.type || 'Creature',
+          race: monsterData.race || '',
+          currentHp: associatedToken.currentHp,
+          maxHp: associatedToken.maxHp,
+          tempHp: associatedToken.tempHp || 0,
+          speed: associatedToken.speed || 30,
+          armorClass: monsterData.armor_class ?? 10,
+          passivePerception: 10,
+          initiativeBonus: associatedToken.initiativeBonus ?? 0,
+          stats: {
+            str: monsterData.strength ?? monsterData.str ?? 10,
+            dex: monsterData.dexterity ?? monsterData.dex ?? 10,
+            con: monsterData.constitution ?? monsterData.con ?? 10,
+            int: monsterData.intelligence ?? monsterData.int ?? 10,
+            wis: monsterData.wisdom ?? monsterData.wis ?? 10,
+            cha: monsterData.charisma ?? monsterData.cha ?? 10,
+          },
+          spells: [],
+          actions: mActions.length > 0 ? mActions : undefined,
+        };
+      }
+      return {
+        id: associatedToken.id,
+        name: associatedToken.name,
+        level: 1,
+        classes: 'Token',
+        race: '',
+        currentHp: associatedToken.currentHp,
+        maxHp: associatedToken.maxHp,
+        tempHp: associatedToken.tempHp || 0,
+        speed: associatedToken.speed || 30,
+        armorClass: 10,
+        passivePerception: 10,
+        initiativeBonus: associatedToken.initiativeBonus ?? 0,
+        stats: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+        spells: [],
+      };
+    }
+    return character;
+  };
+
+  const effectiveCharacter = resolveEffectiveCharacter();
+  const effectiveSenderName = associatedToken ? `${player.name} (${associatedToken.name})` : player.name;
 
   // Helper to send client-only ephemeral messages for caller
   const sendPrivateSystemMessage = (msgText: string, title = 'VTT Guide', color = '#6366f1') => {
@@ -146,7 +216,7 @@ export function processSlashCommand(
   // 1. /help
   if (cmd === 'help') {
     sendPrivateSystemMessage(
-      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet\n• /attack? [name or index] - Inspect attack statblock card without rolling\n• /skill [skill or index] [adv|dis] - Roll a character skill check\n• /spell [spell or index] [adv|dis] - Roll a spell attack from sheet\n• /spell? [name or index] - Inspect spell reference card (e.g. /spell? magic-missile)\n• /item [item or index] - Use item from inventory\n• /item? [name or index] - Inspect item reference card (e.g. /item? potion of healing)\n• /ability? [name] - Inspect class ability or trait\n• /monster? [name] - Inspect creature statblock (e.g. /monster? goblin)\n• /import [category] <url> - Import spell, item, or monster reference card from URL\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
+      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /token [name or index or clear] - Associate a controllable token with your chat for /attack and rolls\n• /as [name or index] - Alias for /token\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet\n• /attack? [name or index] - Inspect attack statblock card without rolling\n• /skill [skill or index] [adv|dis] - Roll a character skill check\n• /spell [spell or index] [adv|dis] - Roll a spell attack from sheet\n• /spell? [name or index] - Inspect spell reference card (e.g. /spell? magic-missile)\n• /item [item or index] - Use item from inventory\n• /item? [name or index] - Inspect item reference card (e.g. /item? potion of healing)\n• /ability? [name] - Inspect class ability or trait\n• /monster? [name] - Inspect creature statblock (e.g. /monster? goblin)\n• /import [category] <url> - Import spell, item, or monster reference card from URL\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
     );
     return true;
   }
@@ -257,7 +327,7 @@ export function processSlashCommand(
       if (cmd === 'roll') {
         let expr = args[0] || '1d20';
         if (expr.toLowerCase() === 'init' || expr.toLowerCase() === 'initiative') {
-          const bonus = character?.initiativeBonus ?? 0;
+          const bonus = effectiveCharacter?.initiativeBonus ?? associatedToken?.initiativeBonus ?? 0;
           expr = `1d20${bonus >= 0 ? `+${bonus}` : bonus}`;
         }
         const advArg = args[1]?.toLowerCase();
@@ -279,7 +349,7 @@ export function processSlashCommand(
           const rollResult: DiceRollResult = {
             id: crypto.randomUUID(),
             userId: player.id,
-            userName: player.name,
+            userName: effectiveSenderName,
             userColor: player.color,
             diceType: 'd6',
             count: advResult.count,
@@ -293,11 +363,14 @@ export function processSlashCommand(
           onSendMessage({
             id: crypto.randomUUID(),
             senderId: player.id,
-            senderName: player.name,
+            senderName: effectiveSenderName,
             senderColor: player.color,
             text: `rolled **${expr}**\n${advResult.summaryText}\n${detailsPreview}`,
             timestamp: Date.now(),
             roll: rollResult,
+            tokenId: associatedToken?.id,
+            tokenName: associatedToken?.name,
+            tokenImageUrl: associatedToken?.imageUrl,
           });
           return true;
         }
@@ -315,7 +388,7 @@ export function processSlashCommand(
         const rollResult: DiceRollResult = {
           id: crypto.randomUUID(),
           userId: player.id,
-          userName: player.name,
+          userName: effectiveSenderName,
           userColor: player.color,
           diceType: parsed.diceType,
           count: parsed.count,
@@ -331,11 +404,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `rolled ${expr}${advMode !== 'normal' ? ` (${advMode})` : ''} = ${parsed.total} [${parsed.rolls.join(', ')}]`,
           timestamp: Date.now(),
           roll: rollResult,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -345,8 +421,8 @@ export function processSlashCommand(
         const queryArgs = cmd === 'attack?' ? args : args.slice(1);
         const attackQuery = queryArgs.join(' ').trim();
 
-        const availableAttacks: DnDAction[] = (character?.actions && character.actions.length > 0)
-          ? character.actions
+        const availableAttacks: DnDAction[] = (effectiveCharacter?.actions && effectiveCharacter.actions.length > 0)
+          ? effectiveCharacter.actions
           : [
               { name: 'Melee Attack', type: 'melee', toHitModifier: 5, damageDice: '1d8+3' },
               { name: 'Ranged Attack', type: 'ranged', toHitModifier: 5, damageDice: '1d6+3' },
@@ -362,7 +438,7 @@ export function processSlashCommand(
             })
             .join('\n');
           sendPrivateSystemMessage(
-            `No attack specified. Available attacks${character ? ` for ${character.name}` : ''}:\n${listText}\n\nUsage: /attack? [name or index]`
+            `No attack specified. Available attacks${effectiveCharacter ? ` for ${effectiveCharacter.name}` : ''}:\n${listText}\n\nUsage: /attack? [name or index]`
           );
           return true;
         }
@@ -390,11 +466,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `inspects attack: **${found.name}**`,
           timestamp: Date.now(),
           statBlock,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -413,8 +492,8 @@ export function processSlashCommand(
           attackQuery = args.slice(0, -1).join(' ').trim();
         }
 
-        const availableAttacks: DnDAction[] = (character?.actions && character.actions.length > 0)
-          ? character.actions
+        const availableAttacks: DnDAction[] = (effectiveCharacter?.actions && effectiveCharacter.actions.length > 0)
+          ? effectiveCharacter.actions
           : [
               { name: 'Melee Attack', type: 'melee', toHitModifier: 5, damageDice: '1d8+3' },
               { name: 'Ranged Attack', type: 'ranged', toHitModifier: 5, damageDice: '1d6+3' },
@@ -431,7 +510,7 @@ export function processSlashCommand(
             })
             .join('\n');
           sendPrivateSystemMessage(
-            `No attack specified. Available attacks${character ? ` for ${character.name}` : ''}:\n${listText}\n\nUsage: /attack [name or index] [adv|dis]`
+            `No attack specified. Available attacks${effectiveCharacter ? ` for ${effectiveCharacter.name}` : ''}:\n${listText}\n\nUsage: /attack [name or index] [adv|dis]`
           );
           return true;
         }
@@ -475,7 +554,7 @@ export function processSlashCommand(
         const rollResult: DiceRollResult = {
           id: crypto.randomUUID(),
           userId: player.id,
-          userName: player.name,
+          userName: effectiveSenderName,
           userColor: player.color,
           diceType: 'd20',
           count: 1,
@@ -494,11 +573,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `attacks with ${found.name}${attackTag}! To Hit: ${hitTotal} (${hitRoll.rolls.join('/')}${toHitMod >= 0 ? `+${toHitMod}` : toHitMod}) | Damage: ${dmgParsed.total} [${dmgExpr}]`,
           timestamp: Date.now(),
           roll: rollResult,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -507,7 +589,7 @@ export function processSlashCommand(
       if (cmd === 'spell?' || (cmd === 'spell' && args[0] === '?')) {
         const queryArgs = cmd === 'spell?' ? args : args.slice(1);
         const spellQuery = queryArgs.join(' ').trim();
-        const availableSpells = character?.spells || [];
+        const availableSpells = effectiveCharacter?.spells || [];
 
         if (!spellQuery) {
           if (availableSpells.length === 0) {
@@ -521,7 +603,7 @@ export function processSlashCommand(
             .map((s, idx) => `${idx + 1}. ${s.name} (${s.level === 0 ? 'Cantrip' : `Level ${s.level}`})`)
             .join('\n');
           sendPrivateSystemMessage(
-            `No spell specified. Spells for ${character?.name || 'character'}:\n${listText}\n\nUsage: /spell? [name or index]`
+            `No spell specified. Spells for ${effectiveCharacter?.name || 'character'}:\n${listText}\n\nUsage: /spell? [name or index]`
           );
           return true;
         }
@@ -542,11 +624,14 @@ export function processSlashCommand(
           onSendMessage({
             id: crypto.randomUUID(),
             senderId: player.id,
-            senderName: player.name,
+            senderName: effectiveSenderName,
             senderColor: player.color,
             text: `inspects spell: **${found.name}**`,
             timestamp: Date.now(),
             statBlock,
+            tokenId: associatedToken?.id,
+            tokenName: associatedToken?.name,
+            tokenImageUrl: associatedToken?.imageUrl,
           });
           return true;
         }
@@ -557,11 +642,14 @@ export function processSlashCommand(
             onSendMessage({
               id: crypto.randomUUID(),
               senderId: player.id,
-              senderName: player.name,
+              senderName: effectiveSenderName,
               senderColor: player.color,
               text: `inspects spell: **${open5eBlock.name}**`,
               timestamp: Date.now(),
               statBlock: open5eBlock,
+              tokenId: associatedToken?.id,
+              tokenName: associatedToken?.name,
+              tokenImageUrl: associatedToken?.imageUrl,
             });
             return;
           }
@@ -572,11 +660,14 @@ export function processSlashCommand(
             onSendMessage({
               id: crypto.randomUUID(),
               senderId: player.id,
-              senderName: player.name,
+              senderName: effectiveSenderName,
               senderColor: player.color,
               text: `inspects PF2e spell: **${pf2eBlock.name}**`,
               timestamp: Date.now(),
               statBlock: pf2eBlock,
+              tokenId: associatedToken?.id,
+              tokenName: associatedToken?.name,
+              tokenImageUrl: associatedToken?.imageUrl,
             });
             return;
           }
@@ -604,14 +695,14 @@ export function processSlashCommand(
           spellQuery = args.slice(0, -1).join(' ').trim();
         }
 
-        const availableSpells = character?.spells || [];
+        const availableSpells = effectiveCharacter?.spells || [];
 
         // Bug #54 & #71: No spell name provided -> list options, do not roll
         if (!spellQuery) {
           if (availableSpells.length === 0) {
             sendPrivateSystemMessage(
-              character
-                ? `No spells found on ${character.name}'s sheet.`
+              effectiveCharacter
+                ? `No spells found on ${effectiveCharacter.name}'s sheet.`
                 : 'Please link a character sheet with spells first.',
               'System',
               '#f43f5e'
@@ -626,7 +717,7 @@ export function processSlashCommand(
             })
             .join('\n');
           sendPrivateSystemMessage(
-            `No spell specified. Available spells for ${character?.name || 'character'}:\n${listText}\n\nUsage: /spell [name or index] [adv|dis]`
+            `No spell specified. Available spells for ${effectiveCharacter?.name || 'character'}:\n${listText}\n\nUsage: /spell [name or index] [adv|dis]`
           );
           return true;
         }
@@ -660,8 +751,8 @@ export function processSlashCommand(
           return true;
         }
 
-        const intMod = Math.floor(((character?.stats?.int ?? 10) - 10) / 2);
-        const prof = character?.proficiencyBonus ?? 2;
+        const intMod = Math.floor(((effectiveCharacter?.stats?.int ?? 10) - 10) / 2);
+        const prof = effectiveCharacter?.proficiencyBonus ?? 2;
         const spellToHitMod = intMod + prof;
 
         const hitRoll = parseDiceExpression('1d20', advMode)!;
@@ -672,7 +763,7 @@ export function processSlashCommand(
         const rollResult: DiceRollResult = {
           id: crypto.randomUUID(),
           userId: player.id,
-          userName: player.name,
+          userName: effectiveSenderName,
           userColor: player.color,
           diceType: 'd20',
           count: 1,
@@ -691,11 +782,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `casts ${found.name}${spellTag}! Attack: ${hitTotal} (${hitRoll.rolls.join('/')}${spellToHitMod >= 0 ? `+${spellToHitMod}` : spellToHitMod}) | Effect/Damage: ${dmgParsed.total} [${dmgExpr}]`,
           timestamp: Date.now(),
           roll: rollResult,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -722,8 +816,8 @@ export function processSlashCommand(
           'Stealth', 'Survival'
         ];
 
-        const skillsList = character?.skills && character.skills.length > 0
-          ? character.skills
+        const skillsList = effectiveCharacter?.skills && effectiveCharacter.skills.length > 0
+          ? effectiveCharacter.skills
           : ALL_SKILLS.map((s) => ({ name: s, modifier: 0, proficiency: 'none' as const }));
 
         // Bug #54 & #91: No skill specified -> list options with 1-based index, do not roll
@@ -732,7 +826,7 @@ export function processSlashCommand(
             .map((s, idx) => `${idx + 1}. ${s.name} (${s.modifier >= 0 ? `+${s.modifier}` : s.modifier}${s.proficiency !== 'none' ? ' • Proficient' : ''})`)
             .join('\n');
           sendPrivateSystemMessage(
-            `No skill specified. Available skills${character ? ` for ${character.name}` : ''}:\n${listText}\n\nUsage: /skill [skill or index] [adv|dis]`
+            `No skill specified. Available skills${effectiveCharacter ? ` for ${effectiveCharacter.name}` : ''}:\n${listText}\n\nUsage: /skill [skill or index] [adv|dis]`
           );
           return true;
         }
@@ -766,7 +860,7 @@ export function processSlashCommand(
         const rollResult: DiceRollResult = {
           id: crypto.randomUUID(),
           userId: player.id,
-          userName: player.name,
+          userName: effectiveSenderName,
           userColor: player.color,
           diceType: 'd20',
           count: 1,
@@ -782,11 +876,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `checks ${skillName}! Result: ${total} (${d20.rolls.join('/')}${skillMod >= 0 ? `+${skillMod}` : skillMod})${advMode !== 'normal' ? ` (${advMode})` : ''}`,
           timestamp: Date.now(),
           roll: rollResult,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -795,7 +892,7 @@ export function processSlashCommand(
       if (cmd === 'item?' || (cmd === 'item' && args[0] === '?')) {
         const queryArgs = cmd === 'item?' ? args : args.slice(1);
         const itemQuery = queryArgs.join(' ').trim();
-        const availableItems = character?.items || [];
+        const availableItems = effectiveCharacter?.items || [];
 
         if (!itemQuery) {
           if (availableItems.length === 0) {
@@ -809,7 +906,7 @@ export function processSlashCommand(
             .map((it, idx) => `${idx + 1}. ${it.name}${it.quantity ? ` (x${it.quantity})` : ''}`)
             .join('\n');
           sendPrivateSystemMessage(
-            `No item specified. Items for ${character?.name || 'character'}:\n${listText}\n\nUsage: /item? [name or index]`
+            `No item specified. Items for ${effectiveCharacter?.name || 'character'}:\n${listText}\n\nUsage: /item? [name or index]`
           );
           return true;
         }
@@ -830,11 +927,14 @@ export function processSlashCommand(
           onSendMessage({
             id: crypto.randomUUID(),
             senderId: player.id,
-            senderName: player.name,
+            senderName: effectiveSenderName,
             senderColor: player.color,
             text: `inspects item: **${found.name}**`,
             timestamp: Date.now(),
             statBlock,
+            tokenId: associatedToken?.id,
+            tokenName: associatedToken?.name,
+            tokenImageUrl: associatedToken?.imageUrl,
           });
           return true;
         }
@@ -845,11 +945,14 @@ export function processSlashCommand(
             onSendMessage({
               id: crypto.randomUUID(),
               senderId: player.id,
-              senderName: player.name,
+              senderName: effectiveSenderName,
               senderColor: player.color,
               text: `inspects item: **${open5eBlock.name}**`,
               timestamp: Date.now(),
               statBlock: open5eBlock,
+              tokenId: associatedToken?.id,
+              tokenName: associatedToken?.name,
+              tokenImageUrl: associatedToken?.imageUrl,
             });
             return;
           }
@@ -860,11 +963,14 @@ export function processSlashCommand(
             onSendMessage({
               id: crypto.randomUUID(),
               senderId: player.id,
-              senderName: player.name,
+              senderName: effectiveSenderName,
               senderColor: player.color,
               text: `inspects PF2e item: **${pf2eBlock.name}**`,
               timestamp: Date.now(),
               statBlock: pf2eBlock,
+              tokenId: associatedToken?.id,
+              tokenName: associatedToken?.name,
+              tokenImageUrl: associatedToken?.imageUrl,
             });
             return;
           }
@@ -882,8 +988,8 @@ export function processSlashCommand(
       if (cmd === 'item') {
         const itemQuery = args.join(' ').trim();
         const availableItems: Array<{ id?: string; name: string; description?: string; quantity?: number }> =
-          (character?.items && character.items.length > 0)
-            ? character.items
+          (effectiveCharacter?.items && effectiveCharacter.items.length > 0)
+            ? effectiveCharacter.items
             : [
                 { name: 'Potion of Healing', description: 'Regains 2d4 + 2 hit points when consumed.', quantity: 2 },
                 { name: 'Rope (hempen, 50 feet)', description: '50 feet of hempen rope, burst DC 17.', quantity: 1 },
@@ -897,7 +1003,7 @@ export function processSlashCommand(
             .map((it, idx) => `${idx + 1}. ${it.name}${it.quantity ? ` (x${it.quantity})` : ''}${it.description ? ` - ${it.description}` : ''}`)
             .join('\n');
           sendPrivateSystemMessage(
-            `No item specified. Available items${character ? ` for ${character.name}` : ''}:\n${listText}\n\nUsage: /item [name or index]`
+            `No item specified. Available items${effectiveCharacter ? ` for ${effectiveCharacter.name}` : ''}:\n${listText}\n\nUsage: /item [name or index]`
           );
           return true;
         }
@@ -915,10 +1021,13 @@ export function processSlashCommand(
           onSendMessage({
             id: crypto.randomUUID(),
             senderId: player.id,
-            senderName: player.name,
+            senderName: effectiveSenderName,
             senderColor: player.color,
             text: `uses/inspects item: ${found.name}${found.quantity ? ` (x${found.quantity})` : ''}${found.description ? `\n"${found.description}"` : ''}`,
             timestamp: Date.now(),
+            tokenId: associatedToken?.id,
+            tokenName: associatedToken?.name,
+            tokenImageUrl: associatedToken?.imageUrl,
           });
           return true;
         }
@@ -929,11 +1038,14 @@ export function processSlashCommand(
             onSendMessage({
               id: crypto.randomUUID(),
               senderId: player.id,
-              senderName: player.name,
+              senderName: effectiveSenderName,
               senderColor: player.color,
               text: `inspects item: **${open5eItem.name}**`,
               timestamp: Date.now(),
               statBlock: open5eItem,
+              tokenId: associatedToken?.id,
+              tokenName: associatedToken?.name,
+              tokenImageUrl: associatedToken?.imageUrl,
             });
           } else {
             const listText = availableItems.map((it, idx) => `${idx + 1}. ${it.name}`).join('\n');
@@ -951,7 +1063,7 @@ export function processSlashCommand(
       if (cmd === 'ability?' || (cmd === 'ability' && args[0] === '?')) {
         const queryArgs = cmd === 'ability?' ? args : args.slice(1);
         const abilityQuery = queryArgs.join(' ').trim();
-        const availableActions = character?.actions || [];
+        const availableActions = effectiveCharacter?.actions || [];
 
         if (!abilityQuery) {
           const listText = availableActions
@@ -980,11 +1092,14 @@ export function processSlashCommand(
         onSendMessage({
           id: crypto.randomUUID(),
           senderId: player.id,
-          senderName: player.name,
+          senderName: effectiveSenderName,
           senderColor: player.color,
           text: `inspects ability: **${found.name}**`,
           timestamp: Date.now(),
           statBlock,
+          tokenId: associatedToken?.id,
+          tokenName: associatedToken?.name,
+          tokenImageUrl: associatedToken?.imageUrl,
         });
         return true;
       }
@@ -1200,6 +1315,74 @@ export function processSlashCommand(
         sendPrivateSystemMessage(
           `Controllable tokens available to sync:\n${lines.join('\n')}\n\nUse /sync <url or id> <index> to sync a character.`,
           'Tokens'
+        );
+        return true;
+      }
+
+      // 7b. /token [name or index or clear] (OB-182)
+      if (cmd === 'token' || cmd === 'as') {
+        const syncTokens = context.tokens || [];
+        const query = args.join(' ').trim();
+
+        if (!query || query === '?') {
+          const currentName = associatedToken ? `**${associatedToken.name}**` : '*(None - Using Player Sheet)*';
+          if (syncTokens.length === 0) {
+            sendPrivateSystemMessage(
+              `Active Chat Token: ${currentName}\nNo controllable tokens available on this map.`,
+              'Token Association',
+              '#6366f1'
+            );
+            return true;
+          }
+
+          const lines = syncTokens.map((t, idx) => {
+            const isCurrent = associatedToken?.id === t.id ? ' ⭐️ (Active)' : '';
+            const charStr = t.character ? ` (${t.character.classes || t.character.name})` : '';
+            const hpStr = t.maxHp ? ` [HP: ${t.currentHp ?? 0}/${t.maxHp}]` : '';
+            return `${idx + 1}. ${t.name}${charStr}${hpStr}${isCurrent}`;
+          });
+
+          sendPrivateSystemMessage(
+            `Active Chat Token: ${currentName}\n\nControllable tokens:\n${lines.join('\n')}\n\nUsage:\n• \`/token <index or name>\` - Switch active token for chat & /attack\n• \`/token clear\` - Revert to player character sheet`,
+            'Token Association',
+            '#6366f1'
+          );
+          return true;
+        }
+
+        if (query === 'clear' || query === 'none' || query === 'reset') {
+          onSetAssociatedToken?.(null);
+          sendPrivateSystemMessage(
+            `🔄 Cleared token association. Chat and commands like \`/attack\` now use your default character sheet (${character?.name || player.name}).`,
+            'Token Association',
+            '#10b981'
+          );
+          return true;
+        }
+
+        // Match by 1-based index or name
+        let targetToken: Token | undefined;
+        const numIdx = parseInt(query, 10);
+        if (!isNaN(numIdx) && String(numIdx) === query && numIdx >= 1 && numIdx <= syncTokens.length) {
+          targetToken = syncTokens[numIdx - 1];
+        } else {
+          targetToken = syncTokens.find((t) => t.name.toLowerCase().includes(query.toLowerCase()));
+        }
+
+        if (!targetToken) {
+          sendPrivateSystemMessage(
+            `⚠️ Could not find controllable token matching "${query}". Use \`/tokens\` or \`/token\` to list available tokens.`,
+            'Token Association',
+            '#f43f5e'
+          );
+          return true;
+        }
+
+        onSetAssociatedToken?.(targetToken);
+        sendPrivateSystemMessage(
+          `🎭 Associated chat with token **${targetToken.name}**! Commands like \`/attack\`, \`/spell\`, and \`/roll\` will now roll on behalf of ${targetToken.name}.`,
+          'Token Association',
+          '#10b981'
         );
         return true;
       }
@@ -1448,6 +1631,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   player,
   character,
   tokens,
+  associatedToken: propAssociatedToken,
+  onSetAssociatedToken: propOnSetAssociatedToken,
+  selectedToken,
   messages,
   onSendMessage,
   onBroadcastRoll,
@@ -1461,6 +1647,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   isOpen,
   onToggleOpen,
 }) => {
+  const [localAssociatedToken, setLocalAssociatedToken] = useState<Token | null>(null);
+  const activeAssociatedToken = propAssociatedToken !== undefined ? propAssociatedToken : localAssociatedToken;
+  const handleSetAssociatedToken = (token: Token | null) => {
+    setLocalAssociatedToken(token);
+    propOnSetAssociatedToken?.(token);
+  };
+
   const [inputText, setInputText] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -1493,6 +1686,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         player,
         character: character || undefined,
         tokens,
+        associatedToken: activeAssociatedToken,
+        onSetAssociatedToken: handleSetAssociatedToken,
         onSendMessage,
         onBroadcastRoll,
         onSyncToken,
@@ -1510,10 +1705,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     onSendMessage({
       id: crypto.randomUUID(),
       senderId: player.id,
-      senderName: player.name,
+      senderName: activeAssociatedToken ? `${player.name} (${activeAssociatedToken.name})` : player.name,
       senderColor: player.color,
       text,
       timestamp: Date.now(),
+      tokenId: activeAssociatedToken?.id,
+      tokenName: activeAssociatedToken?.name,
+      tokenImageUrl: activeAssociatedToken?.imageUrl,
     });
   };
 
@@ -1665,6 +1863,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               }}
             >
               /spell
+            </span>
+            <span>•</span>
+            <span
+              style={{ cursor: 'pointer', color: '#38bdf8' }}
+              onClick={() => {
+                resetNavigation();
+                setInputText('/token ');
+                inputRef.current?.focus();
+              }}
+            >
+              /token
             </span>
             <span>•</span>
             <span
@@ -1863,6 +2072,90 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Active Token Selector Bar (OB-182) */}
+          <div
+            style={{
+              padding: '0.35rem 0.75rem',
+              backgroundColor: activeAssociatedToken ? 'rgba(56, 189, 248, 0.08)' : 'rgba(15, 23, 42, 0.6)',
+              borderTop: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.72rem',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
+              🎭 <strong style={{ color: activeAssociatedToken ? '#38bdf8' : 'var(--text-primary)' }}>As:</strong>
+            </span>
+            <select
+              value={activeAssociatedToken?.id || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) {
+                  handleSetAssociatedToken(null);
+                } else {
+                  const target = (tokens || []).find((t) => t.id === val);
+                  if (target) handleSetAssociatedToken(target);
+                }
+              }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                padding: '0.2rem 0.35rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-subtle)',
+                color: activeAssociatedToken ? '#38bdf8' : 'white',
+                fontSize: '0.72rem',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">👤 {character?.name || player.name} (Player Sheet)</option>
+              {(tokens || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  🎭 {t.name}{t.character ? ` (${t.character.name || t.character.classes})` : ''}
+                </option>
+              ))}
+            </select>
+            {selectedToken && selectedToken.id !== activeAssociatedToken?.id && (
+              <button
+                type="button"
+                onClick={() => handleSetAssociatedToken(selectedToken)}
+                style={{
+                  padding: '0.2rem 0.4rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(99, 102, 241, 0.2)',
+                  border: '1px solid #6366f1',
+                  color: '#c7d2fe',
+                  fontSize: '0.68rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+                title={`Switch chat to selected token "${selectedToken.name}"`}
+              >
+                Bind Selected
+              </button>
+            )}
+            {activeAssociatedToken && (
+              <button
+                type="button"
+                onClick={() => handleSetAssociatedToken(null)}
+                style={{
+                  padding: '0.2rem 0.35rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.68rem',
+                  cursor: 'pointer',
+                }}
+                title="Reset to player character sheet"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           {/* Input Form */}
           <form
             onSubmit={handleSubmit}
@@ -1877,7 +2170,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             <input
               ref={inputRef}
               type="text"
-              placeholder="Chat or /roll, /attack, /skill..."
+              placeholder={
+                activeAssociatedToken
+                  ? `Chat or /attack, /roll as ${activeAssociatedToken.name}...`
+                  : 'Chat or /roll, /attack, /skill...'
+              }
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}

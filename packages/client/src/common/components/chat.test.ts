@@ -810,6 +810,141 @@ describe('Dice Parser & Slash Command Utilities', () => {
       global.fetch = originalFetch;
     }
   });
+
+  it('supports associating a token with chat for /attack and rolls (OB-182)', () => {
+    const testPlayer = {
+      id: 'p-1',
+      name: 'Tom',
+      role: 'gm' as const,
+      color: '#3b82f6',
+      connected: true,
+      assignedTokenIds: [],
+    };
+
+    const playerChar = {
+      id: 'char-tom',
+      name: 'Default Hero',
+      level: 1,
+      classes: 'Fighter 1',
+      race: 'Human',
+      currentHp: 12,
+      maxHp: 12,
+      tempHp: 0,
+      speed: 30,
+      armorClass: 14,
+      passivePerception: 10,
+      initiativeBonus: 1,
+      stats: { str: 14, dex: 12, con: 14, int: 10, wis: 10, cha: 10 },
+      spells: [],
+      actions: [{ name: 'Shortsword', type: 'melee', toHitModifier: 4, damageDice: '1d6+2' }],
+    };
+
+    const tokenGoblin = {
+      id: 'tok-goblin',
+      mapId: 'map-1',
+      name: 'Goblin Sneak',
+      x: 10,
+      y: 10,
+      size: 1,
+      rotation: 0,
+      ringColor: '#10b981',
+      fillColor: '#000000',
+      clipCircle: true,
+      currentHp: 7,
+      maxHp: 7,
+      tempHp: 0,
+      speed: 30,
+      isProp: false,
+      layer: 'token' as const,
+      conditions: [],
+      initiativeBonus: 3,
+      character: {
+        id: 'char-goblin',
+        name: 'Goblin Sneak',
+        level: 1,
+        classes: 'Goblin',
+        race: 'Goblinoid',
+        currentHp: 7,
+        maxHp: 7,
+        tempHp: 0,
+        speed: 30,
+        armorClass: 15,
+        passivePerception: 9,
+        initiativeBonus: 3,
+        stats: { str: 8, dex: 16, con: 10, int: 10, wis: 8, cha: 8 },
+        spells: [],
+        actions: [{ name: 'Scimitar', type: 'melee', toHitModifier: 5, damageDice: '1d6+3' }],
+      },
+    };
+
+    const sentMessages: any[] = [];
+    const broadcastRolls: any[] = [];
+    let currentAssociatedToken: any = null;
+
+    const ctx = {
+      player: testPlayer,
+      character: playerChar as any,
+      tokens: [tokenGoblin as any],
+      get associatedToken() {
+        return currentAssociatedToken;
+      },
+      onSetAssociatedToken: (tok: any) => {
+        currentAssociatedToken = tok;
+      },
+      onSendMessage: (msg: any) => sentMessages.push(msg),
+      onBroadcastRoll: (roll: any) => broadcastRolls.push(roll),
+    };
+
+    // 1. /token lists current association and controllable tokens
+    const handledList = processSlashCommand('/token', ctx);
+    assert.strictEqual(handledList, true);
+    const listMsg = sentMessages[sentMessages.length - 1];
+    assert.ok(listMsg.isEphemeral);
+    assert.ok(listMsg.text.includes('Goblin Sneak'));
+
+    // 2. /token 1 associates chat with Goblin Sneak
+    const handledSelect = processSlashCommand('/token 1', ctx);
+    assert.strictEqual(handledSelect, true);
+    assert.strictEqual(currentAssociatedToken?.id, 'tok-goblin');
+    const selectMsg = sentMessages[sentMessages.length - 1];
+    assert.ok(selectMsg.text.includes('Goblin Sneak'));
+
+    // 3. /attack with no args lists the goblin's attacks, not the player's
+    const handledAttackList = processSlashCommand('/attack', ctx);
+    assert.strictEqual(handledAttackList, true);
+    const attackListMsg = sentMessages[sentMessages.length - 1];
+    assert.ok(attackListMsg.text.includes('Scimitar'));
+    assert.ok(!attackListMsg.text.includes('Shortsword'));
+
+    // 4. /attack 1 rolls using Goblin's Scimitar and attributes sender as "Tom (Goblin Sneak)"
+    const handledAttackRoll = processSlashCommand('/attack 1', ctx);
+    assert.strictEqual(handledAttackRoll, true);
+    const rollMsg = sentMessages[sentMessages.length - 1];
+    assert.strictEqual(rollMsg.senderName, 'Tom (Goblin Sneak)');
+    assert.ok(rollMsg.text.includes('attacks with Scimitar'));
+    assert.strictEqual(rollMsg.tokenId, 'tok-goblin');
+    assert.strictEqual(rollMsg.tokenName, 'Goblin Sneak');
+    assert.strictEqual(broadcastRolls.length, 1);
+    assert.strictEqual(broadcastRolls[0].userName, 'Tom (Goblin Sneak)');
+
+    // 5. /roll init uses Goblin's initiative bonus (+3)
+    const handledInit = processSlashCommand('/roll init', ctx);
+    assert.strictEqual(handledInit, true);
+    const initRollMsg = sentMessages[sentMessages.length - 1];
+    assert.strictEqual(initRollMsg.senderName, 'Tom (Goblin Sneak)');
+    assert.ok(initRollMsg.text.includes('1d20+3'));
+
+    // 6. /token clear resets association back to player sheet
+    const handledClear = processSlashCommand('/token clear', ctx);
+    assert.strictEqual(handledClear, true);
+    assert.strictEqual(currentAssociatedToken, null);
+
+    // 7. /attack now lists default player's attacks (Shortsword)
+    processSlashCommand('/attack', ctx);
+    const defaultAttackMsg = sentMessages[sentMessages.length - 1];
+    assert.ok(defaultAttackMsg.text.includes('Shortsword'));
+    assert.ok(!defaultAttackMsg.text.includes('Scimitar'));
+  });
 });
 
 

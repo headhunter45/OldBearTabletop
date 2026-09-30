@@ -26,6 +26,7 @@ A lightweight, zero-install, mobile-friendly virtual tabletop (VTT) and tactical
    - [Voice Chat & Audio Streaming](#voice-chat--audio-streaming)
    - [Soundboard & Custom Audio](#soundboard--custom-audio)
    - [Dice Roller & Initiative Tracker](#dice-roller--initiative-tracker)
+   - [Chat Commands & Token Association](#chat-commands--token-association)
    - [Full Data Backup & Browser Migration](#full-data-backup--browser-migration)
    - [Global Drag and Drop](#global-drag-and-drop)
 7. [Configuring Available Colors](#configuring-available-colors)
@@ -514,6 +515,27 @@ npm run dev -w @oldbear/client
 ### Dice Roller & Initiative Tracker
 - **Dice Roller**: Roll polyhedral dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) with modifiers and advantage/disadvantage. Rolls are broadcast to all players in the room with roll history.
 - **Initiative Tracker**: Add characters and monsters with automated or manual initiative rolls, cycle through rounds, and highlight the active turn.
+
+---
+
+### Chat Commands & Token Association
+The in-game chat panel supports full token association, enabling players and GMs to speak and roll as specific controllable tokens on the battlemap.
+
+1. **Associating a Token**:
+   - **Visual Selector**: Use the **"Speaking as:"** dropdown bar above the chat input to pick any token you control (or GM controls all tokens). Click **`Bind Selected`** to instantly associate whichever token is selected on the canvas.
+   - **Slash Commands**:
+     - `/token`: Lists all controllable tokens on the map with numeric indices.
+     - `/token <name|index>`: Associates your chat with that token (e.g. `/token 1` or `/token Goblin Shaman`).
+     - `/token clear`: Clears the association and returns speaking identity to your player name.
+     - `/as <name> <message>`: Sends a one-off in-character message or speech bubble as that name.
+2. **Token-Attributed Attacks & Spells**:
+   - `/attack [name]`: Attacks with the associated token's weapons or actions (e.g. `/attack Greatsword`). If no name is provided, lists available actions.
+   - `/attack? [name]`: Inspects the weapon's action card without rolling.
+   - `/spell [name]` / `/spell? [name]`: Casts or inspects a spell from the associated character or monster statblock.
+   - `/roll d20+init`: Automatically rolls initiative using the associated token's initiative bonus or dexterity modifier.
+   - When a token is associated, rolls and messages display attribution in the format `Player Name (Token Name)` and display the token avatar.
+3. **Command History Navigation**:
+   - Press **Up Arrow** / **Down Arrow** in the chat message input to cycle through previously executed commands and messages.
 
 ---
 

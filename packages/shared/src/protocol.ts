@@ -53,6 +53,9 @@ export interface ChatMessage {
   isEphemeral?: boolean;
   recipientId?: string;
   statBlock?: EntityStatBlock;
+  tokenId?: string;
+  tokenName?: string;
+  tokenImageUrl?: string;
 }
 
 export type ServerToClientMessage =

@@ -2013,6 +2013,7 @@ export const AppVtt: React.FC = () => {
               return [...list].sort((a, b) => a.name.localeCompare(b.name));
             })()
           }
+          selectedToken={selectedToken}
           onSyncToken={(tokenId, updates) => {
             handleUpdateToken(tokenId, updates);
           }}
