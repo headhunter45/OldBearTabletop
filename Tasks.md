@@ -184,7 +184,7 @@
 | OB-181 | Done    | [Statblock Inspection Syntax (`?`) for Chat Commands](#ob-181---statblock-inspection-syntax--for-chat-commands)                                                                                                                                                                                                                                                                                                                                                                      |
 | OB-182 | Testing | [Associate Controllable Token with Chat Panel](#ob-182---associate-controllable-token-with-chat-panel)                                                                                                                                                                                                                                                                                                                                               |
 | OB-183 | Testing | [Codebase Simplification & Refactoring Plan (docs/refactor-1.md)](#ob-183---codebase-simplification--refactoring-plan-docsrefactor-1md)                                                                                                                                                                                                            |
-| OB-184 | Ready   | Create a doc with suggested components/locations for HelpTips.                                                                                                                                                                                                                                                                                                                                                                                        |                               |
+| OB-184 | Testing | [HelpTip Component & Placement Guide (docs/helptip-locations.md)](#ob-184---helptip-component--placement-guide-docshelptip-locationsmd)                                                                                                                                                                                                            |
 | OB-185 | Ready   | Do some research on our backlog tasks and create a doc with your notes, implementation suggestions, and task sugestions for each in docs/\*.md                                                                                                                                                                                                                                                                                                                                       |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
@@ -1117,5 +1117,19 @@ Perform an architectural review of the codebase and create [docs/refactor-1.md](
 - **REF-006**: Unified `UniversalImporter` Pipeline (consolidating D&D Beyond, PF2e, Open5e, and TetraCube parsers).
 - **REF-007**: Strategy Pattern for Canvas Interaction Tools (`CanvasEngine.ts` and `PointerSystem.ts` decoupling).
 - **REF-008**: Unified Storage Repository & Key Registry (centralizing `localStorage` and `IndexedDB` access).
+
+## OB-184 - HelpTip Component & Placement Guide (docs/helptip-locations.md)
+
+**Status:** Testing  
+**App:** Client / Documentation  
+**Depends On:** [OB-176](#ob-176---portal-fixed-balloon-positioning-for-helptip)  
+**Description:**
+
+Audit the user interface across all modals, panels, and toolbars and create [docs/helptip-locations.md](docs/helptip-locations.md) detailing exact integration points for `<HelpTip />`:
+
+- Catalogs 9 core application areas: Map Settings (`MapSettingsModal`), Token Interaction Bar (`TokenControls`), Chat Panel (`ChatPanel`), Initiative Tracker (`InitiativeTracker`), Floating Clocks & Timers (`ClockWidgetBar`, `TimerHUD`), Character Sheet (`CharacterFlyout`), Canvas Tools (`ToolBar`, `MarkerControls`), Data Backup (`DataBackupModal`), and Audio Streaming (`VoiceSettingsModal`, `SoundboardModal`).
+- Specifies placement properties (`title`, `placement`, `shortcut`, and exact copy) for each location with High, Medium, and Low priorities.
+- Details a 3-phase execution roadmap prioritizing high-traffic onboarding friction points (grid alignment, token status lifecycles, and chat commands).
+
 
 
