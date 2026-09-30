@@ -183,8 +183,8 @@
 | OB-180 | Testing | [System-Agnostic EntityAction Schema & Statblock Card Renderer](#ob-180---system-agnostic-entityaction-schema--statblock-card-renderer)                                                                                                                                                                                                                                                                                                                                              |
 | OB-181 | Done    | [Statblock Inspection Syntax (`?`) for Chat Commands](#ob-181---statblock-inspection-syntax--for-chat-commands)                                                                                                                                                                                                                                                                                                                                                                      |
 | OB-182 | Testing | [Associate Controllable Token with Chat Panel](#ob-182---associate-controllable-token-with-chat-panel)                                                                                                                                                                                                                                                                                                                                               |
-| OB-183 | Ready   | Review the codebase and create docs/refactor-1.md containing a list of tasks like this one to simplify or refactor the codebase to combine classes/types/files.                                                                                                                                                                                                                                                                                                                      |
-| OB-184 | Ready   | Create a doc with suggested components/locations for HelpTips.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| OB-183 | Testing | [Codebase Simplification & Refactoring Plan (docs/refactor-1.md)](#ob-183---codebase-simplification--refactoring-plan-docsrefactor-1md)                                                                                                                                                                                                            |
+| OB-184 | Ready   | Create a doc with suggested components/locations for HelpTips.                                                                                                                                                                                                                                                                                                                                                                                        |                               |
 | OB-185 | Ready   | Do some research on our backlog tasks and create a doc with your notes, implementation suggestions, and task sugestions for each in docs/\*.md                                                                                                                                                                                                                                                                                                                                       |
 
 ## OB-048 - Syllable-Based Fantasy Name Generator
@@ -1099,4 +1099,23 @@ Enable associating a controllable token with the chat panel so commands like `/a
   - `/spell [name]` and `/spell? [name]`: Casts or inspects spells from the associated token.
   - `/roll d20+init`: Automatically rolls initiative using the associated token's initiative bonus / dexterity modifier.
   - Attributed rolls and messages display `Player (TokenName)` and render the token's avatar image.
+
+## OB-183 - Codebase Simplification & Refactoring Plan (docs/refactor-1.md)
+
+**Status:** Testing  
+**App:** Shared / Client / Server  
+**Depends On:** None  
+**Description:**
+
+Perform an architectural review of the codebase and create [docs/refactor-1.md](docs/refactor-1.md) detailing 8 high-impact refactoring tasks:
+
+- **REF-001**: Unified Entity Statblock & Character Schema Consolidation (consolidating `DnDCharacter`, `MonsterCard`, and `EntityStatBlock`).
+- **REF-002**: Modular Slash Command Registry & Evaluators (extracting handlers from monolithic `ChatPanel.tsx`).
+- **REF-003**: State Hook Extraction from `AppVtt.tsx` (`useVttModalManager`, `useVttNetworkSync`, `useTokenSelection`).
+- **REF-004**: Extraction of Headless `BackupService` & `BinderService` from `DataBackupModal.tsx`.
+- **REF-005**: Modular Character Sheet Tabs & Editor Components (`CharacterFlyout.tsx` decomposition).
+- **REF-006**: Unified `UniversalImporter` Pipeline (consolidating D&D Beyond, PF2e, Open5e, and TetraCube parsers).
+- **REF-007**: Strategy Pattern for Canvas Interaction Tools (`CanvasEngine.ts` and `PointerSystem.ts` decoupling).
+- **REF-008**: Unified Storage Repository & Key Registry (centralizing `localStorage` and `IndexedDB` access).
+
 
