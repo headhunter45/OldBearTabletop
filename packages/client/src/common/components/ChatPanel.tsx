@@ -34,6 +34,11 @@ import {
   fetchOpen5eMonster,
   fetchOpen5eItem,
 } from '../utils/open5eFetcher.js';
+import {
+  fetchPF2eFromUrl,
+  fetchPF2eReference,
+  parseFoundryPF2eJson,
+} from '../utils/pf2eFetcher.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -141,7 +146,7 @@ export function processSlashCommand(
   // 1. /help
   if (cmd === 'help') {
     sendPrivateSystemMessage(
-      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet\n• /attack? [name or index] - Inspect attack statblock card without rolling\n• /skill [skill or index] [adv|dis] - Roll a character skill check\n• /spell [spell or index] [adv|dis] - Roll a spell attack from sheet\n• /spell? [name or index] - Inspect spell reference card (e.g. /spell? magic-missile)\n• /item [item or index] - Use item from inventory\n• /item? [name or index] - Inspect item reference card (e.g. /item? potion of healing)\n• /ability? [name] - Inspect class ability or trait\n• /monster? [name] - Inspect creature statblock (e.g. /monster? goblin)\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
+      `Available commands:\n• /roll [count]d[sides][+/-mod] [adv|dis] - Roll any dice (e.g. /roll 1d20+5 adv)\n• /timer <duration> - Start round timer HUD (e.g. /timer 10 min, /timer 30s)\n• /clock - Open segmented pie-wedge progress clocks\n• /attack [weapon or index] [adv|dis] - Roll to-hit & damage from sheet\n• /attack? [name or index] - Inspect attack statblock card without rolling\n• /skill [skill or index] [adv|dis] - Roll a character skill check\n• /spell [spell or index] [adv|dis] - Roll a spell attack from sheet\n• /spell? [name or index] - Inspect spell reference card (e.g. /spell? magic-missile)\n• /item [item or index] - Use item from inventory\n• /item? [name or index] - Inspect item reference card (e.g. /item? potion of healing)\n• /ability? [name] - Inspect class ability or trait\n• /monster? [name] - Inspect creature statblock (e.g. /monster? goblin)\n• /import [category] <url> - Import spell, item, or monster reference card from URL\n• /sync [url or id] [token index] - Sync character sheet and token with D&D Beyond\n• /tokens - List all tokens and their index number available to sync\n• /discord webhook <url> - Configure Discord one-way sync (GM only)\n• /discord webhook none - Disable Discord sync (GM only)`
     );
     return true;
   }
@@ -546,8 +551,8 @@ export function processSlashCommand(
           return true;
         }
 
-        // 2. Fetch from Open5e reference
-        fetchOpen5eSpell(spellQuery).then((open5eBlock) => {
+        // 2. Fetch from Open5e reference, with PF2e fallback
+        fetchOpen5eSpell(spellQuery).then(async (open5eBlock) => {
           if (open5eBlock) {
             onSendMessage({
               id: crypto.randomUUID(),
@@ -558,13 +563,29 @@ export function processSlashCommand(
               timestamp: Date.now(),
               statBlock: open5eBlock,
             });
-          } else {
-            sendPrivateSystemMessage(
-              `Could not find spell matching "${spellQuery}" on sheet or Open5e database.`,
-              'System',
-              '#f43f5e'
-            );
+            return;
           }
+
+          // Fallback to PF2e reference
+          const pf2eBlock = await fetchPF2eReference('spell', spellQuery);
+          if (pf2eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects PF2e spell: **${pf2eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: pf2eBlock,
+            });
+            return;
+          }
+
+          sendPrivateSystemMessage(
+            `Could not find spell matching "${spellQuery}" on sheet, Open5e, or PF2e database.`,
+            'System',
+            '#f43f5e'
+          );
         });
         return true;
       }
@@ -818,8 +839,8 @@ export function processSlashCommand(
           return true;
         }
 
-        // 2. Fetch from Open5e reference
-        fetchOpen5eItem(itemQuery).then((open5eBlock) => {
+        // 2. Fetch from Open5e reference, with PF2e fallback
+        fetchOpen5eItem(itemQuery).then(async (open5eBlock) => {
           if (open5eBlock) {
             onSendMessage({
               id: crypto.randomUUID(),
@@ -830,13 +851,29 @@ export function processSlashCommand(
               timestamp: Date.now(),
               statBlock: open5eBlock,
             });
-          } else {
-            sendPrivateSystemMessage(
-              `Could not find item matching "${itemQuery}" in inventory or Open5e database.`,
-              'System',
-              '#f43f5e'
-            );
+            return;
           }
+
+          // Fallback to PF2e reference
+          const pf2eBlock = await fetchPF2eReference('item', itemQuery);
+          if (pf2eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects PF2e item: **${pf2eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: pf2eBlock,
+            });
+            return;
+          }
+
+          sendPrivateSystemMessage(
+            `Could not find item matching "${itemQuery}" in inventory, Open5e, or PF2e database.`,
+            'System',
+            '#f43f5e'
+          );
         });
         return true;
       }
@@ -993,8 +1030,8 @@ export function processSlashCommand(
           }
         }
 
-        // 2. Query Open5e monsters
-        fetchOpen5eMonster(monsterQuery).then((open5eBlock) => {
+        // 2. Query Open5e monsters, with PF2e fallback
+        fetchOpen5eMonster(monsterQuery).then(async (open5eBlock) => {
           if (open5eBlock) {
             onSendMessage({
               id: crypto.randomUUID(),
@@ -1005,13 +1042,28 @@ export function processSlashCommand(
               timestamp: Date.now(),
               statBlock: open5eBlock,
             });
-          } else {
-            sendPrivateSystemMessage(
-              `Could not find monster matching "${monsterQuery}" on canvas or Open5e database.`,
-              'System',
-              '#f43f5e'
-            );
+            return;
           }
+
+          const pf2eBlock = await fetchPF2eReference('monster', monsterQuery);
+          if (pf2eBlock) {
+            onSendMessage({
+              id: crypto.randomUUID(),
+              senderId: player.id,
+              senderName: player.name,
+              senderColor: player.color,
+              text: `inspects PF2e creature: **${pf2eBlock.name}**`,
+              timestamp: Date.now(),
+              statBlock: pf2eBlock,
+            });
+            return;
+          }
+
+          sendPrivateSystemMessage(
+            `Could not find monster matching "${monsterQuery}" on canvas, Open5e, or PF2e database.`,
+            'System',
+            '#f43f5e'
+          );
         });
         return true;
       }
@@ -1149,6 +1201,165 @@ export function processSlashCommand(
           `Controllable tokens available to sync:\n${lines.join('\n')}\n\nUse /sync <url or id> <index> to sync a character.`,
           'Tokens'
         );
+        return true;
+      }
+
+      // 8. /import [category] <url> (OB-177, OB-153)
+      if (cmd === 'import') {
+        const firstArg = args[0]?.toLowerCase();
+        const validCategories = ['pf2e', 'spell', 'item', 'monster', 'dndbeyond'];
+        let category: string | null = null;
+        let targetUrl = '';
+
+        if (validCategories.includes(firstArg)) {
+          category = firstArg;
+          targetUrl = args.slice(1).join(' ').trim().replace(/^["']|["']$/g, '');
+        } else {
+          targetUrl = args.join(' ').trim().replace(/^["']|["']$/g, '');
+        }
+
+        if (!targetUrl) {
+          sendPrivateSystemMessage(
+            'Usage: `/import <url>` or `/import <category> <url>`\n\n' +
+              'Supported Categories: `pf2e`, `spell`, `item`, `monster`\n\n' +
+              'Examples:\n' +
+              '• `/import https://raw.githubusercontent.com/foundryvtt/pf2e/master/packs/spells/1st-rank/acidic-burst.json`\n' +
+              '• `/import pf2e "https://github.com/foundryvtt/pf2e/blob/master/packs/equipment/healing-potion.json"`\n' +
+              '• `/import spell https://api.open5e.com/v1/spells/magic-missile/`\n' +
+              '• `/import monster https://api.open5e.com/v1/monsters/goblin/`',
+            'Reference Data Import',
+            '#6366f1'
+          );
+          return true;
+        }
+
+        const lowerUrl = targetUrl.toLowerCase();
+        const isPf2e =
+          category === 'pf2e' ||
+          lowerUrl.includes('foundryvtt/pf2e') ||
+          lowerUrl.includes('/packs/') ||
+          lowerUrl.endsWith('.json');
+
+        const isOpen5e =
+          lowerUrl.includes('open5e.com') || lowerUrl.includes('api.open5e.com');
+
+        sendPrivateSystemMessage(
+          `Importing reference data from \`${targetUrl.length > 50 ? `${targetUrl.slice(0, 50)}...` : targetUrl}\`...`,
+          'Reference Data Import',
+          '#3b82f6'
+        );
+
+        if (isPf2e) {
+          fetchPF2eFromUrl(targetUrl)
+            .then((block) => {
+              if (block) {
+                onSendMessage({
+                  id: crypto.randomUUID(),
+                  senderId: player.id,
+                  senderName: player.name,
+                  senderColor: player.color,
+                  text: `imported PF2e ${block.type}: **${block.name}**`,
+                  timestamp: Date.now(),
+                  statBlock: block,
+                });
+              } else {
+                sendPrivateSystemMessage(
+                  `Could not parse PF2e pack JSON from URL: ${targetUrl}`,
+                  'Reference Data Import',
+                  '#f43f5e'
+                );
+              }
+            })
+            .catch((err) => {
+              sendPrivateSystemMessage(
+                `Failed to import PF2e data: ${err.message || err}`,
+                'Reference Data Import',
+                '#f43f5e'
+              );
+            });
+          return true;
+        }
+
+        if (isOpen5e) {
+          let fetcherPromise: Promise<EntityStatBlock | null>;
+          if (category === 'spell' || lowerUrl.includes('/spells/')) {
+            const slug = lowerUrl.split('/spells/')[1]?.replace(/\/$/, '') || targetUrl;
+            fetcherPromise = fetchOpen5eSpell(slug);
+          } else if (category === 'monster' || lowerUrl.includes('/monsters/')) {
+            const slug = lowerUrl.split('/monsters/')[1]?.replace(/\/$/, '') || targetUrl;
+            fetcherPromise = fetchOpen5eMonster(slug);
+          } else {
+            const slug =
+              lowerUrl.split('/magicitems/')[1]?.replace(/\/$/, '') ||
+              lowerUrl.split('/weapons/')[1]?.replace(/\/$/, '') ||
+              targetUrl;
+            fetcherPromise = fetchOpen5eItem(slug);
+          }
+
+          fetcherPromise
+            .then((block) => {
+              if (block) {
+                onSendMessage({
+                  id: crypto.randomUUID(),
+                  senderId: player.id,
+                  senderName: player.name,
+                  senderColor: player.color,
+                  text: `imported 5e ${block.type}: **${block.name}**`,
+                  timestamp: Date.now(),
+                  statBlock: block,
+                });
+              } else {
+                sendPrivateSystemMessage(
+                  `Could not fetch Open5e reference data from URL: ${targetUrl}`,
+                  'Reference Data Import',
+                  '#f43f5e'
+                );
+              }
+            })
+            .catch((err) => {
+              sendPrivateSystemMessage(
+                `Failed to import Open5e data: ${err.message || err}`,
+                'Reference Data Import',
+                '#f43f5e'
+              );
+            });
+          return true;
+        }
+
+        // Generic fallback: fetch and inspect JSON format
+        fetch(targetUrl)
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          })
+          .then((jsonData) => {
+            if (jsonData && jsonData.system && jsonData.name) {
+              const block = parseFoundryPF2eJson(jsonData, targetUrl);
+              onSendMessage({
+                id: crypto.randomUUID(),
+                senderId: player.id,
+                senderName: player.name,
+                senderColor: player.color,
+                text: `imported ${block.type}: **${block.name}**`,
+                timestamp: Date.now(),
+                statBlock: block,
+              });
+            } else {
+              sendPrivateSystemMessage(
+                `Unsupported data format from ${targetUrl}. Expected Foundry PF2e pack JSON or Open5e URL.`,
+                'Reference Data Import',
+                '#f43f5e'
+              );
+            }
+          })
+          .catch((err) => {
+            sendPrivateSystemMessage(
+              `Failed to fetch or parse URL: ${err.message || err}`,
+              'Reference Data Import',
+              '#f43f5e'
+            );
+          });
+
         return true;
       }
   return false;

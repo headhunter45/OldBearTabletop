@@ -674,6 +674,110 @@ describe('Dice Parser & Slash Command Utilities', () => {
     assert.strictEqual(broadcastRolls.length, 1);
     assert.strictEqual(broadcastRolls[0].modifier, 6);
   });
+
+  it('handles /import command for PF2e pack JSON and Open5e URLs (OB-177, OB-153)', async () => {
+    const testPlayer = {
+      id: 'p-import',
+      name: 'GameMaster',
+      role: 'gm' as const,
+      color: '#6366f1',
+      connected: true,
+      assignedTokenIds: [],
+    };
+
+    const sentMessages: any[] = [];
+    const ctx = {
+      player: testPlayer,
+      onSendMessage: (msg: any) => sentMessages.push(msg),
+    };
+
+    // 1. Bare /import shows usage info ephemerally
+    const bareImport = processSlashCommand('/import', ctx);
+    assert.strictEqual(bareImport, true);
+    assert.strictEqual(sentMessages.length, 1);
+    assert.strictEqual(sentMessages[0].isEphemeral, true);
+    assert.ok(sentMessages[0].text.includes('Usage: `/import <url>`'));
+
+    // 2. Mock global fetch for PF2e pack import test
+    const originalFetch = global.fetch;
+    try {
+      global.fetch = async (url: any) => {
+        const urlStr = String(url);
+        if (urlStr.includes('acidic-burst')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              _id: 'rnNGALRtsjspFTws',
+              name: 'Acidic Burst',
+              type: 'spell',
+              system: {
+                time: { value: '2' },
+                level: { value: 1 },
+                damage: { '0': { formula: '2d6', type: 'acid' } },
+                description: { value: '<p>You burst with acid.</p>' },
+                traits: { value: ['acid', 'manipulate'] },
+              },
+            }),
+          } as any;
+        }
+        if (urlStr.includes('api.open5e.com/v1/spells/magic-missile')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              slug: 'magic-missile',
+              name: 'Magic Missile',
+              desc: 'Three darts of magical force.',
+              level: '1st-level',
+              level_int: 1,
+              school: 'Evocation',
+              casting_time: '1 action',
+              range: '120 feet',
+              duration: 'Instantaneous',
+            }),
+          } as any;
+        }
+        return { ok: false, status: 404, json: async () => ({}) } as any;
+      };
+
+      // Import PF2e URL
+      const pf2eHandled = processSlashCommand(
+        '/import https://raw.githubusercontent.com/foundryvtt/pf2e/master/packs/spells/1st-rank/acidic-burst.json',
+        ctx
+      );
+      assert.strictEqual(pf2eHandled, true);
+
+      // Wait for async fetch to finish
+      await new Promise((r) => setTimeout(r, 20));
+
+      const importedPf2eMsg = sentMessages.find(
+        (m) => m.statBlock && m.statBlock.name === 'Acidic Burst'
+      );
+      assert.ok(importedPf2eMsg, 'Found imported PF2e spell message');
+      assert.strictEqual(importedPf2eMsg.statBlock.sourceSystem, 'pf2e');
+      assert.strictEqual(importedPf2eMsg.statBlock.cost, '2_actions');
+      assert.strictEqual(importedPf2eMsg.statBlock.damageFormula, '2d6');
+
+      // Import Open5e spell URL
+      const open5eHandled = processSlashCommand(
+        '/import spell "https://api.open5e.com/v1/spells/magic-missile/"',
+        ctx
+      );
+      assert.strictEqual(open5eHandled, true);
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      const importedOpen5eMsg = sentMessages.find(
+        (m) => m.statBlock && m.statBlock.name === 'Magic Missile'
+      );
+      assert.ok(importedOpen5eMsg, 'Found imported Open5e spell message');
+      assert.strictEqual(importedOpen5eMsg.statBlock.sourceSystem, '5e');
+      assert.strictEqual(importedOpen5eMsg.statBlock.level, 1);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });
 
 

@@ -489,3 +489,22 @@ All tasks in your requested sequence have been implemented, tested, and individu
   3. Add the token to combat by clicking the **Init** button on the token bar, then open the **Initiative Tracker** window.
   4. Advance rounds or turns by clicking the **Next Turn** button (`>`) in the tracker.
   5. As turns transition, [StatusManager.ts](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/status/StatusManager.ts) automatically decrements counters (e.g. `Bleeding 3` → `Bleeding 2`), clears expired statuses (e.g. `Stunned` clears at the end of the turn), and posts status update audits to the chat panel.
+
+#### 4. OB-177 — Pathfinder 2e Reference Data Import (Foundry PF2e Packs) & `/import` Command
+- **Where to find it:** The **Chat Panel** input box.
+- **How to test:**
+  1. Open the Chat Panel.
+  2. Test the `/help` command: type `/help` and verify the `/import [category] <url>` command is listed.
+  3. Test bare `/import`: type `/import` and verify it displays the interactive usage and supported categories (`pf2e`, `spell`, `item`, `monster`).
+  4. Test importing a Foundry PF2e pack URL:
+     - Enter `/import https://raw.githubusercontent.com/foundryvtt/pf2e/master/packs/spells/1st-rank/acidic-burst.json`.
+     - Observe the imported `<StatBlockCard />` displayed in chat with:
+       - Action cost glyph: `◆◆` (2 Actions)
+       - Level / Rank subtitle: `Rank 1 Spell`
+       - Trait tags: `Acid`, `Concentrate`, `Manipulate`
+       - Damage: `2d6` (Acid)
+       - Defense: `Basic Reflex`
+       - Action buttons: `[+ Add to Sheet]`, `[Cast]`, and `[Spawn Token]`
+  5. Test inspection fallback:
+     - Type `/spell? acidic-burst`.
+     - If not present in local sheet or Open5e, OldBear automatically falls back to the PF2e reference database and displays the PF2e card with `◆◆` glyphs.
