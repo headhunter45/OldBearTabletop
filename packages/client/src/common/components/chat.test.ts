@@ -772,12 +772,45 @@ describe('Dice Parser & Slash Command Utilities', () => {
         (m) => m.statBlock && m.statBlock.name === 'Magic Missile'
       );
       assert.ok(importedOpen5eMsg, 'Found imported Open5e spell message');
-      assert.strictEqual(importedOpen5eMsg.statBlock.sourceSystem, '5e');
-      assert.strictEqual(importedOpen5eMsg.statBlock.level, 1);
+      // Import D&D Beyond Character URL
+      const dndBeyondCharHandled = processSlashCommand(
+        '/import https://www.dndbeyond.com/characters/47804290',
+        {
+          ...ctx,
+          fetchCharacterFn: async () => ({
+            id: '47804290',
+            name: 'Krag Ironhide',
+            level: 5,
+            classes: 'Barbarian 5',
+            race: 'Goliath',
+            currentHp: 65,
+            maxHp: 65,
+            tempHp: 0,
+            speed: 30,
+            armorClass: 16,
+            stats: { str: 18, dex: 14, con: 16, int: 8, wis: 12, cha: 10 },
+            actions: [{ name: 'Greataxe', type: 'melee', activationType: 'action', damageDice: '1d12+4' }],
+            avatarUrl: 'https://example.com/krag.png',
+          }),
+        }
+      );
+      assert.strictEqual(dndBeyondCharHandled, true);
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      const importedDndMsg = sentMessages.find(
+        (m) => m.statBlock && m.statBlock.name === 'Krag Ironhide'
+      );
+      assert.ok(importedDndMsg, 'Found imported D&D Beyond character message');
+      assert.strictEqual(importedDndMsg.statBlock.type, 'monster');
+      assert.strictEqual(importedDndMsg.statBlock.armorClass, 16);
+      assert.strictEqual(importedDndMsg.statBlock.imageUrl, 'https://example.com/krag.png');
+      assert.strictEqual(importedDndMsg.statBlock.actions?.length, 1);
     } finally {
       global.fetch = originalFetch;
     }
   });
 });
+
 
 

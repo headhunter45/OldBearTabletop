@@ -473,6 +473,7 @@ export interface EntityStatBlock extends EntityAction {
   actions?: EntityAction[];
   reactions?: EntityAction[];
   specialAbilities?: EntityAction[];
+  imageUrl?: string;
 }
 
 /**
@@ -702,6 +703,7 @@ export function convertCharacterToMonsterStatBlock(
     speed: `${char.speed} ft.`,
     stats: char.stats,
     actions,
+    imageUrl: char.avatarUrl,
     sourceSystem,
   };
 }

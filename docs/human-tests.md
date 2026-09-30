@@ -508,3 +508,15 @@ All tasks in your requested sequence have been implemented, tested, and individu
   5. Test inspection fallback:
      - Type `/spell? acidic-burst`.
      - If not present in local sheet or Open5e, OldBear automatically falls back to the PF2e reference database and displays the PF2e card with `◆◆` glyphs.
+
+#### 5. OB-143 — Direct Token Creation from D&D Beyond & Reference Cards
+- **Where to find it:** The **Chat Panel** reference cards and battlemap canvas.
+- **How to test:**
+  1. In the chat panel, import a monster or character:
+     - E.g. `/import https://www.dndbeyond.com/characters/47804290` or `/monster? goblin`.
+  2. In the displayed statblock card, click the **`[Spawn Token]`** button.
+  3. Notice:
+     - A confirmation toast appears: `Spawned "Goblin" token on the battlemap!`.
+     - A private ephemeral chat message confirms: `✨ Spawned token for Goblin on the canvas.`.
+     - A ready-to-fight token is instantiated on the canvas with appropriate size (e.g. Tiny = 0.8, Medium = 1, Large = 2, Huge = 3, Gargantuan = 4), populated HP, AC, and attacks on the token.
+     - Spawning multiple tokens staggers placement so they do not overlap.

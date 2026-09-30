@@ -2071,12 +2071,28 @@ export const AppVtt: React.FC = () => {
               })),
             };
 
+            const sizeStr = (statBlock.subtitle || '').toLowerCase();
+            let tokenSize = 1;
+            if (sizeStr.includes('gargantuan')) tokenSize = 4;
+            else if (sizeStr.includes('huge')) tokenSize = 3;
+            else if (sizeStr.includes('large')) tokenSize = 2;
+            else if (sizeStr.includes('tiny')) tokenSize = 0.8;
+
+            const existingTokens = Object.values(session.tokens || {});
+            let spawnX = 300;
+            let spawnY = 300;
+            while (existingTokens.some((t) => Math.abs(t.x - spawnX) < 15 && Math.abs(t.y - spawnY) < 15)) {
+              spawnX += 45;
+              spawnY += 45;
+            }
+
             const newToken: Token = {
               id: crypto.randomUUID(),
               name: statBlock.name,
-              x: 300,
-              y: 300,
-              size: 1,
+              x: spawnX,
+              y: spawnY,
+              size: tokenSize,
+              imageUrl: statBlock.imageUrl,
               mapId: session.activeMapId,
               color: '#10b981',
               hp: hpParsed,
@@ -2099,6 +2115,7 @@ export const AppVtt: React.FC = () => {
               };
             });
             networkRef.current?.send({ type: 'token-add', token: newToken });
+            showToast(`Spawned "${statBlock.name}" token on the battlemap!`);
           }}
           onBroadcastRoll={(r) => {
             handleRecordRoll(r);

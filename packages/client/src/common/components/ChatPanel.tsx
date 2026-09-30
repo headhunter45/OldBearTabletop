@@ -1240,6 +1240,13 @@ export function processSlashCommand(
           lowerUrl.includes('/packs/') ||
           lowerUrl.endsWith('.json');
 
+        const isDndBeyondChar =
+          category === 'dndbeyond' ||
+          lowerUrl.includes('dndbeyond.com/characters/') ||
+          lowerUrl.includes('character-service.dndbeyond.com');
+
+        const isDndBeyondMonster = lowerUrl.includes('dndbeyond.com/monsters/');
+
         const isOpen5e =
           lowerUrl.includes('open5e.com') || lowerUrl.includes('api.open5e.com');
 
@@ -1248,6 +1255,78 @@ export function processSlashCommand(
           'Reference Data Import',
           '#3b82f6'
         );
+
+        if (isDndBeyondChar) {
+          const idMatch =
+            targetUrl.match(/characters\/(\d+)/) ||
+            targetUrl.match(/character\/v\d+\/character\/(\d+)/) ||
+            targetUrl.match(/^(\d+)$/);
+          const charId = idMatch ? idMatch[1] : targetUrl;
+          const fetchFn =
+            context.fetchCharacterFn ||
+            (async (id: string) => {
+              const res = await fetch(`/api/dndbeyond/${encodeURIComponent(id)}`);
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            });
+
+          fetchFn(charId)
+            .then((char: DnDCharacter) => {
+              const block = convertCharacterToMonsterStatBlock(char, '5e');
+              block.sourceUrl = `https://www.dndbeyond.com/characters/${charId}`;
+              onSendMessage({
+                id: crypto.randomUUID(),
+                senderId: player.id,
+                senderName: player.name,
+                senderColor: player.color,
+                text: `imported D&D Beyond character: **${char.name}**`,
+                timestamp: Date.now(),
+                statBlock: block,
+              });
+            })
+            .catch((err: any) => {
+              sendPrivateSystemMessage(
+                `Failed to import D&D Beyond character: ${err.message || err}`,
+                'Reference Data Import',
+                '#f43f5e'
+              );
+            });
+          return true;
+        }
+
+        if (isDndBeyondMonster) {
+          const monsterMatch = targetUrl.match(/monsters\/(?:\d+-)?([a-z0-9-]+)/i);
+          const monsterSlug = monsterMatch ? monsterMatch[1] : targetUrl;
+          fetchOpen5eMonster(monsterSlug)
+            .then((block) => {
+              if (block) {
+                block.sourceUrl = targetUrl;
+                onSendMessage({
+                  id: crypto.randomUUID(),
+                  senderId: player.id,
+                  senderName: player.name,
+                  senderColor: player.color,
+                  text: `imported D&D Beyond monster: **${block.name}**`,
+                  timestamp: Date.now(),
+                  statBlock: block,
+                });
+              } else {
+                sendPrivateSystemMessage(
+                  `Could not find statblock for monster "${monsterSlug}".`,
+                  'Reference Data Import',
+                  '#f43f5e'
+                );
+              }
+            })
+            .catch((err) => {
+              sendPrivateSystemMessage(
+                `Failed to import monster: ${err.message || err}`,
+                'Reference Data Import',
+                '#f43f5e'
+              );
+            });
+          return true;
+        }
 
         if (isPf2e) {
           fetchPF2eFromUrl(targetUrl)
@@ -1762,6 +1841,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                           onSpawnMonsterToken
                             ? (block) => {
                                 onSpawnMonsterToken(block);
+                                onSendMessage({
+                                  id: crypto.randomUUID(),
+                                  senderId: 'system',
+                                  senderName: 'VTT Guide',
+                                  senderColor: '#10b981',
+                                  text: `✨ Spawned token for **${block.name}** on the canvas.`,
+                                  timestamp: Date.now(),
+                                  isEphemeral: true,
+                                  recipientId: player.id,
+                                });
                               }
                             : undefined
                         }
