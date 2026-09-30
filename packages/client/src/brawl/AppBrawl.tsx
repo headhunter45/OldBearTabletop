@@ -32,12 +32,14 @@ import { MarkerControls } from '../common/components/MarkerControls.js';
 import { TOAST_DURATION_MS } from '../common/config/toast.js';
 import { BrawlTopBar } from './components/BrawlTopBar.js';
 import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
+import { PhaseAnnouncementBanner } from './components/PhaseAnnouncementBanner.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
+import { advanceWargamePhase, WARGAME_PHASES, PhaseTransitionEvent } from './domain/phaseEngine.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const PHASES: WargamePhase[] = ['Command', 'Movement', 'Shooting', 'Charge', 'Fight', 'Morale'];
+const PHASES: WargamePhase[] = WARGAME_PHASES;
 
 export const AppBrawl: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -72,6 +74,7 @@ export const AppBrawl: React.FC = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [activePlayerIndex, setActivePlayerIndex] = useState<1 | 2>(1);
+  const [phaseAnnouncement, setPhaseAnnouncement] = useState<PhaseTransitionEvent | null>(null);
   const [p1ClockSeconds, setP1ClockSeconds] = useState(5400); // 90 min default
   const [p2ClockSeconds, setP2ClockSeconds] = useState(5400);
   const [isClockRunning, setIsClockRunning] = useState(false);
@@ -123,22 +126,74 @@ export const AppBrawl: React.FC = () => {
     return () => clearInterval(interval);
   }, [isClockRunning, activePlayerIndex]);
 
-  // Phase Stepper
+  // Phase Stepper (OB-157)
   const handleNextPhase = () => {
-    const nextIdx = (currentPhaseIndex + 1) % PHASES.length;
-    setCurrentPhaseIndex(nextIdx);
-    if (nextIdx === 0) {
-      setCurrentRound((prev) => prev + 1);
-      showToast(`Battle Round ${currentRound + 1} Begins!`);
-    } else {
-      showToast(`Phase: ${PHASES[nextIdx]}`);
+    const playersList = session ? Object.values(session.players) : [];
+    const p1 = playersList[0]?.name || 'Player 1';
+    const p2 = playersList[1]?.name || 'Player 2';
+
+    const { nextState, event } = advanceWargamePhase({
+      currentRound,
+      maxRounds: 5,
+      activePlayer: activePlayerIndex,
+      currentPhaseIndex,
+      player1Name: p1,
+      player2Name: p2,
+    });
+
+    setCurrentRound(nextState.currentRound);
+    setActivePlayerIndex(nextState.activePlayer);
+    setCurrentPhaseIndex(nextState.currentPhaseIndex);
+    setPhaseAnnouncement(event);
+    showToast(`${event.bannerTitle}: ${event.bannerSubtitle}`);
+
+    if (networkRef.current && session) {
+      const auditMsg: ChatMessage = {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        senderId: 'system',
+        senderName: 'Battle Overseer',
+        senderColor: '#f59e0b',
+        text: event.chatAuditMessage,
+        timestamp: Date.now(),
+        isCommand: true,
+      };
+      networkRef.current.send({ type: 'chat-message', message: auditMsg });
     }
   };
 
   const handleSwitchActivePlayer = () => {
     const nextPlayer = activePlayerIndex === 1 ? 2 : 1;
     setActivePlayerIndex(nextPlayer);
-    showToast(`Turn passed to Player ${nextPlayer}!`);
+    setCurrentPhaseIndex(0); // Start at Command phase for newly active player
+    const playersList = session ? Object.values(session.players) : [];
+    const nextPlayerName = (nextPlayer === 1 ? playersList[0]?.name : playersList[1]?.name) || `Player ${nextPlayer}`;
+
+    const event: PhaseTransitionEvent = {
+      type: 'turn_change',
+      previousPhase: WARGAME_PHASES[currentPhaseIndex],
+      newPhase: 'Command',
+      activePlayer: nextPlayer,
+      currentRound,
+      bannerTitle: `PLAYER ${nextPlayer} TURN`,
+      bannerSubtitle: `Round ${currentRound} • ${nextPlayerName}'s Command Phase`,
+      chatAuditMessage: `🛡️ **[Round ${currentRound}]** Turn passed to **${nextPlayerName}** (Command Phase).`,
+    };
+
+    setPhaseAnnouncement(event);
+    showToast(`Turn passed to ${nextPlayerName}!`);
+
+    if (networkRef.current && session) {
+      const auditMsg: ChatMessage = {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        senderId: 'system',
+        senderName: 'Battle Overseer',
+        senderColor: '#f59e0b',
+        text: event.chatAuditMessage,
+        timestamp: Date.now(),
+        isCommand: true,
+      };
+      networkRef.current.send({ type: 'chat-message', message: auditMsg });
+    }
   };
 
   // Keep engine in sync with session, player and tools
@@ -267,6 +322,12 @@ export const AppBrawl: React.FC = () => {
         onAddNewModel={() => setShowTokenPickerModal(true)}
         onToggleMobileDrawer={() => setIsMobileDrawerOpen(true)}
         voiceState={voiceState}
+      />
+
+      {/* Phase Transition Banner (OB-157) */}
+      <PhaseAnnouncementBanner
+        announcement={phaseAnnouncement}
+        onDismiss={() => setPhaseAnnouncement(null)}
       />
 
       {/* Main Left Toolbar */}

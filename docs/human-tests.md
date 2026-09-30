@@ -586,3 +586,20 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - As soon as the model exceeds the 2″ perimeter distance, a pulsing red dashed warning halo renders around the isolated model.
      - Moving the model back within 2″ of any unit member immediately clears the warning halo.
   5. For units of 6+ models, daisy-chaining models in a single line causes the two end models to display warning halos (because 6+ model units require $\ge 2$ neighbors in range). Bringing the models into a triangular or clustered formation clears the halos.
+
+#### 10. OB-157 — Battle Round Stepper & Wargaming Phase Engine
+- **Where to find it:** The Brawl top bar phase controller and canvas banner (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`). Note that the top bar displays `Round 1 | Command >` and `P1: 90:00 / P2: 90:00`.
+  2. Click the phase button (initially showing `Command >`).
+  3. Notice:
+     - The phase button advances to `Movement >`.
+     - An animated banner slides in from the top: `MOVEMENT PHASE` with `Round 1 • Player 1's Turn`.
+     - A synchronized audit message is logged in chat: `⚔️ [Round 1] Player 1 advanced to Movement Phase.`
+  4. Step through Shooting, Charge, Fight, and Morale.
+  5. Stepping past Morale automatically completes Player 1's turn and starts Player 2's Command phase:
+     - Top bar highlights Player 2.
+     - Animated banner displays `PLAYER 2 TURN: COMMAND` (`Round 1 • Player 2's Turn begins (+1 CP)`).
+     - Chat logs the turn handover and CP grant.
+  6. Stepping Player 2 through Morale completes Round 1 and begins `BATTLE ROUND 2` with Player 1's Command Phase.
+  7. Alternatively, clicking **Pass Turn** immediately hands over the active turn to the opponent at Command Phase with audit logging.

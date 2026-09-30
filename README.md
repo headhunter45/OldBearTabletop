@@ -558,6 +558,12 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Evaluates tabletop squad coherency in real time as models move (2″ horizontal distance threshold).
    - Enforces graph rules: squads of 2–5 models require each model within distance of $\ge 1$ neighbor; squads of 6+ models require $\ge 2$ neighbors.
    - Models violating coherency display a pulsing red warning halo directly on the battlemap canvas.
+5. **Battle Round Stepper & Turn Phase Engine**:
+   - Manages Battle Rounds 1 through 5, alternating turns between Player 1 and Player 2.
+   - Standard 6-phase sequence: Command ➔ Movement ➔ Shooting ➔ Charge ➔ Fight ➔ Morale.
+   - Animated phase transition banners with custom phase icons and subtitles.
+   - Synchronized chat audit logs and toast notifications whenever turns or phases advance.
+   - Command Point (CP) grants upon turn turnover (+1 CP per round start).
 
 ---
 
