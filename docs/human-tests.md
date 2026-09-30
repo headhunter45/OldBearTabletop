@@ -628,3 +628,26 @@ All tasks in your requested sequence have been implemented, tested, and individu
   8. Overtime tracking:
      - When a player's clock drops below 10 minutes, the timer turns amber. Below 5 minutes, it turns bright orange.
      - When time drops past zero, it displays `-MM:SS OT` in pulsing red without stopping or clamping.
+
+#### 12. OB-159 — Scoreboard & Resource Tracker (VP, CP, Casualties) with Audit Trail
+- **Where to find it:** The Brawl top bar trophy button (`VP: 0 - 0`) and the Scoreboard Modal (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`). Note the `VP: 0 - 0` indicator with the Trophy icon in the top right.
+  2. Click the `VP: 0 - 0` button to open the **Match Scoreboard & Resource Tracker**.
+  3. Notice:
+     - Dual columns for Player 1 and Player 2 with dedicated color accents.
+     - Large TOTAL VICTORY POINTS counters initialized to 0.
+     - Primary VP, Secondary VP, Command Points (CP initialized to 1), and Casualties rows.
+  4. Enter an optional reason: e.g. `Take and Hold primary objective`.
+  5. Click `+4` on Player 1's Primary VP:
+     - Player 1 Primary VP updates to 4, and Total VP automatically computes to 4.
+     - Top bar indicator immediately updates to `VP: 4 - 0`.
+     - An animated toast notification displays: `🎯 [Player 1] Primary VP +4 ➔ 4 (Take and Hold primary objective). Total VP: 4`.
+     - A synchronized chat message is dispatched to all peers with player-colored attribution.
+  6. Click `-1 CP` under Player 1:
+     - Command Points decrement from 1 to 0.
+     - Toast and chat audit logs the CP expenditure.
+  7. Switch to the **Audit Log** tab at the top of the modal:
+     - All timestamped events appear in reverse-chronological order with colored player indicators.
+  8. Click **Reset Scores**:
+     - Prompts and resets all scores back to 0 VP and 1 CP with toast confirmation.

@@ -34,11 +34,19 @@ import { BrawlTopBar } from './components/BrawlTopBar.js';
 import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
 import { PhaseAnnouncementBanner } from './components/PhaseAnnouncementBanner.js';
 import { ChessClockWidget } from './components/ChessClockWidget.js';
+import { ScoreboardModal } from './components/ScoreboardModal.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
 import { advanceWargamePhase, WARGAME_PHASES, PhaseTransitionEvent } from './domain/phaseEngine.js';
 import { playLowTimeWarningSound, playOvertimeAlarmSound, playClockSwitchSound } from './domain/chessClock.js';
+import {
+  ScoreboardState,
+  ScoreAuditEntry,
+  ResourceType,
+  createInitialScoreboard,
+  updatePlayerResource,
+} from './domain/scoreboardEngine.js';
 import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const PHASES: WargamePhase[] = WARGAME_PHASES;
@@ -82,6 +90,9 @@ export const AppBrawl: React.FC = () => {
   const [isClockRunning, setIsClockRunning] = useState(false);
 
   // Modals & Flyouts
+  const [scoreboard, setScoreboard] = useState<ScoreboardState>(() => createInitialScoreboard());
+  const [scoreAuditTrail, setScoreAuditTrail] = useState<ScoreAuditEntry[]>([]);
+  const [showScoreboardModal, setShowScoreboardModal] = useState(false);
   const [showArmyRoster, setShowArmyRoster] = useState(false);
   const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
@@ -160,6 +171,15 @@ export const AppBrawl: React.FC = () => {
     setPhaseAnnouncement(event);
     showToast(`${event.bannerTitle}: ${event.bannerSubtitle}`);
 
+    if (event.commandPointsGranted) {
+      handleUpdateScoreResource(
+        event.commandPointsGranted.player,
+        'commandPoints',
+        event.commandPointsGranted.amount,
+        'Turn turnover CP grant'
+      );
+    }
+
     if (networkRef.current && session) {
       const auditMsg: ChatMessage = {
         id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -172,6 +192,39 @@ export const AppBrawl: React.FC = () => {
       };
       networkRef.current.send({ type: 'chat-message', message: auditMsg });
     }
+  };
+
+  // Scoreboard Resource Adjuster (OB-159)
+  const handleUpdateScoreResource = (
+    player: 1 | 2,
+    resource: ResourceType,
+    delta: number,
+    reason?: string
+  ) => {
+    const { nextState, audit } = updatePlayerResource(scoreboard, player, resource, delta, reason);
+    setScoreboard(nextState);
+    setScoreAuditTrail((prev) => [audit, ...prev]);
+    showToast(audit.formattedMessage.replace(/\*\*/g, ''));
+
+    if (networkRef.current && session) {
+      const auditMsg: ChatMessage = {
+        id: audit.id,
+        senderId: 'system',
+        senderName: 'Score Overseer',
+        senderColor: player === 1 ? '#38bdf8' : '#ec4899',
+        text: audit.formattedMessage,
+        timestamp: audit.timestamp,
+        isCommand: true,
+      };
+      networkRef.current.send({ type: 'chat-message', message: auditMsg });
+    }
+  };
+
+  const handleResetScoreboard = () => {
+    const p1 = scoreboard.p1Name;
+    const p2 = scoreboard.p2Name;
+    setScoreboard(createInitialScoreboard(p1, p2));
+    showToast('Match scores reset to 0 VP / 1 CP');
   };
 
   const handleSwitchActivePlayer = () => {
@@ -325,9 +378,12 @@ export const AppBrawl: React.FC = () => {
         p1ClockSeconds={p1ClockSeconds}
         p2ClockSeconds={p2ClockSeconds}
         isClockRunning={isClockRunning}
+        p1TotalVp={scoreboard.p1.totalVp}
+        p2TotalVp={scoreboard.p2.totalVp}
         onToggleClock={() => setIsClockRunning((prev) => !prev)}
         onNextPhase={handleNextPhase}
         onSwitchActivePlayer={handleSwitchActivePlayer}
+        onOpenScoreboard={() => setShowScoreboardModal(true)}
         onOpenArmyRoster={() => setShowArmyRoster(true)}
         onOpenDice={() => setShowDiceRoller((prev) => !prev)}
         onOpenMaps={() => setShowMapManager(true)}
@@ -477,6 +533,17 @@ export const AppBrawl: React.FC = () => {
             showToast(`Match clocks reset to ${secs / 60} minutes`);
           }}
           onClose={() => setShowChessClockHUD(false)}
+        />
+      )}
+
+      {/* Scoreboard Modal (OB-159) */}
+      {showScoreboardModal && (
+        <ScoreboardModal
+          scoreboard={scoreboard}
+          onUpdateResource={handleUpdateScoreResource}
+          onResetScoreboard={handleResetScoreboard}
+          auditTrail={scoreAuditTrail}
+          onClose={() => setShowScoreboardModal(false)}
         />
       )}
 

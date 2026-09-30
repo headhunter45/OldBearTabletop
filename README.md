@@ -571,6 +571,12 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Audio alerts at 5 minutes, 1 minute, and overtime alarm.
    - Negative overtime tracking (`-MM:SS OT`) with pulsing red indicators without hard-clamping time.
    - Floating draggable HUD widget (`ChessClockWidget`) with compact minimization mode and popout toggle in top bar.
+7. **Scoreboard & Game Resource Tracker (VP, CP, Casualties)**:
+   - Live match scoreboard modal tracking Primary VP, Secondary VP, Total VP (capped at 100), Command Points, and Casualties (models & points lost) per player.
+   - Live VP score badge directly in the top bar (`VP: 12 - 8`).
+   - Quick-increment buttons (`+4` primary, `+2/+5` secondary, `+5` casualties) and CP spending shortcuts.
+   - Comprehensive audit trail: every adjustment creates a formatted, color-coded chat announcement and toast notification with optional audit reasons.
+   - Integrated with Turn Phase Engine: automatically awards +1 CP upon turn turnover.
 
 ---
 

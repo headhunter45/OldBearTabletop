@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Shield,
   MessageSquareHeart,
+  ExternalLink,
+  Trophy,
 } from 'lucide-react';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../../common/network/VoiceManager.js';
@@ -17,7 +19,6 @@ import { FULL_VERSION_STRING } from '../../common/config/version.js';
 import { WargamePhase } from '../types/brawl.js';
 import { switchGameMode, isSingleGameModeEnforced } from '../../App.js';
 import { formatChessClock, getClockWarningStatus } from '../domain/chessClock.js';
-import { ExternalLink } from 'lucide-react';
 
 interface BrawlTopBarProps {
   roomName: string;
@@ -31,9 +32,12 @@ interface BrawlTopBarProps {
   p1ClockSeconds: number;
   p2ClockSeconds: number;
   isClockRunning: boolean;
+  p1TotalVp?: number;
+  p2TotalVp?: number;
   onToggleClock: () => void;
   onNextPhase: () => void;
   onSwitchActivePlayer: () => void;
+  onOpenScoreboard?: () => void;
   onOpenArmyRoster: () => void;
   onOpenDice: () => void;
   onOpenMaps: () => void;
@@ -59,9 +63,12 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   p1ClockSeconds,
   p2ClockSeconds,
   isClockRunning,
+  p1TotalVp = 0,
+  p2TotalVp = 0,
   onToggleClock,
   onNextPhase,
   onSwitchActivePlayer,
+  onOpenScoreboard,
   onOpenArmyRoster,
   onOpenDice,
   onOpenMaps,
@@ -69,6 +76,7 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   onOpenBackup,
   onAddNewModel,
   onToggleMobileDrawer,
+  onToggleChessClockHUD,
   voiceState,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -260,6 +268,31 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
       </div>
 
       <div className="top-bar-right">
+        {/* Scoreboard Button (OB-159) */}
+        {onOpenScoreboard && (
+          <button
+            className="btn-glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: '#f59e0b',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              background: 'rgba(245, 158, 11, 0.12)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+            onClick={onOpenScoreboard}
+            title="Open Match Scoreboard (VP, CP, Casualties)"
+          >
+            <Trophy size={13} />
+            <span>VP: {p1TotalVp} - {p2TotalVp}</span>
+          </button>
+        )}
+
         {/* Army Roster Button */}
         <button
           className="btn-primary"
