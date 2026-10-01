@@ -14,7 +14,10 @@ import {
   Trophy,
   Target,
   Compass,
+  Gavel,
+  Eye,
 } from 'lucide-react';
+import { BrawlUserRole } from '../domain/toManager.js';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../../common/network/VoiceManager.js';
 import { FULL_VERSION_STRING } from '../../common/config/version.js';
@@ -42,6 +45,8 @@ interface BrawlTopBarProps {
   onOpenScoreboard?: () => void;
   onOpenObjectives?: () => void;
   onOpenStaging?: () => void;
+  onOpenToModal?: () => void;
+  currentRole?: BrawlUserRole;
   onOpenArmyRoster: () => void;
   onOpenDice: () => void;
   onOpenMaps: () => void;
@@ -75,6 +80,8 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   onOpenScoreboard,
   onOpenObjectives,
   onOpenStaging,
+  onOpenToModal,
+  currentRole = 'player',
   onOpenArmyRoster,
   onOpenDice,
   onOpenMaps,
@@ -346,6 +353,31 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
           >
             <Compass size={13} />
             <span>Deployment</span>
+          </button>
+        )}
+
+        {/* TO & Spectator Button (OB-163) */}
+        {onOpenToModal && (
+          <button
+            className="btn-glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: currentRole === 'to' ? '#f59e0b' : currentRole === 'spectator' ? '#38bdf8' : 'var(--text-secondary)',
+              border: `1px solid ${currentRole === 'to' ? 'rgba(245, 158, 11, 0.4)' : currentRole === 'spectator' ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255, 255, 255, 0.12)'}`,
+              background: currentRole === 'to' ? 'rgba(245, 158, 11, 0.15)' : currentRole === 'spectator' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(0, 0, 0, 0.25)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+            onClick={onOpenToModal}
+            title="Tournament Organizer & Spectator Settings"
+          >
+            {currentRole === 'spectator' ? <Eye size={13} /> : <Gavel size={13} />}
+            <span>{currentRole === 'to' ? 'TO Mode' : currentRole === 'spectator' ? 'Spectator' : 'TO / Admin'}</span>
           </button>
         )}
 

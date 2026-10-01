@@ -599,6 +599,11 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
       - **Strategic Reserves & Deep Strike**: Off-table staging area for units held in reserve.
       - **Embarked Transports**: Staging area for models embarked inside vehicle transports.
     - One-click model transfers: send selected model(s) to Casualty Tray, send to Reserves, or revive/deploy models back onto the battlefield.
+11. **Tournament Organizer (TO) Mode, Match Privacy & Spectator Controls (OB-163)**:
+    - **TO Administrative Role**: Administrative referee mode allowing Tournament Organizers to issue official rulings broadcast directly into table chat with `⚖️ [OFFICIAL TOURNAMENT RULING]` attribution.
+    - **Score & Clock Overrides**: Administrative controls to override Primary/Secondary VP, Command Points, and Casualty tallies with mandatory audit logging, as well as applying chess clock bonuses or penalties (`+/-1m`, `+/-5m`, or match pause).
+    - **Spectator Controls & Match Privacy**: Read-only spectator mode with toggleable privacy settings to redact hidden secondary objectives and hide off-table Strategic Reserves from spectators.
+    - **Export Match Reports**: Export comprehensive tournament match reports in JSON or copyable/printable match card format (summarizing victory points, differential, round count, casualty totals, clock remaining, official TO rulings, and complete event audit logs).
 
 ---
 

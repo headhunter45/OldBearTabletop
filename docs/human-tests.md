@@ -716,3 +716,37 @@ All tasks in your requested sequence have been implemented, tested, and individu
        - Click **✨ Revive to Table**:
          - The models are returned to the active battlefield at the center coordinates.
          - Their HP is restored to maximum and the `'Slain'` condition is automatically cleared.
+
+#### 16. OB-163 — Tournament Organizer (TO) Mode, Match Privacy & Spectator Controls
+- **Where to find it:** The **TO / Admin** button in the Brawl top bar (gavel icon) and the Tournament Organizer modal (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`).
+  2. In the top bar, click the **TO / Admin** button to open the Tournament Organizer & Spectator modal.
+  3. Role Switching:
+     - Switch between **Player**, **TO (Referee)**, and **Spectator**:
+       - Selecting **TO (Referee)** turns the top bar badge gold (`TO Mode`) and unlocks administrative controls and custom TO handle input.
+       - Selecting **Spectator** turns the top bar badge cyan (`Spectator`), locks canvas tool manipulation, and redacts hidden reserve units.
+  4. Score & Clock Admin Overrides:
+     - Select Player 1 or Player 2.
+     - Adjust Primary VP, Secondary VP, Command Points, or Casualties.
+     - Enter reason: e.g. `Fixed mission card scoring error`.
+     - Click **Apply Administrative Score Override**:
+       - Scoreboard and top bar indicators immediately update.
+       - Chat broadcasts: `⚖️ [TO Head Judge] Adjusted Player 1 scores...`.
+     - Click `+5m` or `-1m` on the chess clock controls:
+       - The player's chess clock updates immediately with a toast notice.
+  5. Official Rulings:
+     - Switch to the **Official Rulings** tab.
+     - Enter Context: `Can unit advance and perform tactical action?`.
+     - Enter Ruling: `Eligible to shoot units may perform actions unless advanced without an assault weapon.`.
+     - Click **Broadcast Official Ruling to Table Chat**:
+       - Dispatches a formatted gold announcement to table chat: `⚖️ OFFICIAL TOURNAMENT RULING`.
+       - Appends ruling to the permanent ruling history.
+  6. Match Privacy & Spectator Restrictions:
+     - Switch to the **Match Privacy** tab.
+     - Toggle `Hide off-table Strategic Reserves from spectators`.
+     - In Spectator role, units located inside the Strategic Reserves submap are hidden from view.
+  7. Export Match Report:
+     - Switch to the **Export Match Report** tab.
+     - Click **Download Match Report (JSON)**: downloads structured `.json` summary.
+     - Click **Copy Printable Match Card**: copies formatted plaintext tournament score card summarizing total VP, VP differential, round count, casualties, and rulings.

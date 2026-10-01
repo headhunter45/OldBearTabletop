@@ -37,7 +37,15 @@ import { ChessClockWidget } from './components/ChessClockWidget.js';
 import { ScoreboardModal } from './components/ScoreboardModal.js';
 import { ObjectivesModal } from './components/ObjectivesModal.js';
 import { DeploymentStagingModal } from './components/DeploymentStagingModal.js';
+import { TournamentOrganizerModal } from './components/TournamentOrganizerModal.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
+import {
+  BrawlUserRole,
+  OfficialRuling,
+  MatchPrivacySettings,
+  formatOfficialRulingMessage,
+  filterTokensForSpectator,
+} from './domain/toManager.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
 import {
@@ -103,6 +111,16 @@ export const AppBrawl: React.FC = () => {
   const [objectives, setObjectives] = useState<ObjectiveMarker[]>([]);
   const [showObjectivesModal, setShowObjectivesModal] = useState(false);
   const [showDeploymentModal, setShowDeploymentModal] = useState(false);
+  const [brawlRole, setBrawlRole] = useState<BrawlUserRole>('player');
+  const brawlRoleRef = useRef<BrawlUserRole>(brawlRole);
+  brawlRoleRef.current = brawlRole;
+  const [showToModal, setShowToModal] = useState(false);
+  const [rulings, setRulings] = useState<OfficialRuling[]>([]);
+  const [matchPrivacy, setMatchPrivacy] = useState<MatchPrivacySettings>({
+    allowSpectators: true,
+    hideSecretObjectives: false,
+    hideReservesFromSpectators: false,
+  });
   const [showArmyRoster, setShowArmyRoster] = useState(false);
   const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
@@ -324,7 +342,10 @@ export const AppBrawl: React.FC = () => {
   useEffect(() => {
     if (!engineRef.current) return;
     if (session) {
-      const coherentTokens = updateTokensCoherency(session.tokens);
+      const visibleTokens = brawlRole === 'spectator'
+        ? filterTokensForSpectator(session.tokens, matchPrivacy, currentMap?.submaps)
+        : session.tokens;
+      const coherentTokens = updateTokensCoherency(visibleTokens);
       engineRef.current.setSession({ ...session, tokens: coherentTokens });
       const mapIdToView = session.activeMapId || session.maps[0]?.id || '';
       if (mapIdToView && engineRef.current.currentMapId !== mapIdToView) {
@@ -336,7 +357,7 @@ export const AppBrawl: React.FC = () => {
     }
     engineRef.current.activeTool = activeTool;
     engineRef.current.snapEnabled = snapEnabled;
-  }, [session, localPlayer, activeTool, snapEnabled]);
+  }, [session, localPlayer, activeTool, snapEnabled, brawlRole, matchPrivacy, currentMap]);
 
   // Initialize CanvasEngine & Network
   useEffect(() => {
@@ -349,6 +370,7 @@ export const AppBrawl: React.FC = () => {
         setSelectedTokens(token ? [token] : []);
       },
       onTokenMove: (token) => {
+        if (brawlRoleRef.current === 'spectator') return; // Spectators cannot move tokens
         setSession((prev) => {
           if (!prev) return prev;
           const nextTokens = prev.tokens.map((t) => (t.id === token.id ? { ...t, x: token.x, y: token.y } : t));
@@ -443,6 +465,8 @@ export const AppBrawl: React.FC = () => {
         onOpenScoreboard={() => setShowScoreboardModal(true)}
         onOpenObjectives={() => setShowObjectivesModal(true)}
         onOpenStaging={() => setShowDeploymentModal(true)}
+        onOpenToModal={() => setShowToModal(true)}
+        currentRole={brawlRole}
         onOpenArmyRoster={() => setShowArmyRoster(true)}
         onOpenDice={() => setShowDiceRoller((prev) => !prev)}
         onOpenMaps={() => setShowMapManager(true)}
@@ -649,6 +673,59 @@ export const AppBrawl: React.FC = () => {
           onRecordCasualties={(player, count, reason) => {
             handleUpdateScoreResource(player, 'casualties', count, reason);
           }}
+          onShowToast={showToast}
+        />
+      )}
+
+      {/* Tournament Organizer & Spectator Controls Modal (OB-163) */}
+      {showToModal && (
+        <TournamentOrganizerModal
+          currentRole={brawlRole}
+          scoreboard={scoreboard}
+          battleRound={battleRound}
+          p1ClockSeconds={p1ClockSeconds}
+          p2ClockSeconds={p2ClockSeconds}
+          isClockRunning={isClockRunning}
+          scoreAuditTrail={scoreAuditTrail}
+          rulings={rulings}
+          privacySettings={matchPrivacy}
+          onRoleChange={setBrawlRole}
+          onUpdateScoreboard={(nextSb, audit) => {
+            setScoreboard(nextSb);
+            setScoreAuditTrail((prev) => [audit, ...prev]);
+            showToast(audit.formattedMessage.replace(/\*\*/g, ''));
+            if (networkRef.current && session) {
+              const chatMsg: ChatMessage = {
+                id: audit.id,
+                senderId: 'system',
+                senderName: 'Tournament Referee',
+                senderColor: '#f59e0b',
+                text: audit.formattedMessage,
+                timestamp: Date.now(),
+                isCommand: true,
+              };
+              networkRef.current.send({ type: 'chat-message', message: chatMsg });
+            }
+          }}
+          onAdjustClock={(player, delta) => {
+            if (player === 1) {
+              setP1ClockSeconds((prev) => prev + delta);
+            } else {
+              setP2ClockSeconds((prev) => prev + delta);
+            }
+            showToast(`Adjusted Player ${player} clock by ${delta > 0 ? `+${delta / 60}m` : `${delta / 60}m`}`);
+          }}
+          onToggleClockRunning={() => setIsClockRunning((prev) => !prev)}
+          onIssueRuling={(ruling) => {
+            setRulings((prev) => [...prev, ruling]);
+            const chatMsg = formatOfficialRulingMessage(ruling);
+            if (networkRef.current && session) {
+              networkRef.current.send({ type: 'chat-message', message: chatMsg });
+            }
+            showToast(`Official Ruling broadcast by ${ruling.toName}`);
+          }}
+          onUpdatePrivacy={setMatchPrivacy}
+          onClose={() => setShowToModal(false)}
           onShowToast={showToast}
         />
       )}
