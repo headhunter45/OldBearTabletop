@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Trophy,
   Target,
+  Compass,
 } from 'lucide-react';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../../common/network/VoiceManager.js';
@@ -40,6 +41,7 @@ interface BrawlTopBarProps {
   onSwitchActivePlayer: () => void;
   onOpenScoreboard?: () => void;
   onOpenObjectives?: () => void;
+  onOpenStaging?: () => void;
   onOpenArmyRoster: () => void;
   onOpenDice: () => void;
   onOpenMaps: () => void;
@@ -72,6 +74,7 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   onSwitchActivePlayer,
   onOpenScoreboard,
   onOpenObjectives,
+  onOpenStaging,
   onOpenArmyRoster,
   onOpenDice,
   onOpenMaps,
@@ -318,6 +321,31 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
           >
             <Target size={13} />
             <span>Objectives</span>
+          </button>
+        )}
+
+        {/* Deployment & Staging Button (OB-162) */}
+        {onOpenStaging && (
+          <button
+            className="btn-glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: '#a78bfa',
+              border: '1px solid rgba(167, 139, 250, 0.35)',
+              background: 'rgba(167, 139, 250, 0.12)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+            onClick={onOpenStaging}
+            title="Open Deployment Zones & Staging Submaps"
+          >
+            <Compass size={13} />
+            <span>Deployment</span>
           </button>
         )}
 

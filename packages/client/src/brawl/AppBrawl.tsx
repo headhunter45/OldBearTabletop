@@ -36,6 +36,7 @@ import { PhaseAnnouncementBanner } from './components/PhaseAnnouncementBanner.js
 import { ChessClockWidget } from './components/ChessClockWidget.js';
 import { ScoreboardModal } from './components/ScoreboardModal.js';
 import { ObjectivesModal } from './components/ObjectivesModal.js';
+import { DeploymentStagingModal } from './components/DeploymentStagingModal.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
@@ -101,6 +102,7 @@ export const AppBrawl: React.FC = () => {
   const [showScoreboardModal, setShowScoreboardModal] = useState(false);
   const [objectives, setObjectives] = useState<ObjectiveMarker[]>([]);
   const [showObjectivesModal, setShowObjectivesModal] = useState(false);
+  const [showDeploymentModal, setShowDeploymentModal] = useState(false);
   const [showArmyRoster, setShowArmyRoster] = useState(false);
   const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
@@ -440,6 +442,7 @@ export const AppBrawl: React.FC = () => {
         onSwitchActivePlayer={handleSwitchActivePlayer}
         onOpenScoreboard={() => setShowScoreboardModal(true)}
         onOpenObjectives={() => setShowObjectivesModal(true)}
+        onOpenStaging={() => setShowDeploymentModal(true)}
         onOpenArmyRoster={() => setShowArmyRoster(true)}
         onOpenDice={() => setShowDiceRoller((prev) => !prev)}
         onOpenMaps={() => setShowMapManager(true)}
@@ -614,6 +617,39 @@ export const AppBrawl: React.FC = () => {
           onScoreObjectives={handleScoreObjectives}
           onRemoveObjective={handleRemoveObjective}
           onClose={() => setShowObjectivesModal(false)}
+        />
+      )}
+
+      {/* Deployment & Staging Submaps Modal (OB-162) */}
+      {showDeploymentModal && currentMap && (
+        <DeploymentStagingModal
+          map={currentMap}
+          tokens={session?.tokens || []}
+          selectedTokenIds={selectedTokenId ? [selectedTokenId] : []}
+          onClose={() => setShowDeploymentModal(false)}
+          onUpdateMap={(updatedMap) => {
+            setSession((prev) => {
+              if (!prev) return prev;
+              const nextMaps = prev.maps.map((m) => (m.id === updatedMap.id ? updatedMap : m));
+              return { ...prev, maps: nextMaps };
+            });
+            if (networkRef.current && session) {
+              networkRef.current.send({
+                type: 'map-update',
+                map: updatedMap,
+              });
+            }
+          }}
+          onUpdateTokens={(updatedTokens) => {
+            setSession((prev) => (prev ? { ...prev, tokens: updatedTokens } : prev));
+            updatedTokens.forEach((t) => {
+              networkRef.current?.send({ type: 'token-update', token: t });
+            });
+          }}
+          onRecordCasualties={(player, count, reason) => {
+            handleUpdateScoreResource(player, 'casualties', count, reason);
+          }}
+          onShowToast={showToast}
         />
       )}
 

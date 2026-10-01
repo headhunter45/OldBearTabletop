@@ -588,6 +588,17 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Intelligent base shape & size auto-inferencing (e.g. 120x75mm rectangular vehicle hulls, 60mm dreadnought/monster bases, 40mm terminator bases, 28mm light infantry bases, and 32mm standard bases).
    - Strict User-Generated Content (UGC) compliance: processes player-provided rosters locally without bundling proprietary rule texts.
    - Quick **Import** button directly inside the Army Roster Flyout header with validation feedback and toast confirmations.
+10. **Deployment Zones, Casualty Trays & Staging Submaps (OB-162)**:
+    - Pre-configured competitive deployment layouts matching standard mission pack layouts:
+      - **Dawn of War**: 12″ deep zones along long North & South edges.
+      - **Hammer and Anvil**: 24″ deep zones along short West & East edges.
+      - **Search and Destroy**: Quarter table deployment with a 9″ center exclusion bubble.
+      - **Crucible of Battle**: Diagonal wedge deployment with an 18″ corridor.
+    - Dedicated off-table staging submaps:
+      - **Casualty Tray / Graveyard**: Off-table staging area for eliminated models (marks models `Slain`, resets HP to 0, automatically records casualties in match scoreboard).
+      - **Strategic Reserves & Deep Strike**: Off-table staging area for units held in reserve.
+      - **Embarked Transports**: Staging area for models embarked inside vehicle transports.
+    - One-click model transfers: send selected model(s) to Casualty Tray, send to Reserves, or revive/deploy models back onto the battlefield.
 
 ---
 

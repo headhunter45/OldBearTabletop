@@ -688,3 +688,31 @@ All tasks in your requested sequence have been implemented, tested, and individu
   5. Expand any unit and click **Deploy Unit to Battlemap**:
      - The models are placed onto the canvas with auto-inferred base sizes (e.g. 120x75mm for tanks, 40mm for terminators/characters, 32mm for standard infantry, 28mm for grots).
   6. Attempting to upload an invalid file extension (e.g. `.png`) gracefully shows a red error banner without crashing the application.
+
+#### 15. OB-162 — Deployment Zones, Casualty Trays & Staging Submap Templates
+- **Where to find it:** The **Deployment** button in the Brawl top bar (compass icon) and the Deployment & Staging modal (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`).
+  2. Click the **Deployment** button in the top bar to open the **Deployment Zones & Staging Submaps** modal.
+  3. Select **Dawn of War** and ensure both *Include Casualty Tray* and *Include Strategic Reserves* are checked, then click **Apply Tournament Deployment Setup**:
+     - The battlemap updates with two 12″ deep shaded deployment zones: Player 1 (North, Cyan `#38bdf8`) and Player 2 (South, Pink `#f43f5e`).
+     - A dark crimson `💀 Casualty Tray / Graveyard` submap is placed below the battlefield table.
+     - A dark indigo `🚀 Strategic Reserves & Deep Strike` submap is placed above the table.
+     - Notice each submap renders with distinct dashed boundary lines and an identification badge pill.
+  4. Select other presets:
+     - **Hammer and Anvil**: Re-configures the map with 24″ zones on the West and East edges.
+     - **Search and Destroy**: Re-configures with NW and SE quarter zones with a 9″ exclusion bubble.
+     - **Crucible of Battle**: Configures diagonal wedge zones.
+  5. One-Click Model Transfers:
+     - On the battlemap, click any token to select it (or box-select multiple models).
+     - Open the **Deployment & Staging** modal:
+       - The modal displays `Selected: <Model Names> (N models)`.
+       - Click **💀 Send to Casualty Tray**:
+         - The selected models are instantly moved into the Casualty Tray submap bounds in a neat grid.
+         - Their HP drops to `0` and the condition `'Slain'` is applied.
+         - The match scoreboard automatically records the casualties.
+       - Click **🚀 Send to Reserves**:
+         - Moves the selected models into the Strategic Reserves submap area.
+       - Click **✨ Revive to Table**:
+         - The models are returned to the active battlefield at the center coordinates.
+         - Their HP is restored to maximum and the `'Slain'` condition is automatically cleared.
