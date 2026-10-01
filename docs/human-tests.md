@@ -672,3 +672,19 @@ All tasks in your requested sequence have been implemented, tested, and individu
   9. Move 1 Player 2 model with 3 OC (e.g. dreadnought/vehicle) into Objective 1's zone:
      - Objective 1 now shows **Player 2 Control** in pink because 3 OC > 2 OC.
   10. Equal OC ties (e.g. 2 OC vs 2 OC) correctly flag the marker as **Contested** and award 0 VP.
+
+#### 14. OB-161 — Roster Ingestion Pipeline: NewRecruit JSON & BattleScribe .rosz
+- **Where to find it:** The **Army Roster Flyout** in Brawl mode (shield icon in top bar).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`).
+  2. Click the **Army Roster** shield icon in the top bar to open the draggable roster window.
+  3. Look at the Army Meta section and click the **Import** button (`Upload` icon).
+  4. Select a NewRecruit export `.json` or BattleScribe `.ros` XML or `.rosz` zip archive:
+     - The parser ingests the roster in real time.
+     - A green confirmation banner displays `Imported <Army Name> (<N> units)`.
+     - The army name, faction, and points limit automatically update.
+     - Units appear in the list with calculated points, model counts, datasheet stats (M, T, Sv, W, Ld, OC), and weapons.
+     - Duplicate units are automatically disambiguated with `A`, `B` suffixes.
+  5. Expand any unit and click **Deploy Unit to Battlemap**:
+     - The models are placed onto the canvas with auto-inferred base sizes (e.g. 120x75mm for tanks, 40mm for terminators/characters, 32mm for standard infantry, 28mm for grots).
+  6. Attempting to upload an invalid file extension (e.g. `.png`) gracefully shows a red error banner without crashing the application.

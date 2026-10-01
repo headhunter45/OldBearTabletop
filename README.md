@@ -582,6 +582,12 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Live Objective Control (OC) calculations per player (factoring unit size, vehicle/monster modifiers, and customized model OC).
    - Real-time control status evaluation (`Player 1 Control`, `Player 2 Control`, `Contested`, `Uncontested`).
    - One-click and Command Phase auto-scoring: awards VP directly to controlling player's scoreboard with chat audit logs and toasts.
+9. **Universal Roster Ingestion Pipeline (OB-161)**:
+   - Ingest user rosters directly from popular wargaming army builder exports: NewRecruit JSON, BattleScribe XML (`.ros`), and zipped BattleScribe archives (`.rosz`).
+   - Parses army name, faction, points limits, units, model counts, statline profiles (M, T, Sv, W, Ld, OC), and weapons with attacks, range, strength, AP, and damage.
+   - Intelligent base shape & size auto-inferencing (e.g. 120x75mm rectangular vehicle hulls, 60mm dreadnought/monster bases, 40mm terminator bases, 28mm light infantry bases, and 32mm standard bases).
+   - Strict User-Generated Content (UGC) compliance: processes player-provided rosters locally without bundling proprietary rule texts.
+   - Quick **Import** button directly inside the Army Roster Flyout header with validation feedback and toast confirmations.
 
 ---
 

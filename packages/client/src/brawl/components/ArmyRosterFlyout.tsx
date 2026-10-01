@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Shield, X, Plus, Trash2, Swords, Crosshair, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, X, Plus, Trash2, Swords, Crosshair, Users, ChevronDown, ChevronUp, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import { WargameArmy, WargameUnit } from '../types/brawl.js';
 import { disambiguateArmy } from '../domain/armyManager.js';
+import { parseRosterFile } from '../domain/rosterParser.js';
 
 interface ArmyRosterFlyoutProps {
   onClose: () => void;
@@ -15,6 +16,32 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
     initialY: 70,
     defaultZIndex: 50,
   });
+
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      let content: string | ArrayBuffer;
+      if (file.name.toLowerCase().endsWith('.rosz')) {
+        content = await file.arrayBuffer();
+      } else {
+        content = await file.text();
+      }
+      const result = await parseRosterFile(file.name, content);
+      setRawArmy(result.army);
+      setImportStatus(`Imported ${result.army.name} (${result.army.units.length} units)`);
+      setTimeout(() => setImportStatus(null), 4000);
+    } catch (err: any) {
+      setImportError(err.message || 'Failed to parse roster file');
+      setTimeout(() => setImportError(null), 5000);
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   const [rawArmy, setRawArmy] = useState<WargameArmy>({
     id: 'army_1',
@@ -101,10 +128,76 @@ export const ArmyRosterFlyout: React.FC<ArmyRosterFlyoutProps> = ({ onClose, onD
         </button>
       </div>
 
-      {/* Army Meta */}
+      {/* Army Meta & Import Controls */}
       <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.8rem' }}>
-        <div style={{ fontWeight: 700 }}>{activeArmy.name}</div>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Faction: {activeArmy.faction}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{activeArmy.name}</div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Faction: {activeArmy.faction}</div>
+          </div>
+          <label
+            className="btn-secondary"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 8px',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              borderRadius: '4px',
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#f59e0b',
+            }}
+          >
+            <Upload size={13} />
+            <span>Import</span>
+            <input
+              type="file"
+              accept=".json,.ros,.rosz"
+              style={{ display: 'none' }}
+              onChange={handleFileImport}
+            />
+          </label>
+        </div>
+
+        {importStatus && (
+          <div
+            style={{
+              marginTop: '4px',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              background: 'rgba(34, 197, 94, 0.15)',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
+              color: '#4ade80',
+              fontSize: '0.7rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <CheckCircle size={12} /> {importStatus}
+          </div>
+        )}
+
+        {importError && (
+          <div
+            style={{
+              marginTop: '4px',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#f87171',
+              fontSize: '0.7rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <AlertCircle size={12} /> {importError}
+          </div>
+        )}
       </div>
 
       {/* Units List */}
