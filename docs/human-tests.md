@@ -651,3 +651,24 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - All timestamped events appear in reverse-chronological order with colored player indicators.
   8. Click **Reset Scores**:
      - Prompts and resets all scores back to 0 VP and 1 CP with toast confirmation.
+
+#### 13. OB-160 — Objective Marker Control Zone Calculation & Auto-Scoring
+- **Where to find it:** The Brawl top bar "Objectives" button and the Objectives Modal (`?mode=brawl`).
+- **How to test:**
+  1. Open Brawl mode (`?mode=brawl`).
+  2. In the top bar, click the **Objectives** button (target icon).
+  3. The **Objective Control & Auto-Scoring** modal opens.
+  4. Click **Deploy Standard 5 Objectives**:
+     - Generates 5 standard tournament objective markers (Center, NW, NE, SW, SE) with 40mm bases and 3″ control radius auras.
+     - The modal immediately lists each objective and displays its status as `Uncontested` with `0 OC (0 models)`.
+  5. Close the modal and deploy models from the Army Roster Flyout.
+  6. Move 2 Player 1 models within 3″ of Objective 1 (Center).
+  7. Re-open the Objectives modal:
+     - Objective 1 displays **Player 1 Control** in cyan with `Player 1: 2 OC (2 models) | Player 2: 0 OC (0 models)`.
+  8. Click **Score Objectives Now**:
+     - Evaluates all 5 objectives.
+     - Automatically grants Player 1 +4 Primary VP for controlling Objective 1.
+     - The top bar updates to `VP: 4 - 0`, an audit log entry is added to the Scoreboard, and a chat announcement broadcasts the scoring breakdown.
+  9. Move 1 Player 2 model with 3 OC (e.g. dreadnought/vehicle) into Objective 1's zone:
+     - Objective 1 now shows **Player 2 Control** in pink because 3 OC > 2 OC.
+  10. Equal OC ties (e.g. 2 OC vs 2 OC) correctly flag the marker as **Contested** and award 0 VP.

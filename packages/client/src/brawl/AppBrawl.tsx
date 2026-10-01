@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   GameMap,
   GameSession,
@@ -35,9 +35,15 @@ import { ArmyRosterFlyout } from './components/ArmyRosterFlyout.js';
 import { PhaseAnnouncementBanner } from './components/PhaseAnnouncementBanner.js';
 import { ChessClockWidget } from './components/ChessClockWidget.js';
 import { ScoreboardModal } from './components/ScoreboardModal.js';
+import { ObjectivesModal } from './components/ObjectivesModal.js';
 import { WargamePhase, WargameUnit } from './types/brawl.js';
 import { modelToToken } from './domain/armyManager.js';
 import { updateTokensCoherency } from './domain/coherencyEngine.js';
+import {
+  ObjectiveMarker,
+  createStandardObjectives,
+  evaluateAllObjectives,
+} from './domain/objectiveEngine.js';
 import { advanceWargamePhase, WARGAME_PHASES, PhaseTransitionEvent } from './domain/phaseEngine.js';
 import { playLowTimeWarningSound, playOvertimeAlarmSound, playClockSwitchSound } from './domain/chessClock.js';
 import {
@@ -93,6 +99,8 @@ export const AppBrawl: React.FC = () => {
   const [scoreboard, setScoreboard] = useState<ScoreboardState>(() => createInitialScoreboard());
   const [scoreAuditTrail, setScoreAuditTrail] = useState<ScoreAuditEntry[]>([]);
   const [showScoreboardModal, setShowScoreboardModal] = useState(false);
+  const [objectives, setObjectives] = useState<ObjectiveMarker[]>([]);
+  const [showObjectivesModal, setShowObjectivesModal] = useState(false);
   const [showArmyRoster, setShowArmyRoster] = useState(false);
   const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
@@ -225,6 +233,53 @@ export const AppBrawl: React.FC = () => {
     const p2 = scoreboard.p2Name;
     setScoreboard(createInitialScoreboard(p1, p2));
     showToast('Match scores reset to 0 VP / 1 CP');
+  };
+
+  // Objective Control Evaluation & Auto-Scoring (OB-160)
+  const objectivesEvaluation = useMemo(() => {
+    return evaluateAllObjectives(objectives, session?.tokens || [], {
+      pixelsPerInch: 50,
+      p1Name: scoreboard.p1Name,
+      p2Name: scoreboard.p2Name,
+    });
+  }, [objectives, session?.tokens, scoreboard.p1Name, scoreboard.p2Name]);
+
+  const handleDeployStandardObjectives = () => {
+    const mapWidth = currentMap?.width || 3000;
+    const mapHeight = currentMap?.height || 2200;
+    const std = createStandardObjectives(mapWidth, mapHeight);
+    setObjectives(std);
+    showToast('Deployed standard 5 tournament objective markers with 3″ auras!');
+  };
+
+  const handleScoreObjectives = () => {
+    let scored = false;
+    if (objectivesEvaluation.p1VpEarned > 0) {
+      handleUpdateScoreResource(
+        1,
+        'primaryVp',
+        objectivesEvaluation.p1VpEarned,
+        `Objective Control (${objectivesEvaluation.p1ControlledCount} held)`
+      );
+      scored = true;
+    }
+    if (objectivesEvaluation.p2VpEarned > 0) {
+      handleUpdateScoreResource(
+        2,
+        'primaryVp',
+        objectivesEvaluation.p2VpEarned,
+        `Objective Control (${objectivesEvaluation.p2ControlledCount} held)`
+      );
+      scored = true;
+    }
+    if (!scored) {
+      showToast('No Primary VP scored (no uncontested objectives held).');
+    }
+  };
+
+  const handleRemoveObjective = (id: string) => {
+    setObjectives((prev) => prev.filter((m) => m.id !== id));
+    showToast('Objective marker removed');
   };
 
   const handleSwitchActivePlayer = () => {
@@ -384,6 +439,7 @@ export const AppBrawl: React.FC = () => {
         onNextPhase={handleNextPhase}
         onSwitchActivePlayer={handleSwitchActivePlayer}
         onOpenScoreboard={() => setShowScoreboardModal(true)}
+        onOpenObjectives={() => setShowObjectivesModal(true)}
         onOpenArmyRoster={() => setShowArmyRoster(true)}
         onOpenDice={() => setShowDiceRoller((prev) => !prev)}
         onOpenMaps={() => setShowMapManager(true)}
@@ -544,6 +600,20 @@ export const AppBrawl: React.FC = () => {
           onResetScoreboard={handleResetScoreboard}
           auditTrail={scoreAuditTrail}
           onClose={() => setShowScoreboardModal(false)}
+        />
+      )}
+
+      {/* Objectives & Control Zones Modal (OB-160) */}
+      {showObjectivesModal && (
+        <ObjectivesModal
+          objectives={objectives}
+          evaluation={objectivesEvaluation}
+          p1Name={scoreboard.p1Name}
+          p2Name={scoreboard.p2Name}
+          onDeployStandardObjectives={handleDeployStandardObjectives}
+          onScoreObjectives={handleScoreObjectives}
+          onRemoveObjective={handleRemoveObjective}
+          onClose={() => setShowObjectivesModal(false)}
         />
       )}
 

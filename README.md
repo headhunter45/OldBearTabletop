@@ -577,6 +577,11 @@ Old Bear Brawl provides a dedicated competitive tabletop wargaming environment w
    - Quick-increment buttons (`+4` primary, `+2/+5` secondary, `+5` casualties) and CP spending shortcuts.
    - Comprehensive audit trail: every adjustment creates a formatted, color-coded chat announcement and toast notification with optional audit reasons.
    - Integrated with Turn Phase Engine: automatically awards +1 CP upon turn turnover.
+8. **Objective Markers & Automated Control Zone Scoring**:
+   - Deployable 40mm wargaming objective markers with standard 3″ control radius auras measured edge-to-edge.
+   - Live Objective Control (OC) calculations per player (factoring unit size, vehicle/monster modifiers, and customized model OC).
+   - Real-time control status evaluation (`Player 1 Control`, `Player 2 Control`, `Contested`, `Uncontested`).
+   - One-click and Command Phase auto-scoring: awards VP directly to controlling player's scoreboard with chat audit logs and toasts.
 
 ---
 

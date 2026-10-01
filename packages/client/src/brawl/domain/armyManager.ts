@@ -85,6 +85,19 @@ export function getBaseRadiusPx(baseShape: BaseShape, pxPerInch: number = DEFAUL
 }
 
 /**
+ * Calculates radius in inches for a token's base geometry.
+ */
+export function calculateBaseRadiusInches(token: Token): number {
+  if (token.baseShape) {
+    const widthInches = (token.baseShape.widthMm || 32) / MM_PER_INCH;
+    const heightInches = (token.baseShape.heightMm || token.baseShape.widthMm || 32) / MM_PER_INCH;
+    return (widthInches + heightInches) / 4;
+  }
+  const sizeNum = typeof token.size === 'number' ? token.size : (token.size === 'large' ? 2 : token.size === 'huge' ? 3 : 1);
+  return sizeNum / 2;
+}
+
+/**
  * Converts a WargameModel into a fully ready-to-fight VTT canvas Token.
  */
 export function modelToToken(

@@ -12,6 +12,7 @@ import {
   MessageSquareHeart,
   ExternalLink,
   Trophy,
+  Target,
 } from 'lucide-react';
 import { Player } from '@oldbear/shared';
 import { VoiceState } from '../../common/network/VoiceManager.js';
@@ -38,6 +39,7 @@ interface BrawlTopBarProps {
   onNextPhase: () => void;
   onSwitchActivePlayer: () => void;
   onOpenScoreboard?: () => void;
+  onOpenObjectives?: () => void;
   onOpenArmyRoster: () => void;
   onOpenDice: () => void;
   onOpenMaps: () => void;
@@ -69,6 +71,7 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   onNextPhase,
   onSwitchActivePlayer,
   onOpenScoreboard,
+  onOpenObjectives,
   onOpenArmyRoster,
   onOpenDice,
   onOpenMaps,
@@ -290,6 +293,31 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
           >
             <Trophy size={13} />
             <span>VP: {p1TotalVp} - {p2TotalVp}</span>
+          </button>
+        )}
+
+        {/* Objectives Button (OB-160) */}
+        {onOpenObjectives && (
+          <button
+            className="btn-glass"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: '#38bdf8',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              background: 'rgba(56, 189, 248, 0.12)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+            onClick={onOpenObjectives}
+            title="Open Objective Markers & Control Zones"
+          >
+            <Target size={13} />
+            <span>Objectives</span>
           </button>
         )}
 
