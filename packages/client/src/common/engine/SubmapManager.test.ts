@@ -155,4 +155,28 @@ describe('Submaps & Secondary Logical Maps per Scene (OB-130)', () => {
       renderSubmap(mockCtx, submap, parentMap, 1.0);
     });
   });
+
+  it('duplicates scene with unique ID and preserves baseMap linkage (OB-186)', () => {
+    const scene = mockGameMap({
+      id: 'map-original',
+      name: 'Crypt Entrance',
+      baseMapId: 'asset-crypt-img',
+      baseMapName: 'Crypt Image',
+    });
+
+    const duplicated: GameMap = {
+      ...scene,
+      id: `map-${crypto.randomUUID()}`,
+      name: `${scene.name} (Copy)`,
+      baseMapId: scene.baseMapId || scene.id,
+      baseMapName: scene.baseMapName || scene.name,
+    };
+
+    assert.notStrictEqual(duplicated.id, scene.id);
+    assert.strictEqual(duplicated.name, 'Crypt Entrance (Copy)');
+    assert.strictEqual(duplicated.baseMapId, 'asset-crypt-img');
+    assert.strictEqual(duplicated.baseMapName, 'Crypt Image');
+    assert.strictEqual(duplicated.imageUrl, scene.imageUrl);
+  });
 });
+

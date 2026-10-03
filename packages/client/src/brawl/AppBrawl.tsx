@@ -135,6 +135,7 @@ export const AppBrawl: React.FC = () => {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [gmPreviewMapId, setGmPreviewMapId] = useState<string>('');
   const [voiceState, setVoiceState] = useState<VoiceState>({
     isInitialized: false,
     isMuted: true,
@@ -153,7 +154,43 @@ export const AppBrawl: React.FC = () => {
     localLevel: 0,
   });
 
-  const currentMap = session?.maps.find((m) => m.id === (session.activeMapId || '')) || session?.maps[0];
+  const currentMap = session?.maps.find((m) => m.id === (gmPreviewMapId || session.activeMapId || '')) || session?.maps[0];
+
+  const handleAddMap = (newMap: GameMap) => {
+    setSession((prev) => (prev ? { ...prev, maps: [...prev.maps, newMap] } : prev));
+    setGmPreviewMapId(newMap.id);
+    networkRef.current?.send({ type: 'map-add', map: newMap });
+  };
+
+  const handleUpdateMap = (id: string, updates: Partial<GameMap>) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        maps: prev.maps.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+      };
+    });
+    networkRef.current?.send({ type: 'map-update', id, updates });
+  };
+
+  const handleDeleteMap = (id: string) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const remaining = prev.maps.filter((m) => m.id !== id);
+      const newActive = prev.activeMapId === id ? (remaining[0]?.id || '') : prev.activeMapId;
+      return {
+        ...prev,
+        maps: remaining,
+        activeMapId: newActive,
+      };
+    });
+    networkRef.current?.send({ type: 'map-delete', mapId: id });
+  };
+
+  const handleSetActiveMapForPlayers = (mapId: string) => {
+    setSession((prev) => (prev ? { ...prev, activeMapId: mapId } : prev));
+    networkRef.current?.send({ type: 'map-switch', mapId });
+  };
 
   // Chess Clock Tick Effect (OB-158)
   useEffect(() => {
@@ -429,6 +466,39 @@ export const AppBrawl: React.FC = () => {
         if (msg.session.maps.length > 0 && !engine.currentMapId) {
           engine.setActiveMap(msg.session.activeMapId || msg.session.maps[0].id);
         }
+      } else if (msg.type === 'map-added') {
+        setSession((prev) => {
+          if (!prev) return prev;
+          if (prev.maps.some((m) => m.id === msg.map.id)) return prev;
+          return { ...prev, maps: [...prev.maps, msg.map] };
+        });
+      } else if (msg.type === 'map-updated') {
+        setSession((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            maps: prev.maps.map((m) => (m.id === msg.id ? { ...m, ...msg.updates } : m)),
+          };
+        });
+      } else if (msg.type === 'map-deleted') {
+        setSession((prev) => {
+          if (!prev) return prev;
+          const remaining = prev.maps.filter((m) => m.id !== msg.mapId);
+          return {
+            ...prev,
+            maps: remaining,
+            activeMapId: msg.activeMapId || (prev.activeMapId === msg.mapId ? (remaining[0]?.id || '') : prev.activeMapId),
+          };
+        });
+      } else if (msg.type === 'map-switched') {
+        setSession((prev) => {
+          if (!prev) return prev;
+          const targetMap = prev.maps.find((m) => m.id === msg.mapId);
+          if (!isOrganizer && targetMap) {
+            showToast(`Tournament Referee moved everyone to ${targetMap.name}`);
+          }
+          return { ...prev, activeMapId: msg.mapId };
+        });
       }
     });
 
@@ -660,20 +730,84 @@ export const AppBrawl: React.FC = () => {
             if (networkRef.current && session) {
               networkRef.current.send({
                 type: 'map-update',
-                map: updatedMap,
+                id: updatedMap.id,
+                updates: updatedMap,
               });
             }
           }}
           onUpdateTokens={(updatedTokens) => {
             setSession((prev) => (prev ? { ...prev, tokens: updatedTokens } : prev));
             updatedTokens.forEach((t) => {
-              networkRef.current?.send({ type: 'token-update', token: t });
+              networkRef.current?.send({ type: 'token-update', id: t.id, updates: t });
             });
           }}
           onRecordCasualties={(player, count, reason) => {
             handleUpdateScoreResource(player, 'casualties', count, reason);
           }}
           onShowToast={showToast}
+        />
+      )}
+
+      {/* Map Manager Modal */}
+      {showMapManager && session && (
+        <MapManagerModal
+          maps={session.maps}
+          activeMapId={session.activeMapId}
+          currentGmPreviewMapId={gmPreviewMapId}
+          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
+          onAddMap={handleAddMap}
+          onUpdateMap={handleUpdateMap}
+          onDeleteMap={handleDeleteMap}
+          onClose={() => setShowMapManager(false)}
+        />
+      )}
+
+      {/* Asset Manager / Data Backup Modal */}
+      {showBackupModal && session && (
+        <DataBackupModal
+          session={session}
+          isGm={isOrganizer}
+          tokens={Array.isArray(session?.tokens) ? session.tokens.reduce((acc, t) => ({ ...acc, [t.id]: t }), {}) : (session?.tokens || {})}
+          activeMapId={currentMap?.id || session?.activeMapId || ''}
+          maps={session.maps}
+          currentGmPreviewMapId={gmPreviewMapId}
+          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
+          onAddMap={handleAddMap}
+          onUpdateMap={handleUpdateMap}
+          onDeleteMap={handleDeleteMap}
+          onClose={() => setShowBackupModal(false)}
+        />
+      )}
+
+      {/* Soundboard Modal */}
+      {showSoundboard && session && (
+        <SoundboardModal
+          soundtracks={session.soundtracks || []}
+          onClose={() => setShowSoundboard(false)}
+          onPlayAudio={(trackId) => {
+            networkRef.current?.send({ type: 'audio-action', trackId, action: 'play' });
+          }}
+          onPauseAudio={(trackId) => {
+            networkRef.current?.send({ type: 'audio-action', trackId, action: 'pause' });
+          }}
+          onStopAudio={(trackId) => {
+            networkRef.current?.send({ type: 'audio-action', trackId, action: 'stop' });
+          }}
+          onVolumeChange={(trackId, volume) => {
+            networkRef.current?.send({ type: 'audio-action', trackId, action: 'volume', volume });
+          }}
+          isGm={isOrganizer}
+        />
+      )}
+
+      {/* Voice Settings Modal */}
+      {showVoiceSettings && (
+        <VoiceSettingsModal
+          voiceState={voiceState}
+          voiceManager={voiceManagerRef.current}
+          onClose={() => setShowVoiceSettings(false)}
         />
       )}
 

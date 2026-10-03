@@ -299,7 +299,7 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-183 | Codebase Simplification & Refactoring Plan (docs/refactor-1.md)                                                                                                                                                                                                                                                                                                                                                                                                                      | Old Bear VTT   | Testing | [Chore](#ob-183)   |
 | OB-184 | HelpTip Component & Placement Guide (docs/helptip-locations.md)                                                                                                                                                                                                                                                                                                                                                                                                                      | Old Bear VTT   | Testing | [Feature](#ob-184) |
 | OB-185 | Backlog Research & Implementation Guide (docs/backlog-implementation-guide.md)                                                                                                                                                                                                                                                                                                                                                                                                       | Old Bear VTT   | Testing | [Feature](#ob-185) |
-| OB-186 | Unable to create new maps or duplicate existing ones.                                                                                                                                                                                                                                                                                                                                                                                                                                | Shared         | Ready   | [Bug](#ob-186)     |
+| OB-186 | Unable to create new maps or duplicate existing ones.                                                                                                                                                                                                                                                                                                                                                                                                                                | Shared         | Done    | [Bug](#ob-186)     |
 
 ---
 
@@ -2808,16 +2808,16 @@ Perform in-depth architectural and technical research across all backlog tasks a
 - **Mobile Touch Usability (OB-137, OB-138)**: Ergonomic finger touch offset (-40px) to prevent finger occlusion during token drags, and mobile interaction bar safe-area insets.
 - **Wargaming Engine Roadmap (OB-154 through OB-163)**: Multi-mode deployment (`GAME_MODE`), BattleScribe/NewRecruit roster ingestion, unit coherency graph checks, dual chess clocks, and objective zone scoring.
 
-<a id="ob-186" class="task" data-project="shared" data-status="ready" data-task-type="bug"></a>
+<a id="ob-186" class="task" data-project="shared" data-status="done" data-task-type="bug"></a>
 ### Unable to create new maps or duplicate existing ones.
 **ID:** OB-186
 **Project:** Shared
-**Status:** Ready
+**Status:** Done
 **Type:** Bug
 
 **Description:**
 The buttons do nothing when clicked.
-- [ ]
+- [x]
 
 ---
 
