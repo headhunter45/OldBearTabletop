@@ -17,7 +17,9 @@ import {
   convertDnDSpellToEntityAction,
   convertDnDItemToEntityAction,
   convertCharacterToMonsterStatBlock,
+  generateUUID,
 } from '@oldbear/shared';
+
 import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { DraggableWindowTitleBar } from './DraggableWindow.js';
@@ -1703,7 +1705,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // Regular Chat message
     onSendMessage({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       senderId: player.id,
       senderName: activeAssociatedToken ? `${player.name} (${activeAssociatedToken.name})` : player.name,
       senderColor: player.color,

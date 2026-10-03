@@ -319,15 +319,26 @@ export class NetworkClient {
 
   disconnect() {
     if (this.ws) {
-      this.ws.onopen = null;
-      this.ws.onmessage = null;
-      this.ws.onerror = null;
-      this.ws.onclose = null;
-      try {
-        this.ws.close(1000, 'Client disconnecting');
-      } catch {}
+      const socket = this.ws;
       this.ws = null;
+      socket.onopen = null;
+      socket.onmessage = null;
+      socket.onerror = null;
+      socket.onclose = null;
+      if (socket.readyState === WebSocket.CONNECTING) {
+        socket.onopen = () => {
+          try {
+            socket.close(1000, 'Client disconnecting');
+          } catch {}
+        };
+        socket.onerror = () => {};
+      } else if (socket.readyState === WebSocket.OPEN) {
+        try {
+          socket.close(1000, 'Client disconnecting');
+        } catch {}
+      }
     }
+
     for (const pc of this.peerConnections.values()) {
       pc.close();
     }
