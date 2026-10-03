@@ -5,8 +5,12 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
+  const workspaceRoot = path.resolve(__dirname, '../../');
   const env = loadEnv(mode, process.cwd(), '');
-  const rootEnv = loadEnv(mode, '../../', '');
+  const rootEnv = loadEnv(mode, workspaceRoot, '');
+  const clientPort = Number(process.env.CLIENT_PORT || rootEnv.CLIENT_PORT || env.CLIENT_PORT) || 3000;
+  const serverPort = Number(process.env.SERVER_PORT || rootEnv.SERVER_PORT || env.SERVER_PORT) || 3001;
+
   const toastDuration =
     env.VITE_TOAST_DURATION_MS ||
     rootEnv.VITE_TOAST_DURATION_MS ||
@@ -21,7 +25,7 @@ export default defineConfig(({ mode }) => {
     '';
   if (!appVersion) {
     try {
-      const versionFile = path.resolve(__dirname, '../../VERSION');
+      const versionFile = path.resolve(workspaceRoot, 'VERSION');
       if (fs.existsSync(versionFile)) {
         appVersion = fs.readFileSync(versionFile, 'utf-8').trim();
       }
@@ -49,25 +53,26 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    envDir: '../../',
+    envDir: workspaceRoot,
     define: {
       'import.meta.env.VITE_TOAST_DURATION_MS': JSON.stringify(toastDuration),
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
       'import.meta.env.VITE_GIT_COMMIT_HASH': JSON.stringify(gitCommitHash),
     },
     server: {
-      port: Number(process.env.CLIENT_PORT || rootEnv.CLIENT_PORT) || 3000,
+      port: clientPort,
       host: true,
       proxy: {
         '/api': {
-          target: `http://127.0.0.1:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
+          target: `http://127.0.0.1:${serverPort}`,
           changeOrigin: true,
         },
         '/ws': {
-          target: `ws://127.0.0.1:${process.env.SERVER_PORT || rootEnv.SERVER_PORT || 3001}`,
+          target: `ws://127.0.0.1:${serverPort}`,
           ws: true,
         },
       },
     },
   };
 });
+

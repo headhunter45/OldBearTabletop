@@ -10,6 +10,7 @@ import { fetchDnDCharacter } from './dndbeyond.js';
 import { initDb, isDbConnected, getDbPool } from './db.js';
 
 // Load environment variables from root workspace and local directory
+dotenv.config({ path: path.resolve(import.meta.dirname, '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config();
