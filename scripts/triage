@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""
+triage
+
+Triages a task from Documentation/Tasks.md using an AI CLI agent (Antigravity or Hermes).
+Validates that the task is in 'planning' or 'triage' status, prepares full
+architectural and task context, and launches the agent interactively.
+
+Usage:
+    ./scripts/triage 094
+    ./scripts/triage OT-120 --hermes
+    ./scripts/triage 094 --agy
+    ./scripts/triage --help
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Ensure scripts/lib is importable
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+
+from task_context import (
+    fetch_task,
+    assert_task_status,
+    build_workflow_prompt,
+    add_common_agent_arguments,
+    resolve_selected_agent,
+)
+
+TRIAGE_OBJECTIVES = """- Inspect the codebase to understand the current implementation and scope for this task.
+- Clarify ambiguities: ask the user any critical design or scoping questions interactively.
+- Formulate a clear, actionable checklist of engineering deliverables (- [ ]).
+- Document any open decisions, architectural considerations, or trade-offs in triage notes.
+- Once scoped, update the task using `./scripts/update-task {task_id}`.
+- If ready for implementation, propose moving status to 'pending', or keep in 'triage'/'planning' if awaiting user decisions."""
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Triage a task in Documentation/Tasks.md using an AI CLI agent. Requires status to be 'planning' or 'triage'."
+    )
+    parser.add_argument("task_id", help="Task number or prefixed ID (e.g. 94, PREFIX-094)")
+    add_common_agent_arguments(parser)
+
+    args = parser.parse_args()
+
+    agent = resolve_selected_agent(args)
+    task = fetch_task(args.task_id, tasks_file=args.file)
+    assert_task_status(task, ["planning", "triage"], command_name="triage")
+
+    prompt = build_workflow_prompt(
+        task=task,
+        workflow_name="triaging",
+        workflow_objective=TRIAGE_OBJECTIVES.format(task_id=task["id"]),
+    )
+
+    print(f"Launching {agent.name.capitalize()} ({agent.name}) to triage {task['id']}: {task['title']}...")
+    agent.launch(prompt)
+
+
+if __name__ == "__main__":
+    main()

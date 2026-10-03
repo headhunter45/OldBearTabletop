@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Build and verify a production release of Open Tasks
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${REPO_ROOT}/src:${PYTHONPATH:-}"
+
+VERSION=""
+OUTPUT_DIR="${REPO_ROOT}/dist"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --version|-v)
+            VERSION="$2"
+            shift 2
+            ;;
+        --output-dir|-o)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        *)
+            if [ -z "$VERSION" ]; then
+                VERSION="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$VERSION" ]; then
+    VERSION=$(python3 -c "import ot; print(ot.__version__)")
+fi
+mkdir -p "$OUTPUT_DIR"
+
+echo "=== 1. Running Test Suite ==="
+python3 -m unittest discover -s "${REPO_ROOT}/tests"
+
+echo "=== 2. Building Release Artifact (v${VERSION}) ==="
+python3 -m ot.packaging \
+    --version "$VERSION" \
+    --src-dir "${REPO_ROOT}/src" \
+    --output-dir "$OUTPUT_DIR" \
+    --artifact-name "ot-${VERSION}.zipapp"
+
+# Also maintain canonical ot.zipapp copy in dist/
+cp "${OUTPUT_DIR}/ot-${VERSION}.zipapp" "${OUTPUT_DIR}/ot.zipapp"
+
+echo "=== 3. Generating SHA256 Checksums ==="
+cd "$OUTPUT_DIR"
+if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "ot-${VERSION}.zipapp" "ot.zipapp" > SHA256SUMS
+elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "ot-${VERSION}.zipapp" "ot.zipapp" > SHA256SUMS
+fi
+
+echo "=== 4. Validating Built Release Artifact ==="
+python3 "${OUTPUT_DIR}/ot-${VERSION}.zipapp" version
+
+echo "=========================================="
+echo "Release Pipeline completed successfully for v${VERSION}!"
+echo "Artifacts created in ${OUTPUT_DIR}:"
+ls -la "${OUTPUT_DIR}"

@@ -1,0 +1,283 @@
+#!/usr/bin/env python3
+"""
+update-task
+
+Modifies metadata, title, and/or description of a specific task in Documentation/Tasks.md
+and automatically synchronizes the document tables and sorting.
+
+Usage:
+    ./scripts/update-task OT-018 --status pending
+    ./scripts/update-task OT-018 --title "Updated Title"
+    ./scripts/update-task OT-018 --description "New description..."
+    ./scripts/update-task OT-018 --append-description "- [ ] Additional checklist item"
+    ./scripts/update-task OT-018 --check-all
+"""
+
+import argparse
+import importlib.machinery
+import importlib.util
+import re
+import sys
+from pathlib import Path
+
+
+def load_update_tasks_module():
+    script_dir = Path(__file__).resolve().parent
+    update_script = script_dir / "update-tasks"
+    if not update_script.exists():
+        raise FileNotFoundError(f"Could not find update-tasks at {update_script}")
+    loader = importlib.machinery.SourceFileLoader("update_tasks", str(update_script))
+    spec = importlib.util.spec_from_loader("update_tasks", loader)
+    if spec is None:
+        raise ImportError(f"Could not load spec for {update_script}")
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+def parse_task_id(id_str):
+    return load_update_tasks_module().parse_task_id(id_str)
+
+
+def update_task_detail(
+    task_id_input,
+    title=None,
+    project=None,
+    subproject=None,
+    clear_subproject=False,
+    status=None,
+    task_type=None,
+    description=None,
+    append_description=None,
+    check_items=None,
+    uncheck_items=None,
+    check_all=False,
+    uncheck_all=False,
+    sync=True,
+    tasks_file=None,
+    epic=None,
+    clear_epic=False,
+):
+    update_mod = load_update_tasks_module()
+    tasks_path = update_mod.find_tasks_file(tasks_file)
+
+    with open(tasks_path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    fm_data = update_mod.read_frontmatter(text)
+    prefix = update_mod.get_task_id_prefix(fm_data)
+    target_num = update_mod.parse_task_id(task_id_input)
+
+    detail_header_marker = "## Detailed Tasks\n"
+    detail_start = text.find(detail_header_marker)
+    if detail_start == -1:
+        raise ValueError("## Detailed Tasks heading not found")
+
+    notes_marker = "\n---\n\n## Notes\n"
+    notes_start = text.find(notes_marker)
+    if notes_start == -1:
+        notes_start = len(text)
+
+    detail_body = text[detail_start + len(detail_header_marker) : notes_start]
+    task_chunks = re.split(r"(?=<a\s+[^>]*\bid=|<id=)", detail_body)
+
+    found = False
+    new_chunks = []
+
+    for chunk in task_chunks:
+        chunk_clean = chunk.strip()
+        if not chunk_clean:
+            continue
+        m = re.search(update_mod.TASK_ID_PATTERN, chunk_clean, re.IGNORECASE)
+        if m and int(m.group(2)) == target_num and update_mod.task_id_matches(task_id_input, m.group(1), prefix):
+            found = True
+            anchor_match = re.search(update_mod.TASK_ANCHOR_PATTERN, chunk_clean, re.IGNORECASE)
+            if not anchor_match:
+                raise ValueError(f"Anchor tag missing in task {target_num}")
+            anchor_tag = anchor_match.group(1)
+
+            # Current metadata
+            proj_m = re.search(r'data-project=["\']([^"\']+)["\']', anchor_tag)
+            subproj_m = re.search(r'data-subproject=["\']([^"\']*)["\']', anchor_tag)
+            status_m = re.search(r'data-status=["\']([^"\']+)["\']', anchor_tag)
+            type_m = re.search(r'data-task-type=["\']([^"\']+)["\']', anchor_tag)
+            epic_m = re.search(r'data-epic=["\']([^"\']*)["\']', anchor_tag)
+            epic_input = epic if epic is not None else (epic_m.group(1) if epic_m else None)
+            new_epic, epic_label = update_mod.resolve_epic(None if clear_epic else epic_input, fm_data)
+
+            if not subproj_m:
+                subproj_field_m = re.search(r'^\*\*Subproject:\*\*\s*([^\n]+)$', chunk_clean, re.MULTILINE)
+                current_subproj = subproj_field_m.group(1).strip() if subproj_field_m else ""
+            else:
+                current_subproj = subproj_m.group(1).strip()
+
+            current_proj = proj_m.group(1) if proj_m else "shared"
+            current_status = status_m.group(1) if status_m else "triage"
+            current_type = type_m.group(1) if type_m else "feature"
+
+            title_m = re.search(r'^###\s+(.+)$', chunk_clean, re.MULTILINE)
+            current_title = title_m.group(1).strip() if title_m else f"Task {target_num}"
+
+            desc_m = re.search(r'\*\*Description:\*\*\s*\n(.*)$', chunk_clean, re.DOTALL)
+            current_desc = desc_m.group(1).strip() if desc_m else ""
+
+            # Apply modifications
+            new_proj = project.strip().lower() if project else current_proj
+            new_status = status.strip().lower() if status else current_status
+            new_type = task_type.strip().lower() if task_type else current_type
+            new_title = title.strip() if title else current_title
+
+            if clear_subproject or (subproject is not None and subproject.strip().lower() in ("", "none", "null", "clear")):
+                new_subproj = None
+            elif subproject is not None:
+                new_subproj = subproject.strip().lower()
+            else:
+                new_subproj = current_subproj if current_subproj else None
+
+            if description is not None:
+                new_desc = description.strip()
+            else:
+                new_desc = current_desc
+
+            if append_description:
+                if new_desc:
+                    new_desc = new_desc + "\n" + append_description.strip()
+                else:
+                    new_desc = append_description.strip()
+
+            # Handle checkboxes
+            if check_all:
+                new_desc = re.sub(r'-\s*\[\s*\]', '- [x]', new_desc)
+            elif uncheck_all:
+                new_desc = re.sub(r'-\s*\[x\]', '- [ ]', new_desc)
+
+            if check_items:
+                desc_lines = new_desc.splitlines()
+                cb_count = 0
+                for i, line in enumerate(desc_lines):
+                    if re.match(r'^\s*-\s*\[[\s x]\]', line):
+                        cb_count += 1
+                        for ci in check_items:
+                            if str(ci).isdigit() and int(ci) == cb_count:
+                                desc_lines[i] = re.sub(r'-\s*\[[\s x]\]', '- [x]', line, count=1)
+                            elif isinstance(ci, str) and ci.lower() in line.lower():
+                                desc_lines[i] = re.sub(r'-\s*\[[\s x]\]', '- [x]', line, count=1)
+                new_desc = "\n".join(desc_lines)
+
+            if uncheck_items:
+                desc_lines = new_desc.splitlines()
+                cb_count = 0
+                for i, line in enumerate(desc_lines):
+                    if re.match(r'^\s*-\s*\[[\s x]\]', line):
+                        cb_count += 1
+                        for ui in uncheck_items:
+                            if str(ui).isdigit() and int(ui) == cb_count:
+                                desc_lines[i] = re.sub(r'-\s*\[[\s x]\]', '- [ ]', line, count=1)
+                            elif isinstance(ui, str) and ui.lower() in line.lower():
+                                desc_lines[i] = re.sub(r'-\s*\[[\s x]\]', '- [ ]', line, count=1)
+                new_desc = "\n".join(desc_lines)
+
+            digit_width = max(3, len(m.group(1).rsplit("-", 1)[1]))
+            normalized_id = update_mod.format_task_id(target_num, prefix, digit_width)
+            normalized_aid = m.group(1)
+
+            # Assemble modified chunk (update-tasks will format headers/labels upon sync)
+            if new_subproj:
+                anchor_tag_str = f'<a id="{normalized_aid}" class="task" data-project="{new_proj}" data-subproject="{new_subproj}" data-status="{new_status}" data-task-type="{new_type}"></a>'
+                subproj_line = f"**Subproject:** {new_subproj.capitalize()}\n"
+            else:
+                anchor_tag_str = f'<a id="{normalized_aid}" class="task" data-project="{new_proj}" data-status="{new_status}" data-task-type="{new_type}"></a>'
+                subproj_line = ""
+
+            if new_epic:
+                anchor_tag_str = anchor_tag_str.replace('></a>', f' data-epic="{new_epic}"></a>')
+            epic_line = f"**Epic:** {epic_label}\n" if new_epic else ""
+
+            updated_chunk = (
+                f'{anchor_tag_str}\n'
+                f"### {new_title}\n"
+                f"**ID:** {normalized_id}\n"
+                f"**Project:** {new_proj.capitalize()}\n"
+                f"{subproj_line}"
+                f"{epic_line}"
+                f"**Status:** {new_status.capitalize()}\n"
+                f"**Type:** {new_type.capitalize()}\n\n"
+                f"**Description:**\n"
+                f"{new_desc}"
+            )
+            new_chunks.append(updated_chunk)
+        else:
+            new_chunks.append(chunk_clean)
+
+    if not found:
+        raise KeyError(f"Task {task_id_input} ({update_mod.format_task_id(target_num, prefix)}) was not found in {tasks_path}")
+
+    # Reconstruct document
+    new_detail_body = "\n\n".join(new_chunks) + "\n"
+    updated_text = text[: detail_start + len(detail_header_marker)] + new_detail_body + text[notes_start:]
+
+    with open(tasks_path, "w", encoding="utf-8") as f:
+        f.write(updated_text)
+
+    if sync:
+        update_mod.update_tasks_document(tasks_path)
+
+    return update_mod.format_task_id(target_num, prefix, digit_width), tasks_path
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Modify task details and synchronize tasks.md")
+    parser.add_argument("task_id", help="Task number or prefixed ID (e.g. 18, PREFIX-018)")
+    parser.add_argument("--epic", default=None, help="Update epic using a frontmatter value or label")
+    parser.add_argument("--clear-epic", action="store_true", help="Remove epic from task")
+    parser.add_argument("-T", "--title", default=None, help="Update task title")
+    parser.add_argument("-p", "--project", default=None, help="Update project (e.g. android, editor, shared, story-engine)")
+    parser.add_argument("-S", "--subproject", default=None, help="Update subproject (e.g. actions, expressions, schema)")
+    parser.add_argument("--clear-subproject", action="store_true", help="Remove subproject from task")
+    parser.add_argument("-s", "--status", default=None, help="Update status (e.g. triage, pending, in_progress, done, blocked, cancelled)")
+    parser.add_argument("-t", "--type", default=None, help="Update task type (e.g. feature, bug, lint, chore)")
+    parser.add_argument("-d", "--description", default=None, help="Replace entire description body")
+    parser.add_argument("--desc-file", default=None, help="File containing new description body")
+    parser.add_argument("-a", "--append-description", default=None, help="Append text to existing description")
+    parser.add_argument("--check", action="append", default=[], help="Checkbox index (1-based) or substring to check [x]")
+    parser.add_argument("--uncheck", action="append", default=[], help="Checkbox index (1-based) or substring to uncheck [ ]")
+    parser.add_argument("--check-all", action="store_true", help="Mark all checkboxes in this task as checked [x]")
+    parser.add_argument("--uncheck-all", action="store_true", help="Mark all checkboxes in this task as unchecked [ ]")
+    parser.add_argument("--no-sync", action="store_true", help="Do not run update-tasks table sync")
+    parser.add_argument("-f", "--file", default=None, help="Path to tasks.md (optional)")
+
+    args = parser.parse_args()
+
+    desc_content = args.description
+    if args.desc_file:
+        with open(args.desc_file, "r", encoding="utf-8") as df:
+            desc_content = df.read()
+
+    try:
+        formatted_id, path = update_task_detail(
+            task_id_input=args.task_id,
+            title=args.title,
+            project=args.project,
+            subproject=args.subproject,
+            clear_subproject=args.clear_subproject,
+            status=args.status,
+            task_type=args.type,
+            description=desc_content,
+            append_description=args.append_description,
+            check_items=args.check,
+            uncheck_items=args.uncheck,
+            check_all=args.check_all,
+            uncheck_all=args.uncheck_all,
+            sync=not args.no_sync,
+            tasks_file=args.file,
+            epic=args.epic,
+            clear_epic=args.clear_epic,
+        )
+        print(f"Successfully updated task {formatted_id} in {path}")
+    except Exception as e:
+        sys.stderr.write(f"Error: {e}\n")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

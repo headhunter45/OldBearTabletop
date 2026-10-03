@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""
+get-task
+
+Retrieves detailed information and metadata for a specific task in Documentation/Tasks.md.
+Usage:
+    ./scripts/get-task OT-018
+    ./scripts/get-task 18 --json
+    ./scripts/get-task OT-099 --description-only
+"""
+
+import argparse
+import importlib.machinery
+import importlib.util
+import json
+import re
+import sys
+from pathlib import Path
+
+
+def load_update_tasks_module():
+    script_dir = Path(__file__).resolve().parent
+    update_script = script_dir / "update-tasks"
+    if not update_script.exists():
+        raise FileNotFoundError(f"Could not find update-tasks at {update_script}")
+    loader = importlib.machinery.SourceFileLoader("update_tasks", str(update_script))
+    spec = importlib.util.spec_from_loader("update_tasks", loader)
+    if spec is None:
+        raise ImportError(f"Could not load spec for {update_script}")
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+def parse_task_id(id_str):
+    return load_update_tasks_module().parse_task_id(id_str)
+
+
+def get_task(task_id_input, tasks_file=None):
+    update_mod = load_update_tasks_module()
+    tasks_path = update_mod.find_tasks_file(tasks_file)
+
+    with open(tasks_path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    fm_data = update_mod.read_frontmatter(text)
+    prefix = update_mod.get_task_id_prefix(fm_data)
+    target_num = update_mod.parse_task_id(task_id_input)
+
+    detail_header_marker = "## Detailed Tasks\n"
+    detail_start = text.find(detail_header_marker)
+    if detail_start == -1:
+        raise ValueError("## Detailed Tasks heading not found")
+
+    notes_marker = "\n---\n\n## Notes\n"
+    notes_start = text.find(notes_marker)
+    if notes_start == -1:
+        notes_start = len(text)
+
+    detail_body = text[detail_start + len(detail_header_marker) : notes_start]
+    task_chunks = re.split(r"(?=<a\s+[^>]*\bid=|<id=)", detail_body)
+
+    for chunk in task_chunks:
+        chunk_clean = chunk.strip()
+        if not chunk_clean:
+            continue
+        m = re.search(update_mod.TASK_ID_PATTERN, chunk_clean, re.IGNORECASE)
+        if m and int(m.group(2)) == target_num and update_mod.task_id_matches(task_id_input, m.group(1), prefix):
+            anchor_match = re.search(update_mod.TASK_ANCHOR_PATTERN, chunk_clean, re.IGNORECASE)
+            anchor_tag = anchor_match.group(1) if anchor_match else ""
+
+            proj_m = re.search(r'data-project=["\']([^"\']+)["\']', anchor_tag)
+            subproj_m = re.search(r'data-subproject=["\']([^"\']*)["\']', anchor_tag)
+            status_m = re.search(r'data-status=["\']([^"\']+)["\']', anchor_tag)
+            type_m = re.search(r'data-task-type=["\']([^"\']+)["\']', anchor_tag)
+            epic_m = re.search(r'data-epic=["\']([^"\']*)["\']', anchor_tag)
+            epic, epic_label = update_mod.resolve_epic(epic_m.group(1) if epic_m else None, fm_data)
+
+            if not subproj_m:
+                subproj_field_m = re.search(r'^\*\*Subproject:\*\*\s*([^\n]+)$', chunk_clean, re.MULTILINE)
+                subproject = subproj_field_m.group(1).strip() if subproj_field_m else ""
+            else:
+                subproject = subproj_m.group(1).strip()
+
+            title_m = re.search(r'^###\s+(.+)$', chunk_clean, re.MULTILINE)
+            title = title_m.group(1).strip() if title_m else f"Task {target_num}"
+
+            desc_m = re.search(r'\*\*Description:\*\*\s*\n(.*)$', chunk_clean, re.DOTALL)
+            description = desc_m.group(1).strip() if desc_m else ""
+
+            digit_width = max(3, len(m.group(1).rsplit("-", 1)[1]))
+            formatted_id = update_mod.format_task_id(target_num, prefix, digit_width)
+            formatted_aid = m.group(1)
+
+            return {
+                "number": target_num,
+                "id": formatted_id,
+                "anchor_id": formatted_aid,
+                "title": title,
+                "project": proj_m.group(1) if proj_m else "shared",
+                "subproject": subproject,
+                "epic": epic,
+                "epic_label": epic_label,
+                "status": status_m.group(1) if status_m else "triage",
+                "type": type_m.group(1) if type_m else "feature",
+                "description": description,
+                "raw_markdown": chunk_clean,
+                "file_path": str(tasks_path),
+            }
+
+    raise KeyError(f"Task {task_id_input} ({update_mod.format_task_id(target_num, prefix)}) was not found in {tasks_path}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Get detailed info and metadata for a task in tasks.md")
+    parser.add_argument("task_id", help="Task number or prefixed ID (e.g. 18, PREFIX-018)")
+    parser.add_argument("-j", "--json", action="store_true", help="Output details as JSON")
+    parser.add_argument("-d", "--description", "--description-only", dest="description", action="store_true", help="Output description and checklist")
+    parser.add_argument("--id", action="store_true", help="Output task ID only")
+    parser.add_argument("--title", action="store_true", help="Output task title only")
+    parser.add_argument("--project", action="store_true", help="Output task project only")
+    parser.add_argument("--subproject", action="store_true", help="Output task subproject only")
+    parser.add_argument("--epic", action="store_true", help="Output task epic value only")
+    parser.add_argument("--status", action="store_true", help="Output task status only")
+    parser.add_argument("--type", action="store_true", help="Output task type only")
+    parser.add_argument("-m", "--metadata-only", action="store_true", help="Output metadata header attributes only")
+    parser.add_argument("-f", "--file", default=None, help="Path to tasks.md (optional)")
+
+    args = parser.parse_args()
+
+    try:
+        task = get_task(args.task_id, tasks_file=args.file)
+        if args.json:
+            print(json.dumps(task, indent=2))
+        elif args.metadata_only:
+            print(f"ID: {task['id']}")
+            print(f"Title: {task['title']}")
+            print(f"Project: {task['project']}")
+            if task.get("subproject"):
+                print(f"Subproject: {task['subproject']}")
+            if task.get("epic"):
+                print(f"Epic: {task['epic_label']}")
+            print(f"Status: {task['status']}")
+            print(f"Type: {task['type']}")
+        elif any([args.id, args.title, args.project, args.subproject, args.epic, args.status, args.type, args.description]):
+            output_parts = []
+            if args.id:
+                output_parts.append(task["id"])
+            if args.title:
+                output_parts.append(task["title"])
+            if args.project:
+                output_parts.append(task["project"])
+            if args.subproject:
+                output_parts.append(task["subproject"])
+            if args.epic:
+                output_parts.append(task["epic"])
+            if args.status:
+                output_parts.append(task["status"])
+            if args.type:
+                output_parts.append(task["type"])
+            if args.description:
+                output_parts.append(task["description"])
+            for part in output_parts:
+                print(part)
+        else:
+            print(task["raw_markdown"])
+    except Exception as e:
+        sys.stderr.write(f"Error: {e}\n")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

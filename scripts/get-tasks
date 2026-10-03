@@ -1,0 +1,300 @@
+#!/usr/bin/env bash
+#
+# get-tasks
+#
+# Lists tasks from Documentation/Tasks.md sorted by ID.
+# Supports --accept, --reject, and --sort [asc|desc] (defaults to descending).
+# Defaults to Pending tasks, or Triage & Planning with -p / --planning.
+# Uses filter-table if available, with a fast built-in fallback.
+#
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TASKS_FILE="${TASKS_FILE:-}"
+if [[ -z "$TASKS_FILE" ]]; then
+for cand in \
+    "$REPO_ROOT/docs/tasks.md" \
+    "$REPO_ROOT/docs/Tasks.md" \
+    "$REPO_ROOT/Documentation/tasks.md" \
+    "$REPO_ROOT/Documentation/Tasks.md" \
+    "$REPO_ROOT/tasks.md" \
+    "$REPO_ROOT/Tasks.md"; do
+    if [[ -f "$cand" ]]; then
+        TASKS_FILE="$cand"
+        break
+    fi
+done
+fi
+
+if [[ -z "$TASKS_FILE" ]]; then
+    TASKS_FILE="$REPO_ROOT/docs/tasks.md"
+fi
+
+ACCEPTS=()
+REJECTS=()
+MODE=""
+SORT_DIR="desc"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            echo "usage: get-tasks [-h] [-p|--planning] [--all] [--accept PREDICATE] [--reject PREDICATE] [--sort {asc,desc}] [-s|--select COLS] [-f|--file PATH]"
+            echo ""
+            echo "Lists tasks from docs/tasks.md sorted by ID."
+            echo ""
+            echo "options:"
+            echo "  -h, --help            Show this help message and exit"
+            echo "  -p, --planning        Show tasks in Triage and Planning status"
+            echo "  --all                 Show all tasks regardless of status"
+            echo "  --accept PREDICATE    Include rows matching predicate (e.g. 'Status:Fixed', 'Project:Engine', 'Epic:poc')"
+            echo "                       Epic filters accept frontmatter values or labels"
+            echo "  --reject PREDICATE    Exclude rows matching predicate (e.g. 'Status:Cancelled')"
+            echo "  --sort [asc|desc]     Sort order by task ID (default: desc)"
+            echo "  -s, --select COLS     Columns to display (e.g. 'ID,Title,Project,Epic,Status')"
+            echo "  -f, --file PATH       Path to tasks.md (overrides TASKS_FILE)"
+            exit 0
+            ;;
+        -p|--planning)
+            MODE="planning"
+            shift
+            ;;
+        --all)
+            MODE="all"
+            shift
+            ;;
+        -f|--file)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: $1 requires a file path" >&2
+                exit 1
+            fi
+            TASKS_FILE="$2"
+            shift 2
+            ;;
+        --accept)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --accept requires a predicate argument" >&2
+                exit 1
+            fi
+            ACCEPTS+=("$2")
+            shift 2
+            ;;
+        --accept=*)
+            ACCEPTS+=("${1#*=}")
+            shift
+            ;;
+        --reject|--deny)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: $1 requires a predicate argument" >&2
+                exit 1
+            fi
+            REJECTS+=("$2")
+            shift 2
+            ;;
+        --reject=*|--deny=*)
+            REJECTS+=("${1#*=}")
+            shift
+            ;;
+        -s|--select|--columns)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: $1 requires a column list argument" >&2
+                exit 1
+            fi
+            SELECT_COLS="$2"
+            shift 2
+            ;;
+        --select=*|--columns=*)
+            SELECT_COLS="${1#*=}"
+            shift
+            ;;
+        --sort)
+            if [[ -n "${2:-}" && "$2" != -* ]]; then
+                SORT_DIR="$2"
+                shift 2
+            else
+                SORT_DIR="desc"
+                shift
+            fi
+            ;;
+        --sort=*)
+            SORT_DIR="${1#*=}"
+            shift
+            ;;
+        *)
+            echo "Error: Unknown option '$1'" >&2
+            echo "Run 'get-tasks --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$SORT_DIR" = "asc" ]; then
+    SORT_FLAG="ID"
+else
+    SORT_FLAG="-ID"
+fi
+
+# Apply default accept if no explicit accept was provided
+if [ ${#ACCEPTS[@]} -eq 0 ]; then
+    if [ "$MODE" = "planning" ]; then
+        ACCEPTS+=("Status:Triage,Planning")
+    elif [ "$MODE" = "all" ]; then
+        : # No default filter
+    else
+        ACCEPTS+=("Status:Pending")
+    fi
+fi
+
+if [ $((${#ACCEPTS[@]} + ${#REJECTS[@]})) -gt 0 ]; then
+    ACCEPT_COUNT=${#ACCEPTS[@]}
+    NORMALIZED_PREDICATES="$(python3 "$SCRIPT_DIR/lib/filter_predicates.py" "$TASKS_FILE" "${ACCEPTS[@]}" "${REJECTS[@]}")"
+    ACCEPTS=()
+    REJECTS=()
+    PREDICATE_INDEX=0
+    while IFS= read -r predicate; do
+        if [ "$PREDICATE_INDEX" -lt "$ACCEPT_COUNT" ]; then
+            ACCEPTS+=("$predicate")
+        else
+            REJECTS+=("$predicate")
+        fi
+        PREDICATE_INDEX=$((PREDICATE_INDEX + 1))
+    done <<< "$NORMALIZED_PREDICATES"
+fi
+
+if command -v filter-table >/dev/null 2>&1; then
+    FILTER_ARGS=("$TASKS_FILE")
+    for acc in "${ACCEPTS[@]}"; do
+        FILTER_ARGS+=(--accept "$acc")
+    done
+    for rej in "${REJECTS[@]}"; do
+        FILTER_ARGS+=(--reject "$rej")
+    done
+    FILTER_ARGS+=(--sort "$SORT_FLAG")
+
+    if [ -n "$SELECT_COLS" ]; then
+        FILTER_ARGS+=(--select "$SELECT_COLS")
+    elif [ "$MODE" = "all" ]; then
+        ALL_COLS="ID,Title,Project"
+        if grep -q "| Subproject" "$TASKS_FILE"; then
+            ALL_COLS="$ALL_COLS,Subproject"
+        fi
+        if grep -q "| Epic" "$TASKS_FILE"; then
+            ALL_COLS="$ALL_COLS,Epic"
+        fi
+        FILTER_ARGS+=(--select "$ALL_COLS,Status")
+    else
+        FILTER_ARGS+=(--select "ID,Title")
+    fi
+
+    exec filter-table "${FILTER_ARGS[@]}"
+else
+    # Python fallback implementation
+    python3 - "$TASKS_FILE" "$SORT_DIR" "$MODE" "${SELECT_COLS:-}" "${#ACCEPTS[@]}" "${ACCEPTS[@]}" "${REJECTS[@]}" <<'PY'
+import sys, re
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+sort_dir, mode, select_cols_str = sys.argv[2:5]
+accept_count = int(sys.argv[5])
+accepts = sys.argv[6:6 + accept_count]
+rejects = sys.argv[6 + accept_count:]
+
+def parse_predicates(pred_list):
+    preds = []
+    for p in pred_list:
+        if ':' in p:
+            col, vals = p.split(':', 1)
+            allowed = {v.strip().lower() for v in vals.split(',') if v.strip()}
+            preds.append((col.strip().lower(), allowed))
+    return preds
+
+parsed_accepts = parse_predicates(list(accepts) if isinstance(accepts, (list, tuple)) else [])
+parsed_rejects = parse_predicates(list(rejects) if isinstance(rejects, (list, tuple)) else [])
+
+in_table = False
+headers = []
+header_display = []
+raw_rows = []
+
+for line in lines:
+    if line.startswith('| ID'):
+        in_table = True
+        header_display = [h.strip() for h in line.strip().split('|')[1:-1]]
+        headers = [h.lower() for h in header_display]
+        continue
+    if in_table:
+        if not line.strip() or line.startswith('## Detailed Tasks') or not line.startswith('|'):
+            break
+        parts = [p.strip() for p in line.strip().split('|')[1:-1]]
+        if len(parts) >= len(headers) and not parts[0].startswith(':-'):
+            row_dict = {headers[i]: parts[i] for i in range(len(headers))}
+            
+            # Check accepts
+            accept_ok = True
+            for col, allowed in parsed_accepts:
+                val = row_dict.get(col, '').lower()
+                if val not in allowed:
+                    accept_ok = False
+                    break
+            if not accept_ok:
+                continue
+
+            # Check rejects
+            reject_hit = False
+            for col, disallowed in parsed_rejects:
+                val = row_dict.get(col, '').lower()
+                if val in disallowed:
+                    reject_hit = True
+                    break
+            if reject_hit:
+                continue
+
+            raw_rows.append(row_dict)
+
+reverse_sort = (sort_dir != 'asc')
+raw_rows.sort(
+    key=lambda r: int(re.search(r'\d+$', r.get('id', '0')).group(0)) if re.search(r'\d+$', r.get('id', '0')) else 0,
+    reverse=reverse_sort
+)
+
+if select_cols_str:
+    req_cols = [c.strip() for c in select_cols_str.split(',') if c.strip()]
+    out_headers = [c for c in req_cols if c.lower() in headers]
+else:
+    if mode == 'all':
+        out_headers = ['ID', 'Title', 'Project']
+        if 'subproject' in headers:
+            out_headers.append('Subproject')
+        if 'epic' in headers:
+            out_headers.append('Epic')
+        out_headers.append('Status')
+    else:
+        out_headers = ['ID', 'Title']
+
+col_keys = [c.lower() for c in out_headers]
+col_widths = [len(h) for h in out_headers]
+
+formatted_rows = []
+for r in raw_rows:
+    row_vals = []
+    for k in col_keys:
+        val = r.get(k, '')
+        if k == 'title' and not select_cols_str and mode != 'all':
+            clean_t = val.strip('*').strip('_').strip()
+            st = r.get('status', '').lower()
+            val = f'**{clean_t}**' if st == 'pending' else f'*{clean_t}*' if st in ('triage', 'planning') else clean_t
+        row_vals.append(val)
+    formatted_rows.append(row_vals)
+    for idx, v in enumerate(row_vals):
+        col_widths[idx] = max(col_widths[idx], len(v))
+
+hdr_line = '| ' + ' | '.join(f'{out_headers[i]:<{col_widths[i]}}' for i in range(len(out_headers))) + ' |'
+sep_line = '| ' + ' | '.join(':' + '-' * (col_widths[i] - 1) for i in range(len(out_headers))) + ' |'
+print(hdr_line)
+print(sep_line)
+for row in formatted_rows:
+    print('| ' + ' | '.join(f'{row[i]:<{col_widths[i]}}' for i in range(len(out_headers))) + ' |')
+PY
+fi

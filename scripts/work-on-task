@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""
+work-on-task
+
+Validates a task's status for active development, displays its requirements,
+and optionally transitions it to 'in_progress'.
+
+Usage:
+    ./scripts/work-on-task OT-001
+    ./scripts/work-on-task OT-001 --start
+    ./scripts/work-on-task OT-001 --force
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Add scripts/lib to Python path
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from task_context import fetch_task, load_get_task_module
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Validate and begin work on a task.")
+    parser.add_argument("task_id", help="Task number or prefixed ID (e.g., 1 or PREFIX-001)")
+    parser.add_argument("--start", action="store_true", help="Transition status to 'in_progress'")
+    parser.add_argument("--force", action="store_true", help="Proceed even if status is not pending/in_progress")
+    parser.add_argument("-f", "--file", dest="file", default=None, help="Path to tasks.md")
+    args = parser.parse_args()
+
+    try:
+        task = fetch_task(args.task_id, tasks_file=args.file)
+    except Exception as e:
+        sys.stderr.write(f"Error fetching task {args.task_id}: {e}\n")
+        sys.exit(1)
+
+    status = task.get("status", "").strip().lower()
+    valid_work_statuses = ["pending", "in_progress"]
+    invalid_statuses = ["planning", "triage", "research", "done", "cancelled", "blocked"]
+
+    if status not in valid_work_statuses and not args.force:
+        sys.stderr.write(
+            f"WARNING: Task {task['id']} is currently in '{task['status']}' status.\n"
+            f"Tasks in '{task['status']}' are usually not ready to be worked on directly.\n"
+            f"To bypass this check, pass --force.\n"
+        )
+        sys.exit(2)
+
+    print(f"=== Task {task['id']}: {task['title']} ===")
+    print(f"Project: {task['project']}")
+    if task.get("epic"):
+        print(f"Epic:    {task['epic_label']}")
+    print(f"Status:  {task['status']}")
+    print(f"Type:    {task['type']}")
+    if task.get("description"):
+        print("\nRequirements & Description:")
+        print(task["description"])
+
+    if args.start and status != "in_progress":
+        mod = load_get_task_module()
+        update_mod = mod.load_update_tasks_module()
+        script_dir = Path(__file__).resolve().parent
+        import importlib.machinery
+        import importlib.util
+        ut_script = script_dir / "update-task"
+        loader = importlib.machinery.SourceFileLoader("update_task_mod", str(ut_script))
+        spec = importlib.util.spec_from_loader("update_task_mod", loader)
+        ut_mod = importlib.util.module_from_spec(spec)
+        loader.exec_module(ut_mod)
+
+        ut_mod.update_task_detail(task["id"], status="in_progress", tasks_file=args.file)
+        print(f"\n[Status updated to 'in_progress']")
+
+
+if __name__ == "__main__":
+    main()

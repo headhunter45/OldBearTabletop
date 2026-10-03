@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""
+research
+
+Researches a task from Documentation/Tasks.md using an AI CLI agent (Antigravity or Hermes).
+Validates that the task is in 'research' status, prepares task and codebase context,
+and launches the agent interactively.
+
+Usage:
+    ./scripts/research 037
+    ./scripts/research OT-037 --hermes
+    ./scripts/research 037 --agy
+    ./scripts/research --help
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Ensure scripts/lib is importable
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+
+from task_context import (
+    fetch_task,
+    assert_task_status,
+    build_workflow_prompt,
+    add_common_agent_arguments,
+    resolve_selected_agent,
+)
+
+RESEARCH_OBJECTIVES = """- Deeply investigate the technical requirements, architecture, and code models needed for this task.
+- Inspect existing codebase, grammar definitions, or schemas to identify gaps or technical hurdles.
+- Perform web searches or documentation lookups if external formats, libraries, or protocols are involved.
+- Collaborate interactively with the user to explore technical trade-offs and possible approaches.
+- Document research findings, technical recommendations, and proposed solutions.
+- When research is complete, update the task description/notes via `./scripts/update-task {task_id}` and determine if it's ready to transition to 'planning' or 'pending'."""
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Research a task in Documentation/Tasks.md using an AI CLI agent. Requires status to be 'research'."
+    )
+    parser.add_argument("task_id", help="Task number or prefixed ID (e.g. 37, PREFIX-037)")
+    add_common_agent_arguments(parser)
+
+    args = parser.parse_args()
+
+    agent = resolve_selected_agent(args)
+    task = fetch_task(args.task_id, tasks_file=args.file)
+    assert_task_status(task, ["research"], command_name="research")
+
+    prompt = build_workflow_prompt(
+        task=task,
+        workflow_name="conducting technical research on",
+        workflow_objective=RESEARCH_OBJECTIVES.format(task_id=task["id"]),
+    )
+
+    print(f"Launching {agent.name.capitalize()} ({agent.name}) to research {task['id']}: {task['title']}...")
+    agent.launch(prompt)
+
+
+if __name__ == "__main__":
+    main()
