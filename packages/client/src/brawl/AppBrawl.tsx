@@ -160,7 +160,7 @@ export const AppBrawl: React.FC = () => {
 
   const handleAddMap = (newMap: GameMap) => {
     setSession((prev) => (prev ? { ...prev, maps: [...prev.maps, newMap] } : prev));
-    setGmPreviewMapId(newMap.id);
+    handleSelectGmPreviewMap(newMap.id);
     networkRef.current?.send({ type: 'map-add', map: newMap });
   };
 
@@ -191,7 +191,22 @@ export const AppBrawl: React.FC = () => {
 
   const handleSetActiveMapForPlayers = (mapId: string) => {
     setSession((prev) => (prev ? { ...prev, activeMapId: mapId } : prev));
+    setGmPreviewMapId(mapId);
     networkRef.current?.send({ type: 'map-switch', mapId });
+    if (engineRef.current) {
+      engineRef.current.setActiveMap(mapId, true);
+    }
+  };
+
+  const handleSelectGmPreviewMap = (mapId: string) => {
+    setGmPreviewMapId(mapId);
+    if (engineRef.current) {
+      engineRef.current.setActiveMap(mapId, true);
+    }
+    const targetMap = sessionRef.current?.maps.find((m) => m.id === mapId) || session?.maps.find((m) => m.id === mapId);
+    if (targetMap) {
+      showToast(`Viewing scene: ${targetMap.name}`);
+    }
   };
 
   // Chess Clock Tick Effect (OB-158)
@@ -393,9 +408,10 @@ export const AppBrawl: React.FC = () => {
         return acc;
       }, {} as Record<string, Token>);
       engineRef.current.setSession({ ...session, tokens: coherentRecord });
-      const mapIdToView = session.activeMapId || session.maps[0]?.id || '';
-      if (mapIdToView && engineRef.current.currentMapId !== mapIdToView) {
-        engineRef.current.setActiveMap(mapIdToView);
+      const mapIdToView = gmPreviewMapId || session.activeMapId || session.maps[0]?.id || '';
+      if (mapIdToView) {
+        const changed = engineRef.current.currentMapId !== mapIdToView;
+        engineRef.current.setActiveMap(mapIdToView, changed);
       }
     }
     if (localPlayer) {
@@ -403,7 +419,7 @@ export const AppBrawl: React.FC = () => {
     }
     engineRef.current.activeTool = activeTool;
     engineRef.current.snapEnabled = snapEnabled;
-  }, [session, localPlayer, activeTool, snapEnabled, brawlRole, matchPrivacy, currentMap]);
+  }, [session, localPlayer, activeTool, snapEnabled, brawlRole, matchPrivacy, currentMap, gmPreviewMapId]);
 
   // Initialize CanvasEngine & Network
   useEffect(() => {
@@ -483,14 +499,15 @@ export const AppBrawl: React.FC = () => {
         setLocalPlayer(msg.player);
         setSession(msg.session);
         setIsOrganizer(msg.isGm);
+        setGmPreviewMapId(msg.session.activeMapId || msg.session.maps[0]?.id || '');
         if (msg.session.maps.length > 0 && !engine.currentMapId) {
-          engine.setActiveMap(msg.session.activeMapId || msg.session.maps[0].id);
+          engine.setActiveMap(msg.session.activeMapId || msg.session.maps[0].id, true);
         }
       } else if (msg.type === 'sync-session') {
         setSession(msg.session);
         engine.setSession(msg.session);
         if (msg.session.maps.length > 0 && !engine.currentMapId) {
-          engine.setActiveMap(msg.session.activeMapId || msg.session.maps[0].id);
+          engine.setActiveMap(msg.session.activeMapId || msg.session.maps[0].id, true);
         }
       } else if (msg.type === 'map-added') {
         setSession((prev) => {
@@ -525,6 +542,8 @@ export const AppBrawl: React.FC = () => {
           }
           return { ...prev, activeMapId: msg.mapId };
         });
+        setGmPreviewMapId(msg.mapId);
+        engine.setActiveMap(msg.mapId, true);
       }
     });
 
@@ -794,8 +813,8 @@ export const AppBrawl: React.FC = () => {
         <MapManagerModal
           maps={session.maps}
           activeMapId={session.activeMapId}
-          currentGmPreviewMapId={gmPreviewMapId}
-          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          currentGmPreviewMapId={gmPreviewMapId || session.activeMapId}
+          onSelectGmPreviewMap={handleSelectGmPreviewMap}
           onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
           onAddMap={handleAddMap}
           onUpdateMap={handleUpdateMap}
@@ -812,8 +831,8 @@ export const AppBrawl: React.FC = () => {
           tokens={Array.isArray(session?.tokens) ? session.tokens.reduce((acc, t) => ({ ...acc, [t.id]: t }), {}) : (session?.tokens || {})}
           activeMapId={currentMap?.id || session?.activeMapId || ''}
           maps={session.maps}
-          currentGmPreviewMapId={gmPreviewMapId}
-          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          currentGmPreviewMapId={gmPreviewMapId || session.activeMapId}
+          onSelectGmPreviewMap={handleSelectGmPreviewMap}
           onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
           onAddMap={handleAddMap}
           onUpdateMap={handleUpdateMap}

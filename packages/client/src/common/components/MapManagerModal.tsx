@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GameMap, GridType } from '@oldbear/shared';
+import { GameMap, GridType, generateUUID } from '@oldbear/shared';
 import { Map, Plus, Upload, Check, Eye, Trash2, X, Settings, Sliders, Grid, ArrowRightLeft, Copy, Layers } from 'lucide-react';
 import { saveAsset, getAssetsByType, StoredAsset } from '../storage/db.js';
 import { MapSettingsModal } from './MapSettingsModal.js';
@@ -58,7 +58,7 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
   const handleDuplicateScene = (scene: GameMap) => {
     const duplicated: GameMap = {
       ...scene,
-      id: `map-${crypto.randomUUID()}`,
+      id: `map-${generateUUID()}`,
       name: `${scene.name} (Copy)`,
       baseMapId: scene.baseMapId || scene.id,
       baseMapName: scene.baseMapName || scene.name,
@@ -90,7 +90,7 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
     const backgroundColor = existingMap?.backgroundColor;
 
     const newScene: GameMap = {
-      id: `map-${crypto.randomUUID()}`,
+      id: `map-${generateUUID()}`,
       name: newSceneName.trim() || `${sourceName} Scene`,
       imageUrl,
       gridSize,
@@ -126,7 +126,7 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
           const defaultTilesX = Math.max(10, Math.round(width / 70));
           const defaultTilesY = Math.max(10, Math.round(height / 70));
           const newMap: GameMap = {
-            id: `map-${crypto.randomUUID()}`,
+            id: `map-${generateUUID()}`,
             name: file.name.replace(/\.[^/.]+$/, ''),
             imageUrl: dataUrl,
             gridSize: Math.round(width / defaultTilesX),
@@ -249,7 +249,13 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    cursor: 'pointer',
                   }}
+                  onClick={() => {
+                    onSelectGmPreviewMap(map.id);
+                    onClose?.();
+                  }}
+                  title="Click to view this scene"
                 >
                   {!map.imageUrl && (
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Default Grid</span>
@@ -339,7 +345,10 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                     <button
                       className="btn btn-secondary"
                       style={{ flex: 1, fontSize: '0.75rem', padding: '0.35rem' }}
-                      onClick={() => onSelectGmPreviewMap(map.id)}
+                      onClick={() => {
+                        onSelectGmPreviewMap(map.id);
+                        onClose?.();
+                      }}
                     >
                       <Eye size={13} /> GM View
                     </button>
@@ -371,6 +380,7 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                           onClick={() => {
                             onSelectGmPreviewMap(map.id);
                             onSetActiveMapForPlayers(map.id);
+                            onClose?.();
                           }}
                           title="Send all players to this map"
                         >
@@ -383,6 +393,7 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                             onClick={() => {
                               onSelectGmPreviewMap(map.id);
                               onSendPlayersWithTokens(map.id);
+                              onClose?.();
                             }}
                             title="Send all players and move all player tokens to this map"
                           >

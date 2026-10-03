@@ -122,9 +122,16 @@ export class CanvasEngine {
   }
 
   setSession(session: GameSession) {
+    const isFirstInit = !this.session && !this.currentMapId;
     this.session = session;
     if (!this.currentMapId) {
       this.currentMapId = session.activeMapId;
+    }
+    if (isFirstInit && this.currentMapId) {
+      const initialMap = session.maps.find((m) => m.id === this.currentMapId) || session.maps[0];
+      if (initialMap) {
+        this.centerOnMap(initialMap);
+      }
     }
   }
 
@@ -132,8 +139,25 @@ export class CanvasEngine {
     this.localPlayer = player;
   }
 
-  setActiveMap(mapId: string) {
+  centerOnMap(map: GameMap) {
+    const screenW = this.canvas.width || window.innerWidth;
+    const screenH = this.canvas.height || window.innerHeight;
+    const mapW = map.width || 2000;
+    const mapH = map.height || 2000;
+    const scale = Math.min(1.5, Math.max(0.15, Math.min((screenW * 0.85) / mapW, (screenH * 0.85) / mapH)));
+    this.viewport.scale = scale;
+    this.viewport.centerOn(mapW / 2, mapH / 2, screenW, screenH);
+  }
+
+  setActiveMap(mapId: string, centerOnSwitch: boolean = false) {
+    const changed = this.currentMapId !== mapId;
     this.currentMapId = mapId;
+    if ((changed || centerOnSwitch) && this.session) {
+      const map = this.session.maps.find((m) => m.id === mapId);
+      if (map) {
+        this.centerOnMap(map);
+      }
+    }
   }
 
   selectToken(id: string | null) {

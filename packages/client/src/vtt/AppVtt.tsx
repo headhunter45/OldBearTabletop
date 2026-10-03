@@ -13,6 +13,7 @@ import {
   DnDAction,
   ChatMessage,
   generateRandomName,
+  generateUUID,
 } from '@oldbear/shared';
 import { CanvasEngine, ActiveTool } from '../common/engine/CanvasEngine.js';
 import { NetworkClient } from '../common/network/NetworkClient.js';
@@ -377,16 +378,7 @@ export const AppVtt: React.FC = () => {
           });
           setGmPreviewMapId(msg.mapId);
           if (engineRef.current) {
-            engineRef.current.setActiveMap(msg.mapId);
-            const targetMap = sessionRef.current?.maps.find((m) => m.id === msg.mapId);
-            if (targetMap) {
-              engineRef.current.viewport.centerOn(
-                targetMap.width / 2,
-                targetMap.height / 2,
-                window.innerWidth,
-                window.innerHeight
-              );
-            }
+            engineRef.current.setActiveMap(msg.mapId, true);
           }
           break;
         }
@@ -911,9 +903,10 @@ export const AppVtt: React.FC = () => {
     if (localPlayer) {
       engineRef.current.setLocalPlayer(localPlayer);
     }
-    const mapIdToView = isGm && gmPreviewMapId ? gmPreviewMapId : session?.activeMapId;
+    const mapIdToView = gmPreviewMapId || session?.activeMapId;
     if (mapIdToView) {
-      engineRef.current.setActiveMap(mapIdToView);
+      const changed = engineRef.current.currentMapId !== mapIdToView;
+      engineRef.current.setActiveMap(mapIdToView, changed);
     }
     engineRef.current.activeTool = activeTool;
     if (activeTool !== 'measure') {
@@ -1271,12 +1264,12 @@ export const AppVtt: React.FC = () => {
 
   const handleCreateNewToken = () => {
     if (!session || !localPlayer) return;
-    const currentMapId = isGm && gmPreviewMapId ? gmPreviewMapId : session.activeMapId;
+    const currentMapId = gmPreviewMapId || session.activeMapId;
     const gridSize = currentMap?.gridSize || 50;
     const pos = findUnoccupiedPosition(currentMapId, 400, 400, gridSize);
 
     const newToken: Token = {
-      id: `token-${crypto.randomUUID()}`,
+      id: `token-${generateUUID()}`,
       mapId: currentMapId,
       name: 'New Token',
       imageUrl: '',
@@ -1311,7 +1304,7 @@ export const AppVtt: React.FC = () => {
 
   const handleCreateNewTokenFromPicker = (data: TokenSpawnData) => {
     if (!session || !localPlayer) return;
-    const currentMapId = isGm && gmPreviewMapId ? gmPreviewMapId : session.activeMapId;
+    const currentMapId = gmPreviewMapId || session.activeMapId;
     const activeMap = session.maps.find((m) => m.id === currentMapId) || session.maps[0];
     const gridSize = activeMap?.gridSize || 50;
     const isProp = Boolean(data.isProp);
@@ -1329,7 +1322,7 @@ export const AppVtt: React.FC = () => {
     const pos = findUnoccupiedPosition(currentMapId, startX, startY, gridSize);
 
     const newToken: Token = {
-      id: `token-${crypto.randomUUID()}`,
+      id: `token-${generateUUID()}`,
       mapId: currentMapId,
       name: data.name,
       imageUrl: data.imageUrl || '',
@@ -1373,13 +1366,13 @@ export const AppVtt: React.FC = () => {
 
   const handleCreateTokenForCharacter = (char: DnDCharacter) => {
     if (!session || !localPlayer) return;
-    const currentMapId = isGm && gmPreviewMapId ? gmPreviewMapId : session.activeMapId;
+    const currentMapId = gmPreviewMapId || session.activeMapId;
     const activeMap = session.maps.find((m) => m.id === currentMapId) || session.maps[0];
     const mapW = activeMap?.width || 2000;
     const mapH = activeMap?.height || 1500;
 
     const newToken: Token = {
-      id: `token-${crypto.randomUUID()}`,
+      id: `token-${generateUUID()}`,
       mapId: currentMapId,
       name: char.name,
       imageUrl: char.avatarUrl || '',
@@ -1464,8 +1457,22 @@ export const AppVtt: React.FC = () => {
     setSession((prev) => (prev ? { ...prev, activeMapId: mapId } : prev));
     setGmPreviewMapId(mapId);
     networkRef.current?.send({ type: 'map-switch', mapId });
+    if (engineRef.current) {
+      engineRef.current.setActiveMap(mapId, true);
+    }
     const targetMap = session?.maps.find((m) => m.id === mapId);
     showToast(`Sent all players to ${targetMap?.name || 'map'}`);
+  };
+
+  const handleSelectGmPreviewMap = (mapId: string) => {
+    setGmPreviewMapId(mapId);
+    if (engineRef.current) {
+      engineRef.current.setActiveMap(mapId, true);
+    }
+    const targetMap = sessionRef.current?.maps.find((m) => m.id === mapId) || session?.maps.find((m) => m.id === mapId);
+    if (targetMap) {
+      showToast(`Viewing scene: ${targetMap.name}`);
+    }
   };
 
   const handleSendPlayersWithTokens = (targetMapId: string) => {
@@ -1724,7 +1731,7 @@ export const AppVtt: React.FC = () => {
   };
 
   const currentMap =
-    session?.maps.find((m) => m.id === (isGm && gmPreviewMapId ? gmPreviewMapId : session.activeMapId)) ||
+    session?.maps.find((m) => m.id === (gmPreviewMapId || session.activeMapId)) ||
     session?.maps[0];
 
   const handleToggleGrid = () => {
@@ -1734,7 +1741,7 @@ export const AppVtt: React.FC = () => {
   };
 
   const handleCoverAllFog = () => {
-    const mapId = isGm && gmPreviewMapId ? gmPreviewMapId : session?.activeMapId;
+    const mapId = gmPreviewMapId || session?.activeMapId;
     if (!mapId) return;
     setSession((prev) => {
       if (!prev) return prev;
@@ -1760,7 +1767,7 @@ export const AppVtt: React.FC = () => {
   };
 
   const handleClearAllFog = () => {
-    const mapId = isGm && gmPreviewMapId ? gmPreviewMapId : session?.activeMapId;
+    const mapId = gmPreviewMapId || session?.activeMapId;
     if (!mapId) return;
     setSession((prev) => {
       if (!prev) return prev;
@@ -2390,14 +2397,14 @@ export const AppVtt: React.FC = () => {
         <MapManagerModal
           maps={session.maps}
           activeMapId={session.activeMapId}
-          currentGmPreviewMapId={gmPreviewMapId}
-          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          currentGmPreviewMapId={gmPreviewMapId || session.activeMapId}
+          onSelectGmPreviewMap={handleSelectGmPreviewMap}
           onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
           onSendPlayersWithTokens={handleSendPlayersWithTokens}
           onOpenBatchTokenTransfer={() => setShowBatchTransferModal(true)}
           onAddMap={(newMap) => {
             setSession((prev) => (prev ? { ...prev, maps: [...prev.maps, newMap] } : prev));
-            setGmPreviewMapId(newMap.id);
+            handleSelectGmPreviewMap(newMap.id);
             networkRef.current?.send({ type: 'map-add', map: newMap });
           }}
           onUpdateMap={handleUpdateMap}
@@ -2477,8 +2484,8 @@ export const AppVtt: React.FC = () => {
           activeMapId={currentMap?.id || session?.activeMapId || ''}
           initialTab={backupModalTab}
           maps={session?.maps || []}
-          currentGmPreviewMapId={gmPreviewMapId}
-          onSelectGmPreviewMap={(id) => setGmPreviewMapId(id)}
+          currentGmPreviewMapId={gmPreviewMapId || session?.activeMapId}
+          onSelectGmPreviewMap={handleSelectGmPreviewMap}
           onSetActiveMapForPlayers={handleSetActiveMapForPlayers}
           onSendPlayersWithTokens={handleSendPlayersWithTokens}
           onOpenBatchTokenTransfer={() => setShowBatchTransferModal(true)}
