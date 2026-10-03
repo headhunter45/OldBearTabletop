@@ -162,7 +162,7 @@ export function isModelInControlZone(
  */
 export function evaluateObjectiveMarker(
   marker: ObjectiveMarker,
-  tokens: Token[],
+  tokens: Token[] | Record<string, Token> | null | undefined,
   options: {
     pixelsPerInch?: number;
     p1UserId?: string;
@@ -171,6 +171,12 @@ export function evaluateObjectiveMarker(
     p2Name?: string;
   } = {}
 ): ObjectiveEvaluation {
+  const tokenList: Token[] = Array.isArray(tokens)
+    ? tokens
+    : tokens
+    ? Object.values(tokens)
+    : [];
+
   const pixelsPerInch = options.pixelsPerInch ?? 50;
   const p1Name = options.p1Name ?? 'Player 1';
   const p2Name = options.p2Name ?? 'Player 2';
@@ -180,7 +186,7 @@ export function evaluateObjectiveMarker(
   let p1OcTotal = 0;
   let p2OcTotal = 0;
 
-  for (const token of tokens) {
+  for (const token of tokenList) {
     // Skip dead or invisible tokens
     if (token.dead || token.invisible) continue;
 
@@ -228,7 +234,7 @@ export function evaluateObjectiveMarker(
  */
 export function evaluateAllObjectives(
   markers: ObjectiveMarker[],
-  tokens: Token[],
+  tokens: Token[] | Record<string, Token> | null | undefined,
   options: {
     pixelsPerInch?: number;
     p1UserId?: string;
@@ -238,10 +244,16 @@ export function evaluateAllObjectives(
     scoringPlayer?: 1 | 2; // if only active player scores
   } = {}
 ): MatchObjectivesEvaluation {
+  const tokenList: Token[] = Array.isArray(tokens)
+    ? tokens
+    : tokens
+    ? Object.values(tokens)
+    : [];
+
   const p1Name = options.p1Name ?? 'Player 1';
   const p2Name = options.p2Name ?? 'Player 2';
 
-  const evaluations = markers.map((m) => evaluateObjectiveMarker(m, tokens, options));
+  const evaluations = markers.map((m) => evaluateObjectiveMarker(m, tokenList, options));
 
   let p1ControlledCount = 0;
   let p2ControlledCount = 0;

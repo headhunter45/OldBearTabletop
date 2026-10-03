@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { evaluateUnitCoherency } from './coherencyEngine.js';
+import { evaluateUnitCoherency, updateTokensCoherency } from './coherencyEngine.js';
 import { WargameModel } from '../types/brawl.js';
 
 describe('Unit Coherency Graph Engine & Real-Time Warning Halos (OB-156)', () => {
@@ -94,4 +94,35 @@ describe('Unit Coherency Graph Engine & Real-Time Warning Halos (OB-156)', () =>
     assert.strictEqual(result.isUnitCoherent, false);
     assert.ok(result.violatingModelIds.length > 0, 'Disconnected units must be flagged');
   });
+
+  it('handles updateTokensCoherency with both Token[] and Record<string, Token>', () => {
+    // u1: coherent unit with 2 models close together
+    const token1 = { id: 't1', name: 'M1', x: 100, y: 100, size: 1, currentHp: 2, maxHp: 2, wargameUnitId: 'u1' } as any;
+    const token2 = { id: 't2', name: 'M2', x: 150, y: 100, size: 1, currentHp: 2, maxHp: 2, wargameUnitId: 'u1' } as any;
+    // u2: disconnected unit where t4 is far away from t3
+    const token3 = { id: 't3', name: 'M3', x: 200, y: 200, size: 1, currentHp: 2, maxHp: 2, wargameUnitId: 'u2' } as any;
+    const token4 = { id: 't4', name: 'M4', x: 800, y: 800, size: 1, currentHp: 2, maxHp: 2, wargameUnitId: 'u2' } as any;
+
+    // Array input
+    const arrayResult = updateTokensCoherency([token1, token2, token3, token4], PX_PER_INCH);
+    assert.strictEqual(arrayResult.length, 4);
+    assert.strictEqual(arrayResult.find((t) => t.id === 't1')?.isOutOfCoherency, false);
+    assert.strictEqual(arrayResult.find((t) => t.id === 't2')?.isOutOfCoherency, false);
+    assert.strictEqual(arrayResult.find((t) => t.id === 't3')?.isOutOfCoherency, true);
+    assert.strictEqual(arrayResult.find((t) => t.id === 't4')?.isOutOfCoherency, true);
+
+    // Record / Map object input
+    const recordResult = updateTokensCoherency({ t1: token1, t2: token2, t3: token3, t4: token4 }, PX_PER_INCH);
+    assert.strictEqual(recordResult.length, 4);
+    assert.strictEqual(recordResult.find((t) => t.id === 't1')?.isOutOfCoherency, false);
+    assert.strictEqual(recordResult.find((t) => t.id === 't2')?.isOutOfCoherency, false);
+    assert.strictEqual(recordResult.find((t) => t.id === 't3')?.isOutOfCoherency, true);
+    assert.strictEqual(recordResult.find((t) => t.id === 't4')?.isOutOfCoherency, true);
+
+    // Null / Undefined input
+    const nullResult = updateTokensCoherency(null as any, PX_PER_INCH);
+    assert.deepStrictEqual(nullResult, []);
+  });
 });
+
+

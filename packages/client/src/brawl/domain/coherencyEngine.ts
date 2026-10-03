@@ -120,11 +120,17 @@ export function evaluateUnitCoherency(
  * Updates an array of tokens with real-time isOutOfCoherency status flags.
  */
 export function updateTokensCoherency(
-  tokens: import('@oldbear/shared').Token[],
+  tokens: import('@oldbear/shared').Token[] | Record<string, import('@oldbear/shared').Token> | null | undefined,
   pxPerInch: number = DEFAULT_PX_PER_INCH
 ): import('@oldbear/shared').Token[] {
+  const tokenList: import('@oldbear/shared').Token[] = Array.isArray(tokens)
+    ? tokens
+    : tokens
+    ? Object.values(tokens)
+    : [];
+
   const unitTokens = new Map<string, import('@oldbear/shared').Token[]>();
-  tokens.forEach((t) => {
+  tokenList.forEach((t) => {
     const unitId = (t as any).wargameUnitId;
     if (unitId) {
       if (!unitTokens.has(unitId)) unitTokens.set(unitId, []);
@@ -148,7 +154,7 @@ export function updateTokensCoherency(
     result.violatingModelIds.forEach((id) => outOfCoherencyIds.add(id));
   });
 
-  return tokens.map((t) => {
+  return tokenList.map((t) => {
     const modelId = (t as any).wargameModelId || t.id;
     const isOutOfCoherency = outOfCoherencyIds.has(modelId);
     if (t.isOutOfCoherency !== isOutOfCoherency) {
@@ -157,3 +163,4 @@ export function updateTokensCoherency(
     return t;
   });
 }
+

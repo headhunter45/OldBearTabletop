@@ -226,12 +226,18 @@ ${report.auditTrail.slice(0, 20).map((a) => `- [${new Date(a.timestamp).toLocale
  * Redacts tokens located in hidden reserves or secret staging submaps.
  */
 export function filterTokensForSpectator(
-  tokens: Token[],
+  tokens: Token[] | Record<string, Token> | null | undefined,
   privacy: MatchPrivacySettings,
   submaps: SubmapConfig[] = []
 ): Token[] {
+  const tokenList: Token[] = Array.isArray(tokens)
+    ? tokens
+    : tokens
+    ? Object.values(tokens)
+    : [];
+
   if (!privacy.hideReservesFromSpectators) {
-    return tokens;
+    return tokenList;
   }
 
   // Find reserves submaps
@@ -240,12 +246,13 @@ export function filterTokensForSpectator(
   );
 
   if (reserveSubmaps.length === 0) {
-    return tokens;
+    return tokenList;
   }
 
-  return tokens.filter((token) => {
+  return tokenList.filter((token) => {
     // If token is inside any reserves submap, hide from spectator
     const inReserves = reserveSubmaps.some((sub) => isPointInSubmap(sub, token.x, token.y));
     return !inReserves;
   });
 }
+

@@ -379,11 +379,18 @@ export const AppBrawl: React.FC = () => {
   useEffect(() => {
     if (!engineRef.current) return;
     if (session) {
+      const tokenList = Array.isArray(session.tokens)
+        ? session.tokens
+        : Object.values(session.tokens || {});
       const visibleTokens = brawlRole === 'spectator'
-        ? filterTokensForSpectator(session.tokens, matchPrivacy, currentMap?.submaps)
-        : session.tokens;
+        ? filterTokensForSpectator(tokenList, matchPrivacy, currentMap?.submaps)
+        : tokenList;
       const coherentTokens = updateTokensCoherency(visibleTokens);
-      engineRef.current.setSession({ ...session, tokens: coherentTokens });
+      const coherentRecord: Record<string, Token> = coherentTokens.reduce((acc, t) => {
+        acc[t.id] = t;
+        return acc;
+      }, {} as Record<string, Token>);
+      engineRef.current.setSession({ ...session, tokens: coherentRecord });
       const mapIdToView = session.activeMapId || session.maps[0]?.id || '';
       if (mapIdToView && engineRef.current.currentMapId !== mapIdToView) {
         engineRef.current.setActiveMap(mapIdToView);
@@ -410,8 +417,16 @@ export const AppBrawl: React.FC = () => {
         if (brawlRoleRef.current === 'spectator') return; // Spectators cannot move tokens
         setSession((prev) => {
           if (!prev) return prev;
-          const nextTokens = prev.tokens.map((t) => (t.id === token.id ? { ...t, x: token.x, y: token.y } : t));
-          return { ...prev, tokens: updateTokensCoherency(nextTokens) };
+          const currentTokens = Array.isArray(prev.tokens)
+            ? prev.tokens
+            : Object.values(prev.tokens || {});
+          const nextTokens = currentTokens.map((t) => (t.id === token.id ? { ...t, x: token.x, y: token.y } : t));
+          const coherentTokens = updateTokensCoherency(nextTokens);
+          const coherentRecord: Record<string, Token> = coherentTokens.reduce((acc, t) => {
+            acc[t.id] = t;
+            return acc;
+          }, {} as Record<string, Token>);
+          return { ...prev, tokens: coherentRecord };
         });
         networkRef.current?.send({ type: 'token-update', id: token.id, updates: { x: token.x, y: token.y } });
       },
@@ -608,9 +623,15 @@ export const AppBrawl: React.FC = () => {
 
             setSession((prev) => {
               if (!prev) return prev;
+              const currentTokensRecord: Record<string, Token> = Array.isArray(prev.tokens)
+                ? prev.tokens.reduce((acc, t) => ({ ...acc, [t.id]: t }), {} as Record<string, Token>)
+                : { ...(prev.tokens || {}) };
+              newTokens.forEach((tok) => {
+                currentTokensRecord[tok.id] = tok;
+              });
               return {
                 ...prev,
-                tokens: [...prev.tokens, ...newTokens],
+                tokens: currentTokensRecord,
               };
             });
 
@@ -718,7 +739,7 @@ export const AppBrawl: React.FC = () => {
       {showDeploymentModal && currentMap && (
         <DeploymentStagingModal
           map={currentMap}
-          tokens={session?.tokens || []}
+          tokens={Array.isArray(session?.tokens) ? session.tokens : Object.values(session?.tokens || {})}
           selectedTokenIds={selectedTokenId ? [selectedTokenId] : []}
           onClose={() => setShowDeploymentModal(false)}
           onUpdateMap={(updatedMap) => {
@@ -736,7 +757,16 @@ export const AppBrawl: React.FC = () => {
             }
           }}
           onUpdateTokens={(updatedTokens) => {
-            setSession((prev) => (prev ? { ...prev, tokens: updatedTokens } : prev));
+            setSession((prev) => {
+              if (!prev) return prev;
+              const currentTokensRecord: Record<string, Token> = Array.isArray(prev.tokens)
+                ? prev.tokens.reduce((acc, t) => ({ ...acc, [t.id]: t }), {} as Record<string, Token>)
+                : { ...(prev.tokens || {}) };
+              updatedTokens.forEach((t) => {
+                currentTokensRecord[t.id] = t;
+              });
+              return { ...prev, tokens: currentTokensRecord };
+            });
             updatedTokens.forEach((t) => {
               networkRef.current?.send({ type: 'token-update', id: t.id, updates: t });
             });
