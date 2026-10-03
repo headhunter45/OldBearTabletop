@@ -949,29 +949,28 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
             <Map size={16} /> Maps ({mapAssets.length})
           </button>
 
-          {isGm && (
-            <button
-              className={`tab-btn ${activeTab === 'scenes' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab('scenes');
-                setSelectedAssetIds([]);
-              }}
-              style={{
-                padding: '0.75rem 1.1rem',
-                border: 'none',
-                background: 'none',
-                color: activeTab === 'scenes' ? '#38bdf8' : 'var(--text-secondary)',
-                borderBottom: activeTab === 'scenes' ? '2px solid #38bdf8' : '2px solid transparent',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Layers size={16} /> Scenes ({(maps || session?.maps || []).length})
-            </button>
-          )}
+          <button
+            className={`tab-btn ${activeTab === 'scenes' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('scenes');
+              setSelectedAssetIds([]);
+            }}
+            style={{
+              padding: '0.75rem 1.1rem',
+              border: 'none',
+              background: 'none',
+              color: activeTab === 'scenes' ? '#38bdf8' : 'var(--text-secondary)',
+              borderBottom: activeTab === 'scenes' ? '2px solid #38bdf8' : '2px solid transparent',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Layers size={16} /> Scenes ({(maps || session?.maps || []).length})
+          </button>
+
 
           <button
             className={`tab-btn ${activeTab === 'audio' ? 'active' : ''}`}
