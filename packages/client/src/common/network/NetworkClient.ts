@@ -318,7 +318,16 @@ export class NetworkClient {
   }
 
   disconnect() {
-    this.ws?.close();
+    if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onclose = null;
+      try {
+        this.ws.close(1000, 'Client disconnecting');
+      } catch {}
+      this.ws = null;
+    }
     for (const pc of this.peerConnections.values()) {
       pc.close();
     }
@@ -326,3 +335,4 @@ export class NetworkClient {
     this.dataChannels.clear();
   }
 }
+

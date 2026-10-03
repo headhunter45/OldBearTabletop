@@ -78,6 +78,8 @@ export const AppBrawl: React.FC = () => {
   const [session, setSession] = useState<GameSession | null>(null);
   const sessionRef = useRef<GameSession | null>(null);
   sessionRef.current = session;
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected'>('connecting');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string, durationMs: number = TOAST_DURATION_MS) => {
@@ -465,10 +467,19 @@ export const AppBrawl: React.FC = () => {
     const network = new NetworkClient();
     networkRef.current = network;
 
+    network.onStatusChange((status, error) => {
+      setConnectionStatus(status);
+      if (error) {
+        setConnectionError(error);
+      }
+    });
+
     const initialPlayerName = generateRandomName('random');
 
     network.onMessage((msg) => {
       if (msg.type === 'join-ack') {
+        setConnectionStatus('connected');
+        setConnectionError(null);
         setLocalPlayer(msg.player);
         setSession(msg.session);
         setIsOrganizer(msg.isGm);
@@ -916,6 +927,106 @@ export const AppBrawl: React.FC = () => {
           {toastMessage}
         </div>
       )}
+      {/* Connection & Loading Screen */}
+      {!session && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: '16px',
+              padding: '2.5rem',
+              maxWidth: '460px',
+              width: '90%',
+              textAlign: 'center',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            }}
+          >
+            {connectionStatus === 'error' || connectionStatus === 'disconnected' ? (
+              <div>
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.25rem',
+                  }}
+                >
+                  <AlertTriangle size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#fff' }}>
+                  Connection Failed
+                </h3>
+                <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                  {connectionError || 'Unable to connect to the backend server. Please verify the server is running (`npm run dev`).'}
+                </p>
+
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onClick={() => {
+                    setConnectionStatus('connecting');
+                    setConnectionError(null);
+                    const net = networkRef.current;
+                    if (net) {
+                      const path = window.location.pathname.replace(/^\/|\/$/g, '');
+                      const currentRoomId = path || 'brawl-table';
+                      net.connect(currentRoomId, generateRandomName('random'), '#f59e0b', '');
+                    } else {
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  <RefreshCw size={16} /> Retry Connection
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    color: '#f59e0b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.25rem',
+                    animation: 'pulse 2s infinite',
+                  }}
+                >
+                  <Compass size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#fff' }}>
+                  Joining Brawl Table...
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+                  Connecting to real-time session server
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
