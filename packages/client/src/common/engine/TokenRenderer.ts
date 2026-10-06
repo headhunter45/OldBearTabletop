@@ -14,6 +14,10 @@ export function getCachedImage(url?: string): HTMLImageElement | null {
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
+export function setCachedImage(url: string, img: HTMLImageElement) {
+  imageCache.set(url, img);
+}
+
 export function traceTokenShape(
   ctx: CanvasRenderingContext2D,
   shape: 'circle' | 'square' | 'rounded' | 'hexagon' | 'octagon',

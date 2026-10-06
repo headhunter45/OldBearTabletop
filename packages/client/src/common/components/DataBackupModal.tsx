@@ -1135,6 +1135,8 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
           {activeTab === 'scenes' ? (
             <MapManagerModal
               embedded={true}
+              isGm={isGm}
+              tokens={tokens || session?.tokens || {}}
               maps={maps || session?.maps || []}
               activeMapId={activeMapId || session?.activeMapId || ''}
               currentGmPreviewMapId={currentGmPreviewMapId || activeMapId || ''}

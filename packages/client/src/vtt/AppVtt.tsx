@@ -2395,6 +2395,8 @@ export const AppVtt: React.FC = () => {
       {/* GM Maps Manager Modal */}
       {showMapManager && session && (
         <MapManagerModal
+          isGm={isGm}
+          tokens={session.tokens}
           maps={session.maps}
           activeMapId={session.activeMapId}
           currentGmPreviewMapId={gmPreviewMapId || session.activeMapId}

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { GameMap, GridType, generateUUID } from '@oldbear/shared';
-import { Map, Plus, Upload, Check, Eye, Trash2, X, Settings, Sliders, Grid, ArrowRightLeft, Copy, Layers } from 'lucide-react';
+import { GameMap, GridType, generateUUID, Token } from '@oldbear/shared';
+import { Map, Plus, Upload, Check, Eye, Trash2, X, Settings, Sliders, Grid, ArrowRightLeft, Copy, Layers, Download, Loader2 } from 'lucide-react';
 import { saveAsset, getAssetsByType, StoredAsset } from '../storage/db.js';
 import { MapSettingsModal } from './MapSettingsModal.js';
 import { duplicateSceneAsTemplate } from '../engine/SubmapManager.js';
+import { exportSceneToZip } from '../utils/sceneExporter.js';
 
 interface MapManagerModalProps {
   maps: GameMap[];
@@ -18,6 +19,8 @@ interface MapManagerModalProps {
   onDeleteMap: (mapId: string) => void;
   onClose: () => void;
   embedded?: boolean;
+  isGm?: boolean;
+  tokens?: Record<string, Token> | Token[];
 }
 
 export const MapManagerModal: React.FC<MapManagerModalProps> = ({
@@ -33,12 +36,16 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
   onDeleteMap,
   onClose,
   embedded,
+  isGm = true,
+  tokens = {},
 }) => {
   const [selectedMapForEdit, setSelectedMapForEdit] = useState<GameMap | null>(null);
   const [showNewSceneModal, setShowNewSceneModal] = useState(false);
   const [mapAssets, setMapAssets] = useState<StoredAsset[]>([]);
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
   const [newSceneName, setNewSceneName] = useState<string>('');
+  const [exportingMapId, setExportingMapId] = useState<string | null>(null);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (showNewSceneModal) {
@@ -54,6 +61,26 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
       });
     }
   }, [showNewSceneModal, maps]);
+
+  const handleExportScene = async (scene: GameMap) => {
+    try {
+      setExportingMapId(scene.id);
+      setExportMessage(`Exporting ${scene.name}...`);
+      await exportSceneToZip({
+        map: scene,
+        tokens,
+        onProgress: (status) => setExportMessage(status),
+      });
+      setExportMessage(`Successfully exported ${scene.name}!`);
+      setTimeout(() => setExportMessage(null), 4000);
+    } catch (err: any) {
+      console.error('[MapManagerModal] Export error:', err);
+      alert(`Export failed: ${err.message || 'Unknown error'}`);
+      setExportMessage(null);
+    } finally {
+      setExportingMapId(null);
+    }
+  };
 
   const handleDuplicateScene = (scene: GameMap) => {
     const duplicated: GameMap = {
@@ -215,6 +242,26 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
           )}
         </div>
 
+        {exportMessage && (
+          <div
+            style={{
+              padding: '0.65rem 1rem',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              border: '1px solid var(--accent-primary)',
+              color: 'var(--text-main)',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              marginBottom: '0.5rem',
+            }}
+          >
+            {exportingMapId ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} color="var(--accent-primary)" />}
+            <span style={{ fontWeight: 500 }}>{exportMessage}</span>
+          </div>
+        )}
+
         {/* Map Cards Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
           {maps.map((map) => {
@@ -306,6 +353,21 @@ export const MapManagerModal: React.FC<MapManagerModalProps> = ({
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                      {isGm && (
+                        <button
+                          className="btn-icon"
+                          style={{ width: '28px', height: '28px' }}
+                          onClick={() => handleExportScene(map)}
+                          disabled={exportingMapId === map.id}
+                          title="Export Scene at Native Resolution (ZIP)"
+                        >
+                          {exportingMapId === map.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Download size={14} />
+                          )}
+                        </button>
+                      )}
                       <button
                         className="btn-icon"
                         style={{ width: '28px', height: '28px' }}

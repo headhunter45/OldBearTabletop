@@ -811,6 +811,8 @@ export const AppBrawl: React.FC = () => {
       {/* Map Manager Modal */}
       {showMapManager && session && (
         <MapManagerModal
+          isGm={isOrganizer}
+          tokens={session.tokens}
           maps={session.maps}
           activeMapId={session.activeMapId}
           currentGmPreviewMapId={gmPreviewMapId || session.activeMapId}
