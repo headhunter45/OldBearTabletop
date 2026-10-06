@@ -1462,6 +1462,11 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
                           cursor: 'grab',
                         }}
                       >
+                        {preset.imageUrl && (
+                          <div style={{ width: '100%', height: '64px', borderRadius: '4px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', marginBottom: '2px' }}>
+                            <img src={preset.imageUrl} alt={preset.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                          </div>
+                        )}
                         <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {preset.name}
                         </div>

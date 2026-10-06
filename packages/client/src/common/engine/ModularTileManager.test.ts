@@ -106,4 +106,21 @@ describe('Modular / Tileable Maps & Snapping Map Tiles (OB-128)', () => {
     assert.strictEqual(token.propHeight, 8);
     assert.strictEqual(token.fillColor, '#1e293b');
   });
+
+  it('loads DEFAULT_MODULAR_TILES with image URLs and 1x1 sub-tile matrices', () => {
+    assert.strictEqual(DEFAULT_MODULAR_TILES.length, 8);
+    for (const tile of DEFAULT_MODULAR_TILES) {
+      assert.ok(tile.id, 'Tile must have an id');
+      assert.ok(tile.name, 'Tile must have a name');
+      assert.ok(tile.imageUrl.startsWith('/tiles/'), `Tile ${tile.id} must have a public imageUrl`);
+      assert.ok(tile.gridTilesX && tile.gridTilesX > 0, 'gridTilesX must be positive');
+      assert.ok(tile.gridTilesY && tile.gridTilesY > 0, 'gridTilesY must be positive');
+      assert.strictEqual(tile.width, tile.gridTilesX * 50);
+      assert.strictEqual(tile.height, tile.gridTilesY * 50);
+      assert.ok(Array.isArray(tile.tiles), `Tile ${tile.id} must have a 2D tiles matrix`);
+      assert.strictEqual(tile.tiles!.length, tile.gridTilesY);
+      assert.strictEqual(tile.tiles![0].length, tile.gridTilesX);
+    }
+  });
 });
+

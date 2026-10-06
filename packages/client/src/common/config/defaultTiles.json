@@ -1,0 +1,198 @@
+[
+  {
+    "id": "tile_chamber_8x8",
+    "name": "Stone Chamber (8×8)",
+    "category": "room",
+    "imageUrl": "/tiles/8x8-chamber.png",
+    "gridTilesX": 8,
+    "gridTilesY": 8,
+    "width": 400,
+    "height": 400,
+    "backgroundColor": "#1e293b",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["null", "6246", "6214", "2114", "2211", "6214", "6624", "null"],
+      ["6246", "2114", "1421", "1142", "1421", "1142", "4211", "6624"],
+      ["2146", "1111", "4211", "2114", "4211", "2114", "1111", "4621"],
+      ["2146", "2114", "1421", "1142", "1421", "1142", "4211", "4621"],
+      ["2145", "1111", "4211", "2114", "4211", "2114", "1111", "4521"],
+      ["2146", "1111", "1111", "1111", "1111", "1111", "1111", "4621"],
+      ["2466", "1142", "1111", "1111", "1111", "1111", "1421", "4662"],
+      ["null", "2466", "1462", "1462", "1462", "1462", "4662", "null"]
+    ]
+  },
+  {
+    "id": "tile_corridor_straight_4x8",
+    "name": "Corridor Straight (4×8)",
+    "category": "corridor",
+    "imageUrl": "/tiles/4x8-corridor.png",
+    "gridTilesX": 4,
+    "gridTilesY": 8,
+    "width": 200,
+    "height": 400,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": false,
+      "west": false
+    },
+    "tiles": [
+      ["6246", "2114", "4211", "6624"],
+      ["2146", "1111", "1111", "4621"],
+      ["2146", "1111", "1111", "4621"],
+      ["2146", "1111", "1111", "4621"],
+      ["2146", "1111", "1111", "4621"],
+      ["2146", "1111", "1111", "4621"],
+      ["2146", "1111", "1111", "4621"],
+      ["2466", "1142", "1421", "4662"]
+    ]
+  },
+  {
+    "id": "tile_corridor_corner_6x6",
+    "name": "Corridor Corner (6×6)",
+    "category": "corridor",
+    "imageUrl": "/tiles/6x6-corridor-corner.png",
+    "gridTilesX": 6,
+    "gridTilesY": 6,
+    "width": 300,
+    "height": 300,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": false,
+      "east": true,
+      "west": false
+    },
+    "tiles": [
+      ["6246", "6214", "6214", "6214", "6214", "6624"],
+      ["2146", "1111", "1111", "1111", "1111", "4211"],
+      ["2146", "1111", "1111", "1111", "1111", "1421"],
+      ["2146", "1111", "1111", "1421", "1462", "4662"],
+      ["2146", "1111", "1111", "4621", "null", "null"],
+      ["2466", "1142", "1462", "4662", "null", "null"]
+    ]
+  },
+  {
+    "id": "tile_crossroads_8x8",
+    "name": "Dungeon Crossroads (8×8)",
+    "category": "corridor",
+    "imageUrl": "/tiles/8x8-crossroads.png",
+    "gridTilesX": 8,
+    "gridTilesY": 8,
+    "width": 400,
+    "height": 400,
+    "backgroundColor": "#1e293b",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["null", "null", "6246", "2114", "4211", "6624", "null", "null"],
+      ["null", "null", "2146", "1111", "1111", "4621", "null", "null"],
+      ["6246", "6214", "2114", "1111", "1111", "4211", "6214", "6624"],
+      ["2114", "1111", "1111", "1111", "1111", "1111", "1111", "4211"],
+      ["1142", "1111", "1111", "1111", "1111", "1111", "1111", "1421"],
+      ["2466", "1462", "1142", "1111", "1111", "1421", "1462", "4662"],
+      ["null", "null", "2146", "1111", "1111", "4621", "null", "null"],
+      ["null", "null", "2466", "1142", "1421", "4662", "null", "null"]
+    ]
+  },
+  {
+    "id": "tile_wargame_ruin_8x8",
+    "name": "Terrain Ruin / Obstacle (8×8)",
+    "category": "terrain",
+    "imageUrl": "/tiles/8x8-obstacle.png",
+    "gridTilesX": 8,
+    "gridTilesY": 8,
+    "width": 400,
+    "height": 400,
+    "backgroundColor": "#3f3f46",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["1111", "1111", "1111", "1111", "1241d", "1124d", "1111", "1111"],
+      ["1111", "1241d", "1142d", "1111", "2146", "4211", "6214", "1124d"],
+      ["1111", "2411d", "4632", "1111", "2411d", "1462", "1462", "4112d"],
+      ["1111", "1241d", "3624", "1111", "1111", "1111", "1111", "1111"],
+      ["1111", "2411d", "4112d", "1111", "1241d", "6214", "6214", "1124d"],
+      ["1241d", "1124d", "1111", "1111", "2146", "1111", "1111", "4621"],
+      ["2411d", "4362", "6243", "6214", "2114", "1421", "1462", "4112d"],
+      ["1111", "1111", "2411d", "1462", "1462", "4112", "1111", "1111"]
+    ]
+  },
+  {
+    "id": "tile_corridor_straight_1x2",
+    "name": "Corridor Straight (1×2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/1x2-corridor.png",
+    "gridTilesX": 1,
+    "gridTilesY": 2,
+    "width": 50,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": false,
+      "west": false
+    },
+    "tiles": [
+      ["3636"],
+      ["3636"]
+    ]
+  },
+  {
+    "id": "tile_t_intersection_4x2",
+    "name": "T-Intersection (4×2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/4x2-t-intersection.png",
+    "gridTilesX": 4,
+    "gridTilesY": 2,
+    "width": 200,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": false,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["6336", "6243", "6324", "6363"],
+      ["null", "2146", "4621", "null"]
+    ]
+  },
+  {
+    "id": "tile_corridor_corner_2x2",
+    "name": "Corridor Corner (2×2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/2x2-corner.png",
+    "gridTilesX": 2,
+    "gridTilesY": 2,
+    "width": 100,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": false,
+      "east": true,
+      "west": false
+    },
+    "tiles": [
+      ["6336", "6363"],
+      ["3636", "null"]
+    ]
+  }
+]
