@@ -16,6 +16,7 @@ import {
   generateUUID,
 } from '@oldbear/shared';
 import { CanvasEngine, ActiveTool } from '../common/engine/CanvasEngine.js';
+import { getTokenAABB } from '../common/engine/GridRenderer.js';
 import { NetworkClient } from '../common/network/NetworkClient.js';
 import { ToolBar } from '../common/components/ToolBar.js';
 import { TopBar } from '../common/components/TopBar.js';
@@ -973,6 +974,12 @@ export const AppVtt: React.FC = () => {
       return { ...prev, tokens: copy, markers: updatedMarkers };
     });
     setSelectedToken((prev) => (prev?.id === id ? null : prev));
+    setSelectedTokens((prev) => prev.filter((t) => t.id !== id));
+    if (engineRef.current?.selectedTokenId === id) {
+      engineRef.current.selectToken(null);
+    } else if (engineRef.current?.selectedTokenIds.includes(id)) {
+      engineRef.current.selectTokens(engineRef.current.selectedTokenIds.filter((tId) => tId !== id));
+    }
     networkRef.current?.send({
       type: 'token-delete',
       id,
@@ -1246,18 +1253,28 @@ export const AppVtt: React.FC = () => {
     });
   };
 
-  const findUnoccupiedPosition = (mapId: string, startX = 400, startY = 400, gridSize = 50) => {
+  const findUnoccupiedPosition = (
+    mapId: string,
+    startX = 400,
+    startY = 400,
+    gridSize = 50,
+    stepX = gridSize,
+    stepY = gridSize,
+    additionalTokens: Token[] = []
+  ) => {
     if (!session) return { x: startX, y: startY };
-    const existing = Object.values(session.tokens).filter((t) => t.mapId === mapId);
+    const existing = Object.values(session.tokens)
+      .concat(additionalTokens)
+      .filter((t) => t.mapId === mapId);
     let x = startX;
     let y = startY;
     let step = 0;
-    while (existing.some((t) => Math.hypot(t.x - x, t.y - y) < gridSize * 0.8)) {
+    while (existing.some((t) => Math.hypot(t.x - x, t.y - y) < Math.min(stepX, gridSize) * 0.8)) {
       step++;
       const row = Math.floor(step / 6);
       const col = step % 6;
-      x = startX + col * gridSize;
-      y = startY + row * gridSize;
+      x = startX + col * stepX;
+      y = startY + row * stepY;
     }
     return { x, y };
   };
@@ -1490,7 +1507,10 @@ export const AppVtt: React.FC = () => {
     if (!session || !localPlayer) return;
     const currentMapId = token.mapId;
     const gridSize = currentMap?.gridSize || 50;
-    const pos = findUnoccupiedPosition(currentMapId, token.x + gridSize, token.y, gridSize);
+    const aabb = getTokenAABB(token, gridSize);
+    const stepX = aabb.width || gridSize;
+    const stepY = aabb.height || gridSize;
+    const pos = findUnoccupiedPosition(currentMapId, token.x + stepX, token.y, gridSize, stepX, stepY);
 
     const nameMatch = token.name.match(/^(.*?)(?:\s+(\d+))?$/);
     const baseName = nameMatch && nameMatch[1] ? nameMatch[1].trim() : token.name;
@@ -1517,6 +1537,7 @@ export const AppVtt: React.FC = () => {
       };
     });
     setSelectedToken(duplicated);
+    setSelectedTokens([duplicated]);
     engineRef.current?.selectToken(duplicated.id);
 
     networkRef.current?.send({
@@ -1542,7 +1563,18 @@ export const AppVtt: React.FC = () => {
 
     for (let i = 0; i < tokensToDup.length; i++) {
       const tok = tokensToDup[i];
-      const pos = findUnoccupiedPosition(currentMapId, tok.x + gridSize, tok.y, gridSize);
+      const aabb = getTokenAABB(tok, gridSize);
+      const stepX = aabb.width || gridSize;
+      const stepY = aabb.height || gridSize;
+      const pos = findUnoccupiedPosition(
+        currentMapId,
+        tok.x + stepX,
+        tok.y,
+        gridSize,
+        stepX,
+        stepY,
+        duplicatedTokens
+      );
       const nameMatch = tok.name.match(/^(.*?)(?:\s+(\d+))?$/);
       const baseName = nameMatch && nameMatch[1] ? nameMatch[1].trim() : tok.name;
       const nextNum = nameMatch && nameMatch[2] ? parseInt(nameMatch[2], 10) + 1 : 2;
@@ -1896,14 +1928,53 @@ export const AppVtt: React.FC = () => {
         return;
       }
 
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedMarker) {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
         const target = e.target as HTMLElement | null;
         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
           return;
         }
-        e.preventDefault();
-        handleDeleteMarker(selectedMarker.id);
-        return;
+
+        if (selectedMarker) {
+          e.preventDefault();
+          handleDeleteMarker(selectedMarker.id);
+          setSelectedMarker(null);
+          if (engineRef.current) {
+            engineRef.current.selectedMarkerId = null;
+          }
+          return;
+        }
+
+        let tokensToDelete: Token[] = [];
+        if (selectedTokens.length > 0) {
+          tokensToDelete = selectedTokens;
+        } else if (selectedToken) {
+          tokensToDelete = [selectedToken];
+        } else if (engineRef.current?.selectedTokenIds && engineRef.current.selectedTokenIds.length > 0 && session) {
+          tokensToDelete = engineRef.current.selectedTokenIds
+            .map((id) => session.tokens[id])
+            .filter((t): t is Token => Boolean(t));
+        } else if (engineRef.current?.selectedTokenId && session?.tokens[engineRef.current.selectedTokenId]) {
+          tokensToDelete = [session.tokens[engineRef.current.selectedTokenId]];
+        }
+
+        if (tokensToDelete.length > 0) {
+          const canDelete = (tok: Token) => {
+            if (isGm) return true;
+            if (tok.locked) return false;
+            return tok.ownerId === localPlayer?.id || Boolean(localPlayer?.assignedTokenIds?.includes(tok.id));
+          };
+          const controllable = tokensToDelete.filter(canDelete);
+          if (controllable.length > 0) {
+            e.preventDefault();
+            controllable.forEach((tok) => handleDeleteToken(tok.id));
+            setSelectedToken(null);
+            setSelectedTokens([]);
+            if (engineRef.current) {
+              engineRef.current.selectToken(null);
+            }
+            return;
+          }
+        }
       }
 
       if (e.key === 'Escape') {
@@ -1913,16 +1984,36 @@ export const AppVtt: React.FC = () => {
         if (engineRef.current) {
           engineRef.current.measuringTape = null;
           engineRef.current.selectedMarkerId = null;
+          engineRef.current.selectToken(null);
         }
       }
 
       if (key === 'd' || ((e.ctrlKey || e.metaKey) && key === 'd')) {
+        let tokensToDup: Token[] = [];
         if (selectedTokens.length > 1) {
-          e.preventDefault();
-          handleDuplicateTokens(selectedTokens);
+          tokensToDup = selectedTokens;
         } else if (selectedToken) {
+          tokensToDup = [selectedToken];
+        } else if (engineRef.current?.selectedTokenIds && engineRef.current.selectedTokenIds.length > 1 && session) {
+          tokensToDup = engineRef.current.selectedTokenIds
+            .map((id) => session.tokens[id])
+            .filter((t): t is Token => Boolean(t));
+        } else if (engineRef.current?.selectedTokenId && session?.tokens[engineRef.current.selectedTokenId]) {
+          tokensToDup = [session.tokens[engineRef.current.selectedTokenId]];
+        }
+
+        const canControl = (tok: Token) => {
+          if (isGm) return true;
+          return tok.ownerId === localPlayer?.id || Boolean(localPlayer?.assignedTokenIds?.includes(tok.id));
+        };
+        const controllable = tokensToDup.filter(canControl);
+
+        if (controllable.length > 1) {
           e.preventDefault();
-          handleDuplicateToken(selectedToken);
+          handleDuplicateTokens(controllable);
+        } else if (controllable.length === 1) {
+          e.preventDefault();
+          handleDuplicateToken(controllable[0]);
         }
       }
     };

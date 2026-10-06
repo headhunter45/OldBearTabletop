@@ -1,6 +1,106 @@
 import { GameMap } from '@oldbear/shared';
 import { Viewport } from './Viewport.js';
 
+export interface TokenPivotInfo {
+  pivotTileX: number;
+  pivotTileY: number;
+  pivotOffsetX: number;
+  pivotOffsetY: number;
+  pivotX: number;
+  pivotY: number;
+  propW: number;
+  propH: number;
+}
+
+/**
+ * Calculates the pivot grid cell and pivot center offset for any token or modular tile.
+ *
+ * Rules:
+ * - If gridTilesX and gridTilesY are odd: picks the center full tile.
+ * - If gridTilesX and gridTilesY are even: picks the upper-left of the 4 center tiles.
+ * - If gridTilesX is even and gridTilesY is odd: picks the left of the center 2 tiles.
+ * - If gridTilesX is odd and gridTilesY is even: picks the top of the center 2 tiles.
+ *
+ * This formula guarantees that rotating by multiples of 90 degrees around the pivot center
+ * keeps every sub-tile of the token or modular tile 100% aligned to the grid cells.
+ */
+export function getTokenPivot(
+  token: { propWidth?: number; propHeight?: number; size?: number; isProp?: boolean; x?: number; y?: number },
+  gridSize: number
+): TokenPivotInfo {
+  const isProp = Boolean(token.isProp);
+  const size = token.size ?? 1;
+  const tilesW = isProp && token.propWidth !== undefined ? token.propWidth : size;
+  const tilesH = isProp && token.propHeight !== undefined ? token.propHeight : size;
+  const propW = tilesW * gridSize;
+  const propH = tilesH * gridSize;
+
+  const pivotTileX = Math.floor((Math.max(1, tilesW) - 1) / 2);
+  const pivotTileY = Math.floor((Math.max(1, tilesH) - 1) / 2);
+  const pivotOffsetX = (pivotTileX + 0.5) * gridSize;
+  const pivotOffsetY = (pivotTileY + 0.5) * gridSize;
+  const pivotX = (token.x ?? 0) + pivotOffsetX;
+  const pivotY = (token.y ?? 0) + pivotOffsetY;
+
+  return {
+    pivotTileX,
+    pivotTileY,
+    pivotOffsetX,
+    pivotOffsetY,
+    pivotX,
+    pivotY,
+    propW,
+    propH,
+  };
+}
+
+/**
+ * Computes axis-aligned bounding box (AABB) for a token or modular tile taking pivot and rotation into account.
+ */
+export function getTokenAABB(
+  token: { propWidth?: number; propHeight?: number; size?: number; isProp?: boolean; x: number; y: number; rotation?: number },
+  gridSize: number
+): { x: number; y: number; width: number; height: number } {
+  const { pivotOffsetX, pivotOffsetY, pivotX, pivotY, propW, propH } = getTokenPivot(token, gridSize);
+  const rot = ((token.rotation || 0) % 360 + 360) % 360;
+
+  if (rot === 0 || !token.isProp) {
+    return { x: token.x, y: token.y, width: propW, height: propH };
+  }
+
+  const corners = [
+    { x: -pivotOffsetX, y: -pivotOffsetY },
+    { x: propW - pivotOffsetX, y: -pivotOffsetY },
+    { x: -pivotOffsetX, y: propH - pivotOffsetY },
+    { x: propW - pivotOffsetX, y: propH - pivotOffsetY },
+  ];
+
+  const rad = (rot * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const c of corners) {
+    const rx = c.x * cos - c.y * sin;
+    const ry = c.x * sin + c.y * cos;
+    minX = Math.min(minX, rx);
+    maxX = Math.max(maxX, rx);
+    minY = Math.min(minY, ry);
+    maxY = Math.max(maxY, ry);
+  }
+
+  return {
+    x: Math.round(pivotX + minX),
+    y: Math.round(pivotY + minY),
+    width: Math.round(maxX - minX),
+    height: Math.round(maxY - minY),
+  };
+}
+
 export function snapToGrid(
   x: number,
   y: number,
@@ -52,10 +152,8 @@ export function snapToGrid(
 
   const offX = ((offsetX % gridSize) + gridSize) % gridSize;
   const offY = ((offsetY % gridSize) + gridSize) % gridSize;
-  const halfGrid = gridSize / 2;
-  const centerOffset = tokenSize % 2 === 1 ? 0 : halfGrid;
-  const snappedX = Math.round((x - offX - centerOffset) / gridSize) * gridSize + offX + centerOffset;
-  const snappedY = Math.round((y - offY - centerOffset) / gridSize) * gridSize + offY + centerOffset;
+  const snappedX = Math.round((x - offX) / gridSize) * gridSize + offX;
+  const snappedY = Math.round((y - offY) / gridSize) * gridSize + offY;
   return { x: snappedX, y: snappedY };
 }
 

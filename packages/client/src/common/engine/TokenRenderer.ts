@@ -1,4 +1,5 @@
 import { Token } from '@oldbear/shared';
+import { getTokenPivot } from './GridRenderer.js';
 
 const imageCache = new Map<string, HTMLImageElement>();
 
@@ -67,15 +68,14 @@ export function renderToken(
   isGm: boolean
 ) {
   const isProp = Boolean(token.isProp);
-  const propW = (isProp && token.propWidth !== undefined ? token.propWidth : token.size) * gridSize;
-  const propH = (isProp && token.propHeight !== undefined ? token.propHeight : token.size) * gridSize;
+  const { pivotOffsetX, pivotOffsetY, pivotX, pivotY, propW, propH } = getTokenPivot(token, gridSize);
   const cx = token.x + propW / 2;
   const cy = token.y + propH / 2;
 
   // Custom rendering for props (walls, furniture, carpets, decorative items)
   if (isProp) {
     ctx.save();
-    ctx.translate(cx, cy);
+    ctx.translate(pivotX, pivotY);
     if (token.rotation) {
       ctx.rotate((token.rotation * Math.PI) / 180);
     }
@@ -89,10 +89,10 @@ export function renderToken(
       ctx.shadowBlur = 12;
       if (typeof ctx.roundRect === 'function') {
         ctx.beginPath();
-        ctx.roundRect(-propW / 2 - 3, -propH / 2 - 3, propW + 6, propH + 6, 4);
+        ctx.roundRect(-pivotOffsetX - 3, -pivotOffsetY - 3, propW + 6, propH + 6, 4);
         ctx.stroke();
       } else {
-        ctx.strokeRect(-propW / 2 - 3, -propH / 2 - 3, propW + 6, propH + 6);
+        ctx.strokeRect(-pivotOffsetX - 3, -pivotOffsetY - 3, propW + 6, propH + 6);
       }
       ctx.restore();
     }
@@ -100,26 +100,26 @@ export function renderToken(
     // Draw prop image or fallback block
     const img = getCachedImage(token.imageUrl);
     if (img) {
-      ctx.drawImage(img, -propW / 2, -propH / 2, propW, propH);
+      ctx.drawImage(img, -pivotOffsetX, -pivotOffsetY, propW, propH);
     } else {
       ctx.fillStyle = token.fillColor || 'rgba(30, 41, 59, 0.85)';
-      ctx.fillRect(-propW / 2, -propH / 2, propW, propH);
+      ctx.fillRect(-pivotOffsetX, -pivotOffsetY, propW, propH);
       ctx.strokeStyle = token.ringColor || '#eab308';
       ctx.lineWidth = 2;
-      ctx.strokeRect(-propW / 2, -propH / 2, propW, propH);
+      ctx.strokeRect(-pivotOffsetX, -pivotOffsetY, propW, propH);
 
       ctx.fillStyle = '#f8fafc';
       ctx.font = `600 ${Math.max(11, Math.min(propW, propH) * 0.2)}px Outfit, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(token.name || 'Prop', 0, 0);
+      ctx.fillText(token.name || 'Prop', -pivotOffsetX + propW / 2, -pivotOffsetY + propH / 2);
     }
 
     // Optional border if ringColor is explicitly set
     if (token.ringColor && token.ringColor !== 'transparent') {
       ctx.strokeStyle = token.ringColor;
       ctx.lineWidth = Math.max(1, token.borderWidth || 2);
-      ctx.strokeRect(-propW / 2, -propH / 2, propW, propH);
+      ctx.strokeRect(-pivotOffsetX, -pivotOffsetY, propW, propH);
     }
 
     ctx.restore();
@@ -127,7 +127,7 @@ export function renderToken(
     // Render name label for props when selected or GM
     if (isSelected && token.name) {
       const displayName = token.locked ? `🔒 ${token.name}` : token.name;
-      renderTokenLabel(ctx, displayName, cx, cy + propH / 2 + 12);
+      renderTokenLabel(ctx, displayName, pivotX, pivotY + propH - pivotOffsetY + 12);
     }
     return;
   }
@@ -216,10 +216,12 @@ export function renderToken(
   ctx.restore();
 
   // 4. Outer Ring
-  traceTokenShape(ctx, shape, radius - bWidth / 2);
-  ctx.strokeStyle = token.ringColor || '#64748b';
-  ctx.lineWidth = bWidth;
-  ctx.stroke();
+  if (token.ringColor !== 'transparent') {
+    traceTokenShape(ctx, shape, radius - bWidth / 2);
+    ctx.strokeStyle = token.ringColor || '#64748b';
+    ctx.lineWidth = bWidth;
+    ctx.stroke();
+  }
 
   // 5. Conditions / Statuses
   if (token.conditions && token.conditions.length > 0) {

@@ -12,7 +12,7 @@ interface TokenEditorModalProps {
   isGm: boolean;
 }
 
-const RING_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#ffffff'];
+const RING_COLORS = ['transparent', '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#ffffff'];
 const FILL_COLORS = ['#0f172a', '#1e293b', '#1e3a8a', '#7f1d1d', '#064e3b', '#78350f', '#581c87', '#000000'];
 
 const ALL_CONDITIONS = [
@@ -141,10 +141,12 @@ export const TokenEditorModal: React.FC<TokenEditorModalProps> = ({
     ctx.restore();
 
     // 4. Outer Ring
-    traceTokenShape(ctx, clipShape, r - borderWidth / 2);
-    ctx.strokeStyle = ringColor;
-    ctx.lineWidth = borderWidth;
-    ctx.stroke();
+    if (ringColor && ringColor !== 'transparent') {
+      traceTokenShape(ctx, clipShape, r - borderWidth / 2);
+      ctx.strokeStyle = ringColor;
+      ctx.lineWidth = borderWidth;
+      ctx.stroke();
+    }
 
     // 5. Guides when dragging
     if (isDragging) {
@@ -387,7 +389,7 @@ export const TokenEditorModal: React.FC<TokenEditorModalProps> = ({
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
                 userSelect: 'none',
-                boxShadow: `0 4px 20px ${ringColor}22`,
+                boxShadow: ringColor === 'transparent' ? '0 4px 20px rgba(0, 0, 0, 0.2)' : `0 4px 20px ${ringColor}22`,
                 flexShrink: 0,
               }}
             >
@@ -443,23 +445,63 @@ export const TokenEditorModal: React.FC<TokenEditorModalProps> = ({
         {/* Ring & Fill Color Palettes */}
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Ring Color</label>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem' }}>
-            {RING_COLORS.map((c) => (
-              <div
-                key={c}
-                onClick={() => setRingColor(c)}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  backgroundColor: c,
-                  cursor: 'pointer',
-                  border: ringColor === c ? '2px solid white' : '1px solid transparent',
-                  transform: ringColor === c ? 'scale(1.15)' : 'none',
-                  transition: 'transform 0.15s',
-                }}
-              />
-            ))}
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem', alignItems: 'center' }}>
+            {RING_COLORS.map((c) => {
+              const isSelected = ringColor === c;
+              if (c === 'transparent') {
+                return (
+                  <div
+                    key="transparent"
+                    onClick={() => setRingColor('transparent')}
+                    title="Transparent (No Ring)"
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      border: isSelected ? '2px solid white' : '1px solid transparent',
+                      transform: isSelected ? 'scale(1.15)' : 'none',
+                      transition: 'transform 0.15s',
+                      flexShrink: 0,
+                      boxSizing: 'border-box',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      style={{ display: 'block', width: '100%', height: '100%' }}
+                    >
+                      <circle cx="12" cy="12" r="12" fill="#e2e8f0" />
+                      <circle cx="12" cy="12" r="7" fill="none" stroke="#ef4444" strokeWidth="2" />
+                      <line x1="7.05" y1="7.05" x2="16.95" y2="16.95" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={c}
+                  onClick={() => setRingColor(c)}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: c,
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    border: isSelected ? '2px solid white' : '1px solid transparent',
+                    transform: isSelected ? 'scale(1.15)' : 'none',
+                    transition: 'transform 0.15s',
+                    flexShrink: 0,
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
 

@@ -18,6 +18,7 @@ import { importBinderData } from '../storage/BinderPipeline.js';
 import { TOAST_DURATION_MS } from '../config/toast.js';
 import { inspectImportFile, ImportInspectionResult } from '../utils/importDetector.js';
 import { ImportConfirmationModal } from './ImportConfirmationModal.js';
+import { snapToGrid, getTokenPivot } from '../engine/GridRenderer.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -156,12 +157,22 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
           if (asset && (asset.id || asset.name) && (asset.type || asset.dataUrl)) {
             let newToken: Token;
             if (asset.type === 'tile' || asset.layer === 'map') {
+              const { pivotOffsetX, pivotOffsetY } = getTokenPivot(
+                { propWidth: asset.propWidth || 4, propHeight: asset.propHeight || 4, isProp: true },
+                gridSize
+              );
+              const snapped = snapToGrid(
+                worldPos.x - pivotOffsetX,
+                worldPos.y - pivotOffsetY,
+                gridSize,
+                1
+              );
               newToken = {
                 id: `tile-${crypto.randomUUID()}`,
                 name: asset.name || 'Modular Tile',
                 mapId: activeMapId,
-                x: worldPos.x,
-                y: worldPos.y,
+                x: snapped.x,
+                y: snapped.y,
                 size: Math.max(asset.propWidth || 4, asset.propHeight || 4),
                 imageUrl: asset.dataUrl || '',
                 ringColor: asset.ringColor || '#38bdf8',
@@ -182,12 +193,22 @@ export const GlobalDropOverlay: React.FC<GlobalDropOverlayProps> = ({
                 locked: asset.locked,
               };
             } else if (asset.isProp || asset.type === 'prop') {
+              const { pivotOffsetX, pivotOffsetY } = getTokenPivot(
+                { propWidth: asset.propWidth, propHeight: asset.propHeight, size: asset.size || 1, isProp: true },
+                gridSize
+              );
+              const snapped = snapToGrid(
+                worldPos.x - pivotOffsetX,
+                worldPos.y - pivotOffsetY,
+                gridSize,
+                asset.size || 1
+              );
               newToken = {
                 id: `token-${crypto.randomUUID()}`,
                 name: asset.name || 'Prop',
                 mapId: activeMapId,
-                x: worldPos.x,
-                y: worldPos.y,
+                x: snapped.x,
+                y: snapped.y,
                 size: asset.size || 1,
                 imageUrl: asset.dataUrl,
                 ringColor: asset.ringColor || '#10b981',

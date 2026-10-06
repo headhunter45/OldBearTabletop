@@ -7,7 +7,7 @@ import {
   FogShape,
 } from '@oldbear/shared';
 import { Viewport, Point } from './Viewport.js';
-import { renderGrid, snapToGrid } from './GridRenderer.js';
+import { renderGrid, snapToGrid, getTokenPivot, getTokenAABB } from './GridRenderer.js';
 import { renderToken, getCachedImage } from './TokenRenderer.js';
 import { FogRenderer } from './FogRenderer.js';
 import {
@@ -750,26 +750,27 @@ export class CanvasEngine {
     const matchingTokens: Token[] = [];
     for (let i = tokens.length - 1; i >= 0; i--) {
       const tok = tokens[i];
-      const isProp = Boolean(tok.isProp);
-      const propW = (isProp && tok.propWidth !== undefined ? tok.propWidth : tok.size) * currentMap.gridSize;
-      const propH = (isProp && tok.propHeight !== undefined ? tok.propHeight : tok.size) * currentMap.gridSize;
-      const cx = tok.x + propW / 2;
-      const cy = tok.y + propH / 2;
+      const { pivotOffsetX, pivotOffsetY, pivotX, pivotY, propW, propH } = getTokenPivot(tok, currentMap.gridSize);
 
       // Transform worldPos to token's local coordinate system taking rotation into account
-      const dx = worldPos.x - cx;
-      const dy = worldPos.y - cy;
+      const dx = worldPos.x - pivotX;
+      const dy = worldPos.y - pivotY;
       const rotRad = ((tok.rotation || 0) * Math.PI) / 180;
       const localX = dx * Math.cos(-rotRad) - dy * Math.sin(-rotRad);
       const localY = dx * Math.sin(-rotRad) + dy * Math.cos(-rotRad);
 
-      if (isProp) {
-        if (Math.abs(localX) <= propW / 2 && Math.abs(localY) <= propH / 2) {
+      if (tok.isProp) {
+        if (
+          localX >= -pivotOffsetX &&
+          localX <= -pivotOffsetX + propW &&
+          localY >= -pivotOffsetY &&
+          localY <= -pivotOffsetY + propH
+        ) {
           matchingTokens.push(tok);
         }
       } else {
         const radius = (tok.size * currentMap.gridSize) / 2;
-        if (Math.hypot(localX, localY) <= radius) {
+        if (Math.hypot(dx, dy) <= radius) {
           matchingTokens.push(tok);
         }
       }
@@ -1061,12 +1062,11 @@ export class CanvasEngine {
         this.session.maps.find((m) => m.id === this.currentMapId) ||
         this.session.maps[0];
       const isProp = Boolean(this.draggingToken.isProp);
-      const propW = (isProp && this.draggingToken.propWidth !== undefined ? this.draggingToken.propWidth : this.draggingToken.size) * currentMap.gridSize;
-      const propH = (isProp && this.draggingToken.propHeight !== undefined ? this.draggingToken.propHeight : this.draggingToken.size) * currentMap.gridSize;
+      const { pivotOffsetX, pivotOffsetY, propW, propH } = getTokenPivot(this.draggingToken, currentMap.gridSize);
 
-      // Offset token center to follow cursor
-      let newX = worldPos.x - propW / 2;
-      let newY = worldPos.y - propH / 2;
+      // Offset token pivot center to follow cursor
+      let newX = worldPos.x - pivotOffsetX;
+      let newY = worldPos.y - pivotOffsetY;
 
       if (this.snapEnabled) {
         const snapped = snapToGrid(
@@ -1086,20 +1086,20 @@ export class CanvasEngine {
           const otherTileRects: TileRect[] = Object.values(this.session.tokens)
             .filter((t) => t.id !== this.draggingToken!.id && (t.isProp || t.layer === 'map'))
             .map((t) => {
-              const w = (t.propWidth !== undefined ? t.propWidth : t.size) * currentMap.gridSize;
-              const h = (t.propHeight !== undefined ? t.propHeight : t.size) * currentMap.gridSize;
-              return { id: t.id, x: t.x, y: t.y, width: w, height: h };
+              const aabb = getTokenAABB(t, currentMap.gridSize);
+              return { id: t.id, x: aabb.x, y: aabb.y, width: aabb.width, height: aabb.height };
             });
 
           if (otherTileRects.length > 0) {
+            const myAabb = getTokenAABB({ ...this.draggingToken, x: newX, y: newY }, currentMap.gridSize);
             const tileSnap = snapTileEdgeToEdge(
-              { x: newX, y: newY, width: propW, height: propH },
+              { x: myAabb.x, y: myAabb.y, width: myAabb.width, height: myAabb.height },
               otherTileRects,
               Math.max(currentMap.gridSize * 0.7, 30)
             );
             if (tileSnap.snapped) {
-              newX = tileSnap.x;
-              newY = tileSnap.y;
+              newX += (tileSnap.x - myAabb.x);
+              newY += (tileSnap.y - myAabb.y);
             }
           }
         }

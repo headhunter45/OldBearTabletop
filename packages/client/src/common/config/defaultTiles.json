@@ -1,7 +1,7 @@
 [
   {
     "id": "tile_chamber_8x8",
-    "name": "Stone Chamber (8×8)",
+    "name": "Boss Chamber (8×8)",
     "category": "room",
     "imageUrl": "/tiles/8x8-chamber.png",
     "gridTilesX": 8,
@@ -24,58 +24,6 @@
       ["2146", "1111", "1111", "1111", "1111", "1111", "1111", "4621"],
       ["2466", "1142", "1111", "1111", "1111", "1111", "1421", "4662"],
       ["null", "2466", "1462", "1462", "1462", "1462", "4662", "null"]
-    ]
-  },
-  {
-    "id": "tile_corridor_straight_4x8",
-    "name": "Corridor Straight (4×8)",
-    "category": "corridor",
-    "imageUrl": "/tiles/4x8-corridor.png",
-    "gridTilesX": 4,
-    "gridTilesY": 8,
-    "width": 200,
-    "height": 400,
-    "backgroundColor": "#0f172a",
-    "sockets": {
-      "north": true,
-      "south": true,
-      "east": false,
-      "west": false
-    },
-    "tiles": [
-      ["6246", "2114", "4211", "6624"],
-      ["2146", "1111", "1111", "4621"],
-      ["2146", "1111", "1111", "4621"],
-      ["2146", "1111", "1111", "4621"],
-      ["2146", "1111", "1111", "4621"],
-      ["2146", "1111", "1111", "4621"],
-      ["2146", "1111", "1111", "4621"],
-      ["2466", "1142", "1421", "4662"]
-    ]
-  },
-  {
-    "id": "tile_corridor_corner_6x6",
-    "name": "Corridor Corner (6×6)",
-    "category": "corridor",
-    "imageUrl": "/tiles/6x6-corridor-corner.png",
-    "gridTilesX": 6,
-    "gridTilesY": 6,
-    "width": 300,
-    "height": 300,
-    "backgroundColor": "#0f172a",
-    "sockets": {
-      "north": true,
-      "south": false,
-      "east": true,
-      "west": false
-    },
-    "tiles": [
-      ["6246", "6214", "6214", "6214", "6214", "6624"],
-      ["2146", "1111", "1111", "1111", "1111", "4211"],
-      ["2146", "1111", "1111", "1111", "1111", "1421"],
-      ["2146", "1111", "1111", "1421", "1462", "4662"],
-      ["2146", "1111", "1111", "4621", "null", "null"],
-      ["2466", "1142", "1462", "4662", "null", "null"]
     ]
   },
   {
@@ -133,13 +81,85 @@
     ]
   },
   {
-    "id": "tile_corridor_straight_1x2",
-    "name": "Corridor Straight (1×2)",
+    "id": "tile_corridor_straight_8x4",
+    "name": "Corridor Straight (8x4)",
     "category": "corridor",
-    "imageUrl": "/tiles/1x2-corridor.png",
-    "gridTilesX": 1,
+    "imageUrl": "/tiles/8x4-corridor.png",
+    "gridTilesX": 8,
+    "gridTilesY": 4,
+    "width": 400,
+    "height": 200,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": false,
+      "west": false
+    },
+    "tiles": [
+      ["6246", "6214", "6214", "6214", "6214", "6214", "6214", "6624"],
+      ["2114", "1111", "1111", "1111", "1111", "1111", "1111", "4211"],
+      ["1142", "1111", "1111", "1111", "1111", "1111", "1111", "1421"],
+      ["2466", "1462", "1462", "1462", "1462", "1462", "1462", "4662"]
+    ]
+  },
+  {
+    "id": "tile_corridor_corner_6x6",
+    "name": "Corridor Corner (6×6)",
+    "category": "corridor",
+    "imageUrl": "/tiles/6x6-corridor-corner.png",
+    "gridTilesX": 6,
+    "gridTilesY": 6,
+    "width": 300,
+    "height": 300,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": false,
+      "east": true,
+      "west": false
+    },
+    "tiles": [
+      ["6246", "6214", "6214", "6214", "6214", "6624"],
+      ["2146", "1111", "1111", "1111", "1111", "4211"],
+      ["2146", "1111", "1111", "1111", "1111", "1421"],
+      ["2146", "1111", "1111", "1421", "1462", "4662"],
+      ["2146", "1111", "1111", "4621", "null", "null"],
+      ["2466", "1142", "1462", "4662", "null", "null"]
+    ]
+  },
+  {
+    "id": "tile_corridor_corner_5x5",
+    "name": "Corridor Corner (5×5)",
+    "category": "corridor",
+    "imageUrl": "/tiles/5x5-corridor-corner.png",
+    "gridTilesX": 5,
+    "gridTilesY": 5,
+    "width": 250,
+    "height": 250,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": false,
+      "east": true,
+      "west": false
+    },
+    "tiles": [
+      ["6246", "6214", "6214", "6214", "6214"],
+      ["2146", "1421", "1462", "1462", "1462"],
+      ["2146", "4621", "null", "null", "null"],
+      ["2146", "4621", "null", "null", "null"],
+      ["2146", "4621", "null", "null", "null"]
+    ]
+  },
+  {
+    "id": "tile_corridor_4x2",
+    "name": "",
+    "category": "corridor",
+    "imageUrl": "/tiles/4x2-corridor.png",
+    "gridTilesX": 4,
     "gridTilesY": 2,
-    "width": 50,
+    "width": 200,
     "height": 100,
     "backgroundColor": "#0f172a",
     "sockets": {
@@ -149,8 +169,8 @@
       "west": false
     },
     "tiles": [
-      ["3636"],
-      ["3636"]
+      ["6214", "6214", "6214", "6214"],
+      ["1462", "1462", "1462", "1462"]
     ]
   },
   {
@@ -175,6 +195,64 @@
     ]
   },
   {
+    "id": "tile_room_3x2",
+    "name": "Room (3x2)",
+    "category": "room",
+    "imageUrl": "/tiles/3x2-room.png",
+    "gridTilesX": 3,
+    "gridTilesY": 2,
+    "width": 150,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": { "north": true, "south": true, "east": true, "west": true },
+    "tiles": [
+      ["6246", "6214", "6624"],
+      ["2466", "1452-door", "4662"]
+    ]
+  },
+  {
+    "id": "tile_t_intersection_3x2",
+    "name": "T-Intersection (3x2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/3x2-t-intersection.png",
+    "gridTilesX": 3,
+    "gridTilesY": 2,
+    "width": 150,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": false,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["6363", "6222", "6363"],
+      ["null", "3636", "null"]
+    ]
+  },
+  {
+    "id": "tile_corridor_connecter_3x2",
+    "name": "Corridor Connecter (3x2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/3x2-corridor-connector.png",
+    "gridTilesX": 3,
+    "gridTilesY": 2,
+    "width": 150,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": false,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [
+      ["6363", "6243", "6214"],
+      ["null", "2411d", "1462"]
+    ]
+  },
+  {
     "id": "tile_corridor_corner_2x2",
     "name": "Corridor Corner (2×2)",
     "category": "corridor",
@@ -194,5 +272,77 @@
       ["6336", "6363"],
       ["3636", "null"]
     ]
+  },
+  {
+    "id": "tile_corridor_straight_1x2",
+    "name": "Corridor Straight (1×2)",
+    "category": "corridor",
+    "imageUrl": "/tiles/1x2-corridor.png",
+    "gridTilesX": 1,
+    "gridTilesY": 2,
+    "width": 50,
+    "height": 100,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": false,
+      "west": false
+    },
+    "tiles": [["3636"], ["3636"]]
+  },
+  {
+    "id": "tile_dead_end_1x1",
+    "name": "Dead End (1×1)",
+    "category": "corridor",
+    "imageUrl": "/tiles/1x1-dead-end.png",
+    "gridTilesX": 1,
+    "gridTilesY": 1,
+    "width": 50,
+    "height": 50,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": false,
+      "east": false,
+      "west": false
+    },
+    "tiles": [["6636"]]
+  },
+  {
+    "id": "tile_room_1x1",
+    "name": "Room (1x1)",
+    "category": "room",
+    "imageUrl": "/tiles/1x1-room.png",
+    "gridTilesX": 1,
+    "gridTilesY": 1,
+    "width": 50,
+    "height": 50,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [["6636"]]
+  },
+  {
+    "id": "tile_corridor_1x1",
+    "name": "Corridor (1x1)",
+    "category": "corridor",
+    "imageUrl": "/tiles/1x1-corridor.png",
+    "gridTilesX": 1,
+    "gridTilesY": 1,
+    "width": 50,
+    "height": 50,
+    "backgroundColor": "#0f172a",
+    "sockets": {
+      "north": true,
+      "south": true,
+      "east": true,
+      "west": true
+    },
+    "tiles": [["3636"]]
   }
 ]
