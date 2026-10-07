@@ -9,9 +9,13 @@ projects:
     path: '.'
     prefix: 'OBB'
     value: 'old-bear-brawl'
+  - label: 'Common'
+    path: '.'
+    prefix: 'CMN'
+    value: 'cmn'
 task-statuses:
-  - label: 'Backlog'
-    value: 'backlog'
+  - label: 'Triage'
+    value: 'triage'
     description: 'Task is still being defined.'
   - label: 'Ready'
     value: 'ready'
@@ -100,7 +104,7 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
    The attributes on this anchor tag are the canonical source of truth for the task's state.
    `data-epic` is optional; its value comes from frontmatter `epics`. Summary and detail views display the corresponding label.
 3. **Task Lifecycle**:
-   - **Backlog**: Conceptualization and scoping phase.
+   - **Triage**: Conceptualization and scoping phase.
    - **Ready**: Ready to be picked up for implementation.
    - **In Progress**: Actively being worked on.
    - **Testing**: Code complete and ready for verification.
@@ -250,23 +254,23 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-134 | Custom Image "Spray" Indicator Tool                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Old Bear VTT   | Done    | [Feature](#ob-134) |
 | OB-135 | Universal `.binder` Export/Import Pipeline                                                                                                                                                                                                                                                                                                                                                                                                                                           | Old Bear VTT   | Done    | [Bug](#ob-135)     |
 | OB-136 | Client Architectural Refactoring: Restructure into `src/common`, `src/vtt`, and `src/brawl`                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Done    | [Chore](#ob-136)   |
-| OB-137 | Mobile Touch Hit-Box & Finger Offset Calibration                                                                                                                                                                                                                                                                                                                                                                                                                                     | Old Bear VTT   | Backlog | [Feature](#ob-137) |
-| OB-138 | Mobile Token Interaction Bar & Left Menu Clipping                                                                                                                                                                                                                                                                                                                                                                                                                                    | Old Bear VTT   | Backlog | [Feature](#ob-138) |
+| OB-137 | _Mobile Touch Hit-Box & Finger Offset Calibration_                                                                                                                                                                                                                                                                                                                                                                                                                                   | Old Bear VTT   | Triage  | [Feature](#ob-137) |
+| OB-138 | _Mobile Token Interaction Bar & Left Menu Clipping_                                                                                                                                                                                                                                                                                                                                                                                                                                  | Old Bear VTT   | Triage  | [Feature](#ob-138) |
 | OB-139 | Reusable Help & Tooltip Component                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Old Bear VTT   | Done    | [Feature](#ob-139) |
 | OB-140 | Direct JSON Paste / Drop Import for Characters & Monsters                                                                                                                                                                                                                                                                                                                                                                                                                            | Old Bear VTT   | Done    | [Feature](#ob-140) |
 | OB-141 | `/item` Command with Local Caching & D&D Beyond Fetch                                                                                                                                                                                                                                                                                                                                                                                                                                | Old Bear VTT   | Done    | [Feature](#ob-141) |
 | OB-142 | D&D Beyond Monster, Item & Character Direct Fetch by URL/ID                                                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Done    | [Feature](#ob-142) |
 | OB-143 | Direct Token Creation from D&D Beyond Monster/Character URL                                                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Done    | [Feature](#ob-143) |
 | OB-144 | Pathbuilder 2e (PF2e) JSON Character Import                                                                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Done    | [Feature](#ob-144) |
-| OB-145 | Live Video Feed Tokens                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Old Bear VTT   | Backlog | [Feature](#ob-145) |
-| OB-146 | WebRTC Webcam Video Mesh with Draggable PIP Tiles                                                                                                                                                                                                                                                                                                                                                                                                                                    | Old Bear VTT   | Backlog | [Feature](#ob-146) |
-| OB-147 | Discord Two-Way Bot Sync Gateway                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Old Bear VTT   | Backlog | [Feature](#ob-147) |
-| OB-148 | D&D Beyond CobaltSession Auth & Private Sheets Support                                                                                                                                                                                                                                                                                                                                                                                                                               | Old Bear VTT   | Backlog | [Feature](#ob-148) |
-| OB-149 | Discord Embedded App SDK Activity Integration                                                                                                                                                                                                                                                                                                                                                                                                                                        | Old Bear VTT   | Backlog | [Feature](#ob-149) |
-| OB-150 | System-Agnostic Ruleset Manifest & Characterfiles Integration                                                                                                                                                                                                                                                                                                                                                                                                                        | Old Bear VTT   | Backlog | [Feature](#ob-150) |
+| OB-145 | _Live Video Feed Tokens_                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Old Bear VTT   | Triage  | [Feature](#ob-145) |
+| OB-146 | _WebRTC Webcam Video Mesh with Draggable PIP Tiles_                                                                                                                                                                                                                                                                                                                                                                                                                                  | Old Bear VTT   | Triage  | [Feature](#ob-146) |
+| OB-147 | _Discord Two-Way Bot Sync Gateway_                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Old Bear VTT   | Triage  | [Feature](#ob-147) |
+| OB-148 | _D&D Beyond CobaltSession Auth & Private Sheets Support_                                                                                                                                                                                                                                                                                                                                                                                                                             | Old Bear VTT   | Triage  | [Feature](#ob-148) |
+| OB-149 | _Discord Embedded App SDK Activity Integration_                                                                                                                                                                                                                                                                                                                                                                                                                                      | Old Bear VTT   | Triage  | [Feature](#ob-149) |
+| OB-150 | _System-Agnostic Ruleset Manifest & Characterfiles Integration_                                                                                                                                                                                                                                                                                                                                                                                                                      | Old Bear VTT   | Triage  | [Feature](#ob-150) |
 | OB-151 | Switch Container CI/CD to GitHub Container Registry (ghcr.io)                                                                                                                                                                                                                                                                                                                                                                                                                        | Old Bear VTT   | Done    | [Bug](#ob-151)     |
-| OB-152 | Integrate Help & Tooltip Component Across UI                                                                                                                                                                                                                                                                                                                                                                                                                                         | Old Bear VTT   | Backlog | [Feature](#ob-152) |
-| OB-153 | Pathfinder 2e (PF2e) Ruleset Support                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Old Bear VTT   | Backlog | [Feature](#ob-153) |
+| OB-152 | _Integrate Help & Tooltip Component Across UI_                                                                                                                                                                                                                                                                                                                                                                                                                                       | Old Bear VTT   | Triage  | [Feature](#ob-152) |
+| OB-153 | _Pathfinder 2e (PF2e) Ruleset Support_                                                                                                                                                                                                                                                                                                                                                                                                                                               | Old Bear VTT   | Triage  | [Feature](#ob-153) |
 | OB-154 | `GAME_MODE` Environment Configuration & Deployment Toggles                                                                                                                                                                                                                                                                                                                                                                                                                           | Old Bear VTT   | Testing | [Feature](#ob-154) |
 | OB-155 | Army, Unit, and Model Domain Hierarchy & Disambiguation                                                                                                                                                                                                                                                                                                                                                                                                                              | Old Bear Brawl | Testing | [Feature](#ob-155) |
 | OB-156 | Unit Coherency Graph Engine & Real-Time Warning Halos                                                                                                                                                                                                                                                                                                                                                                                                                                | Old Bear Brawl | Testing | [Feature](#ob-156) |
@@ -302,6 +306,26 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-186 | Unable to create new maps or duplicate existing ones.                                                                                                                                                                                                                                                                                                                                                                                                                                | Shared         | Done    | [Bug](#ob-186)     |
 | OB-187 | Submap & Deployment Zone Customization UI (Position, Dimensions, Colors, Background Images)                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Ready   | [Feature](#ob-187) |
 | OB-188 | Relative Dragging for Tokens, Modular Tiles, and Props                                                                                                                                                                                                                                                                                                                                                                                                                               | Old Bear VTT   | Ready   | [Feature](#ob-188) |
+| OB-189 | _Add a way to edit tiles after they have been uploaded._                                                                                                                                                                                                                                                                                                                                                                                                                             | Common         | Triage  | [Feature](#ob-189) |
+| OB-190 | _When tiles is selected the tab bar in the asset manager is positioned up underneath the header._                                                                                                                                                                                                                                                                                                                                                                                    | Common         | Triage  | [Bug](#ob-190)     |
+| OB-191 | _Make no ring color be the default for props and tiles._                                                                                                                                                                                                                                                                                                                                                                                                                             | Common         | Triage  | [Feature](#ob-191) |
+| OB-192 | _Custom statuses can't be created.'_                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Common         | Triage  | [Bug](#ob-192)     |
+| OB-193 | _Add a way to change token images to existing images._                                                                                                                                                                                                                                                                                                                                                                                                                               | Common         | Triage  | [Feature](#ob-193) |
+| OB-194 | _The hitbox for tapping a token should be anywhere within it's ring border._                                                                                                                                                                                                                                                                                                                                                                                                         | Common         | Triage  | [Bug](#ob-194)     |
+| OB-195 | _Add zoom and offset to the PRESET_TOKENS in TokenPickerModal._                                                                                                                                                                                                                                                                                                                                                                                                                      | Common         | Triage  | [Feature](#ob-195) |
+| OB-196 | _Move chat back to the left sidebar. Put it below the measuring tape icon._                                                                                                                                                                                                                                                                                                                                                                                                          | Common         | Triage  | [Feature](#ob-196) |
+| OB-197 | _Brawl mode does not have a top bar so I cannot switch back. See [OB-154](#ob-154)._                                                                                                                                                                                                                                                                                                                                                                                                 | Common         | Triage  | [Bug](#ob-197)     |
+| OB-198 | _Reveal fog should be 'shift-f' instead of 'r' for the shortcut key._                                                                                                                                                                                                                                                                                                                                                                                                                | Vtt            | Triage  | [Feature](#ob-198) |
+| OB-199 | _Make fog be a single layer._                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Vtt            | Triage  | [Feature](#ob-199) |
+| OB-200 | _I want to be able to add attacks to a token without syncing it with a character._                                                                                                                                                                                                                                                                                                                                                                                                   | Vtt            | Triage  | [Feature](#ob-200) |
+| OB-201 | _When a player spawns a token it should automatically be controlled by them. See [OB-143](#ob-143)._                                                                                                                                                                                                                                                                                                                                                                                 | Vtt            | Triage  | [Bug](#ob-201)     |
+| OB-202 | _Make help in chat look better._                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Common         | Triage  | [Feature](#ob-202) |
+| OB-203 | _Make draggable windows resizable on desktop. Especially chat._                                                                                                                                                                                                                                                                                                                                                                                                                      | Common         | Triage  | [Feature](#ob-203) |
+| OB-204 | _Error when trying to import pf2 content with /import_                                                                                                                                                                                                                                                                                                                                                                                                                               | Vtt            | Triage  | [Bug](#ob-204)     |
+| OB-205 | _Inspecting a spell like shows the spell, but it has the wrong buttons._                                                                                                                                                                                                                                                                                                                                                                                                             | Vtt            | Triage  | [Bug](#ob-205)     |
+| OB-206 | _Inspecting a spell like /spell? magic missile' shows the spell, but it has the wrong buttons._                                                                                                                                                                                                                                                                                                                                                                                      | Vtt            | Triage  | [Bug](#ob-206)     |
+| OB-207 | _Changing to a token without a bound character sheet should reset the form to the token's state._                                                                                                                                                                                                                                                                                                                                                                                    | Vtt            | Triage  | [Bug](#ob-207)     |
+| OB-208 | _Update the Open5EFetcher to use the v2 api._                                                                                                                                                                                                                                                                                                                                                                                                                                        | Vtt            | Triage  | [Feature](#ob-208) |
 
 ---
 
@@ -2204,13 +2228,13 @@ Reorganize `packages/client/src/` into three distinct domain folders to decouple
   - `src/vtt/` and `src/brawl/` import from `src/common/`, but never import from each other.
 - Execution Priority: **ASAP (Step 0)**. Must be executed first upon resuming active development so tasks OB-128 through OB-135 land directly in `src/common/`.
 
-<a id="ob-137" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-137" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Mobile Touch Hit-Box & Finger Offset Calibration
 
 **ID:** OB-137
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2219,13 +2243,13 @@ Reorganize `packages/client/src/` into three distinct domain folders to decouple
 
 Add a Touch Slop / Hit Radius Buffer in `CanvasEngine.ts` (`touchHitRadius = Math.max(tokenRadius, 28)` for touch events) to eliminate tap-selection misses on mobile touchscreens. When a touch begins within the expanded radius of a selected token, explicitly lock viewport panning and treat touch-drag as token movement.
 
-<a id="ob-138" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-138" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Mobile Token Interaction Bar & Left Menu Clipping
 
 **ID:** OB-138
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2452,39 +2476,39 @@ The top-level JSON contains a status flag and a `build` object housing all chara
 - `ability`: Casting attribute (e.g., `"cha"`).
 - `spells`: An array of objects indexed by spell level containing spell names and prepared/known status.
 
-<a id="ob-145" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-145" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Live Video Feed Tokens
 
 **ID:** OB-145
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
 
 Render a player's live webcam video feed directly inside their controlling token on the canvas battlemap using `ctx.drawImage(videoElement)` within the 60 FPS canvas loop.
 
-<a id="ob-146" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-146" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### WebRTC Webcam Video Mesh with Draggable PIP Tiles
 
 **ID:** OB-146
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
 
 Floating, draggable picture-in-picture webcam tiles for players with volume sliders, active speaking rings, and minimize/dock controls over the WebRTC peer mesh.
 
-<a id="ob-147" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-147" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Discord Two-Way Bot Sync Gateway
 
 **ID:** OB-147
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2493,13 +2517,13 @@ Floating, draggable picture-in-picture webcam tiles for players with volume slid
 
 Run a persistent Discord gateway bot daemon providing full two-way synchronization: messages typed in Discord text channels are relayed into OldBear room chat, and vice versa.
 
-<a id="ob-148" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-148" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### D&D Beyond CobaltSession Auth & Private Sheets Support
 
 **ID:** OB-148
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2508,26 +2532,26 @@ Run a persistent Discord gateway bot daemon providing full two-way synchronizati
 
 Support importing private character sheets and homebrew content via user-supplied D&D Beyond `CobaltSession` authentication tokens or companion browser extension.
 
-<a id="ob-149" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-149" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Discord Embedded App SDK Activity Integration
 
 **ID:** OB-149
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
 
 Embed OldBear directly inside Discord voice channels using the Discord Embedded App SDK so players can launch and join sessions with a single click from their voice call without external links.
 
-<a id="ob-150" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-150" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### System-Agnostic Ruleset Manifest & Characterfiles Integration
 
 **ID:** OB-150
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2554,13 +2578,13 @@ Transition the production container publishing pipeline from the private registr
 - Update `compose.prod.yaml` image references to pull from `ghcr.io/<owner>/oldbear_*`.
 - Keep images private until ready for public release, accessible to production hosts via GitHub Personal Access Token (PAT).
 
-<a id="ob-152" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-152" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Integrate Help & Tooltip Component Across UI
 
 **ID:** OB-152
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -2574,13 +2598,13 @@ Deploy the `<HelpTip />` component across the application once help text is sett
 - Scene settings, map manager, and asset manager.
 - Dice roller, initiative tracker, and chat commands.
 
-<a id="ob-153" class="task" data-project="old-bear-vtt" data-status="backlog" data-task-type="feature"></a>
+<a id="ob-153" class="task" data-project="old-bear-vtt" data-status="triage" data-task-type="feature"></a>
 
 ### Pathfinder 2e (PF2e) Ruleset Support
 
 **ID:** OB-153
 **Project:** Old Bear VTT
-**Status:** Backlog
+**Status:** Triage
 **Type:** Feature
 
 **Description:**
@@ -3230,6 +3254,286 @@ Make dragging tokens, modular tiles, and props relative to the initial cursor gr
 - [ ] Preserve multi-token group drag relative offsets for all selected tokens.
 - [ ] Verify dragging feels natural for both standard 1x1 tokens and large multi-tile props (e.g. 8x8 rooms, 4x1 corridors).
 
+<a id="ob-189" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Add a way to edit tiles after they have been uploaded.
+
+**ID:** OB-189
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Add a way to edit tiles after they have been uploaded. I can't set their sizes or anything, but name them. Draw a random tile should pan the view so the tile is in the center.
+
+- [ ]
+
+<a id="ob-190" class="task" data-project="cmn" data-status="triage" data-task-type="bug"></a>
+
+### When tiles is selected the tab bar in the asset manager is positioned up underneath the header.
+
+**ID:** OB-190
+**Project:** Common
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+When tiles is selected the tab bar in the asset manager is positioned up underneath the header. This happens for scenes as well once I make a third scene. It appears related to when the content height is large. When a scrollbar appears the tab bar moves up. When the scrollabe conten is even larger the tab bar moves up even further.
+
+- [ ]
+
+<a id="ob-191" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Make no ring color be the default for props and tiles.
+
+**ID:** OB-191
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-192" class="task" data-project="cmn" data-status="triage" data-task-type="bug"></a>
+
+### Custom statuses can't be created.'
+
+**ID:** OB-192
+**Project:** Common
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Custom statuses are saved and loaded at the global and scene levels, but they don't appear to be available in the add status dropdown on the token bar. There also does not appear to be any way to add/edit/remove them so there just aren't any. Even our 'DEFAULT_STATUS_DEFINITIONS' are only checked by the initiative tracker they are not displayed anywhere. See [OB-130](#ob-130).
+
+- [ ]
+
+<a id="ob-193" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Add a way to change token images to existing images.
+
+**ID:** OB-193
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+I should be able to change the image on a token after it has been created. I can upload a new image, but I should be able to browse my saved tokens and the preset tokens to use one of those as well.
+
+- [ ]
+
+<a id="ob-194" class="task" data-project="cmn" data-status="triage" data-task-type="bug"></a>
+
+### The hitbox for tapping a token should be anywhere within it's ring border.
+
+**ID:** OB-194
+**Project:** Common
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-195" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Add zoom and offset to the PRESET_TOKENS in TokenPickerModal.
+
+**ID:** OB-195
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+I want to add zoom and offset or their equivalents to the PRESET_TOKENS in TokenPickerModal and use those values when showing the icons in the picker and when creating the tokens.
+
+- [ ]
+
+<a id="ob-196" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Move chat back to the left sidebar. Put it below the measuring tape icon.
+
+**ID:** OB-196
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-197" class="task" data-project="cmn" data-status="triage" data-task-type="bug"></a>
+
+### Brawl mode does not have a top bar so I cannot switch back. See [OB-154](#ob-154).
+
+**ID:** OB-197
+**Project:** Common
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-198" class="task" data-project="vtt" data-status="triage" data-task-type="feature"></a>
+
+### Reveal fog should be 'shift-f' instead of 'r' for the shortcut key.
+
+**ID:** OB-198
+**Project:** Vtt
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-199" class="task" data-project="vtt" data-status="triage" data-task-type="feature"></a>
+
+### Make fog be a single layer.
+
+**ID:** OB-199
+**Project:** Vtt
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+The Reveal fog tool only removes from the topmost layer of fog it encounters. We should only have 1 layer at a time and track it as an svg preferably or a raster image so we can brush it on and off later.
+
+- [ ]
+
+<a id="ob-200" class="task" data-project="vtt" data-status="triage" data-task-type="feature"></a>
+
+### I want to be able to add attacks to a token without syncing it with a character.
+
+**ID:** OB-200
+**Project:** Vtt
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-201" class="task" data-project="vtt" data-status="triage" data-task-type="bug"></a>
+
+### When a player spawns a token it should automatically be controlled by them. See [OB-143](#ob-143).
+
+**ID:** OB-201
+**Project:** Vtt
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-202" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Make help in chat look better.
+
+**ID:** OB-202
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-203" class="task" data-project="cmn" data-status="triage" data-task-type="feature"></a>
+
+### Make draggable windows resizable on desktop. Especially chat.
+
+**ID:** OB-203
+**Project:** Common
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
+<a id="ob-204" class="task" data-project="vtt" data-status="triage" data-task-type="bug"></a>
+
+### Error when trying to import pf2 content with /import
+
+**ID:** OB-204
+**Project:** Vtt
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Error when trying to import pf2 content with /import Uncaught TypeError: Cannot read properties of undefined (reading 'toUpperCase') at StatBlockCard (StatBlockCard.tsx:330:48) See [OB-177](#0b-177).
+
+- [ ]
+
+<a id="ob-205" class="task" data-project="vtt" data-status="triage" data-task-type="bug"></a>
+
+### Inspecting a spell like shows the spell, but it has the wrong buttons.
+
+**ID:** OB-205
+**Project:** Vtt
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Inspecting a spell like shows the spell, but it has a spawn token button and no add to character sheet button. Only gm can use the add to character sheet button, but it adds to the currently selected character on the character sheet page, not to the as-
+
+- [ ]
+
+<a id="ob-206" class="task" data-project="vtt" data-status="triage" data-task-type="bug"></a>
+
+### Inspecting a spell like /spell? magic missile' shows the spell, but it has the wrong buttons.
+
+**ID:** OB-206
+**Project:** Vtt
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+Inspecting a spell like '/spell? magic missile' shows the spell, but it has a spawn token button and no add to character sheet button. Only gm can use the add to character sheet button, but it adds to the currently selected character on the character sheet page, not to the 'as->' character in chat. See [OB-177](#0b-177).
+
+- [ ]
+
+<a id="ob-207" class="task" data-project="vtt" data-status="triage" data-task-type="bug"></a>
+
+### Changing to a token without a bound character sheet should reset the form to the token's state.
+
+**ID:** OB-207
+**Project:** Vtt
+**Status:** Triage
+**Type:** Bug
+
+**Description:**
+I added a token via Create without image. I already have my character sheet window open. I click on another token and see all the details for that token's character. I click the new 'Hero' token and the character sheet doesn't change. When I click on a token without a bound hero the character sheet should go to the default state and then let me select a character from the dropdown to synchronize with.
+
+- [ ]
+
+<a id="ob-208" class="task" data-project="vtt" data-status="triage" data-task-type="feature"></a>
+
+### Update the Open5EFetcher to use the v2 api.
+
+**ID:** OB-208
+**Project:** Vtt
+**Status:** Triage
+**Type:** Feature
+
+**Description:**
+Describe task objectives and implementation requirements here.
+
+- [ ]
+
 ---
 
 ## Notes
@@ -3245,7 +3549,7 @@ Make dragging tokens, modular tiles, and props relative to the initial cursor gr
 
 | Value       | Label       | Description                               |
 | :---------- | :---------- | :---------------------------------------- |
-| backlog     | Backlog     | Task is still being defined.              |
+| triage      | Triage      | Task is still being defined.              |
 | ready       | Ready       | Task is ready to be worked on.            |
 | in-progress | In Progress | Task is currently being worked on.        |
 | testing     | Testing     | Task is currently being tested.           |
