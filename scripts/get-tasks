@@ -16,11 +16,7 @@ TASKS_FILE="${TASKS_FILE:-}"
 if [[ -z "$TASKS_FILE" ]]; then
 for cand in \
     "$REPO_ROOT/docs/tasks.md" \
-    "$REPO_ROOT/docs/Tasks.md" \
-    "$REPO_ROOT/Documentation/tasks.md" \
-    "$REPO_ROOT/Documentation/Tasks.md" \
-    "$REPO_ROOT/tasks.md" \
-    "$REPO_ROOT/Tasks.md"; do
+    "$REPO_ROOT/docs/Tasks.md"; do
     if [[ -f "$cand" ]]; then
         TASKS_FILE="$cand"
         break
@@ -84,7 +80,7 @@ while [[ $# -gt 0 ]]; do
             ACCEPTS+=("${1#*=}")
             shift
             ;;
-        --reject|--deny)
+        --reject)
             if [[ $# -lt 2 ]]; then
                 echo "Error: $1 requires a predicate argument" >&2
                 exit 1
@@ -92,11 +88,11 @@ while [[ $# -gt 0 ]]; do
             REJECTS+=("$2")
             shift 2
             ;;
-        --reject=*|--deny=*)
+        --reject=*)
             REJECTS+=("${1#*=}")
             shift
             ;;
-        -s|--select|--columns)
+        -s|--select)
             if [[ $# -lt 2 ]]; then
                 echo "Error: $1 requires a column list argument" >&2
                 exit 1
@@ -104,7 +100,7 @@ while [[ $# -gt 0 ]]; do
             SELECT_COLS="$2"
             shift 2
             ;;
-        --select=*|--columns=*)
+        --select=*)
             SELECT_COLS="${1#*=}"
             shift
             ;;
@@ -142,7 +138,7 @@ if [ ${#ACCEPTS[@]} -eq 0 ]; then
     elif [ "$MODE" = "all" ]; then
         : # No default filter
     else
-        ACCEPTS+=("Status:Pending")
+        ACCEPTS+=("Status:Triage")
     fi
 fi
 
@@ -184,7 +180,7 @@ if command -v filter-table >/dev/null 2>&1; then
         fi
         FILTER_ARGS+=(--select "$ALL_COLS,Status")
     else
-        FILTER_ARGS+=(--select "ID,Title")
+        FILTER_ARGS+=(--select "ID,Status,Title")
     fi
 
     exec filter-table "${FILTER_ARGS[@]}"
