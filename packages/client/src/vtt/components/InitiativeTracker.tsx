@@ -1,8 +1,8 @@
+import { ChatMessage, DiceRollResult, InitiativeItem, InitiativeState, Player, Token } from '@oldbear/shared';
+import { ArrowUpDown, Check, ChevronLeft, ChevronRight, Dices, GripVertical, HelpCircle, Pencil, Plus, Swords, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { InitiativeState, InitiativeItem, Token, Player, DiceRollResult, ChatMessage } from '@oldbear/shared';
-import { Swords, Plus, ChevronRight, ChevronLeft, ArrowUpDown, Trash2, X, Dices, HelpCircle, ChevronDown, GripVertical, Pencil, Check } from 'lucide-react';
-import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import { DraggableWindowTitleBar } from '../../common/components/DraggableWindow.js';
+import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 
 interface InitiativeTrackerProps {
   initiative: InitiativeState;
@@ -41,7 +41,7 @@ export const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
   const [dragOverInfo, setDragOverInfo] = useState<{ index: number; placement: 'before' | 'after' } | null>(null);
   const draggedIndexRef = React.useRef<number | null>(null);
   const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
-    storageKey: 'obr_init_tracker_pos',
+    storageKey: 'obb_init_tracker_pos',
     defaultZIndex: 50,
   });
 

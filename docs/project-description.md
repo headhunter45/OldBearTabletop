@@ -1,6 +1,6 @@
-# OldBearRodeo
+# OldBearBattles
 
-OldBearRodeo is a lightweight, mobile-friendly virtual tabletop (VTT) for hosting tabletop roleplaying sessions without mandatory sign-ins. It provides browser-local asset storage, real-time room synchronization, a canvas-based tactical map, token and combat tools, voice chat, and D&D Beyond character integration.
+OldBearBattles is a lightweight, mobile-friendly virtual tabletop (VTT) for hosting tabletop roleplaying sessions without mandatory sign-ins. It provides browser-local asset storage, real-time room synchronization, a canvas-based tactical map, token and combat tools, voice chat, and D&D Beyond character integration.
 
 ## Highlights
 
@@ -25,15 +25,15 @@ OldBearRodeo is a lightweight, mobile-friendly virtual tabletop (VTT) for hostin
 
 ## Image Generation Prompt
 
-Create a polished editorial game-interface illustration for OldBearRodeo, a lightweight fantasy virtual tabletop. Show a warm, rugged bear-themed rodeo emblem integrated with a tactical tabletop map: parchment map tiles, subtle square grid, colorful circular player tokens, a small dice set, and a lantern-lit wooden table. Use a bold palette of oxblood red, ochre, forest green, charcoal, and parchment cream; strong readable silhouettes; restrained texture; no gradients; no UI text; no watermark; wide landscape composition suitable for a project thumbnail.
+Create a polished editorial game-interface illustration for OldBearBattles, a lightweight fantasy virtual tabletop. Show a warm, rugged bear-themed rodeo emblem integrated with a tactical tabletop map: parchment map tiles, subtle square grid, colorful circular player tokens, a small dice set, and a lantern-lit wooden table. Use a bold palette of oxblood red, ochre, forest green, charcoal, and parchment cream; strong readable silhouettes; restrained texture; no gradients; no UI text; no watermark; wide landscape composition suitable for a project thumbnail.
 
 ## Links
 
-- Source: https://github.com/headhunter45/OldBearRodeo
+- Source: https://github.com/headhunter45/OldBearBattles
 - Feedback: https://forms.gle/zD9Rmqj4c3Dffpw39
 
 ## Project Metadata
 
-- ID: `oldbearrodeo`
-- Document ID: `OldBearRodeo`
+- ID: `oldbearbattles`
+- Document ID: `OldBearBattles`
 - Tags: `featured`, `open-source`

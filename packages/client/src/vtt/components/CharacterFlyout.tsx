@@ -1,47 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
 import {
-  DnDCharacter,
   DnDAction,
-  Token,
+  DnDCharacter,
   Player,
+  Token,
   getActivationCategory,
 } from '@oldbear/shared';
 import {
-  User,
-  Heart,
-  Shield,
-  Zap,
-  ExternalLink,
-  RefreshCw,
-  X,
   ChevronDown,
   ChevronUp,
-  Sparkles,
-  Link as LinkIcon,
   Coins,
-  Flame,
   Dices,
-  Upload,
+  ExternalLink,
   FileText,
+  Flame,
+  Heart,
+  Link as LinkIcon,
+  RefreshCw,
+  Shield,
+  Sparkles,
+  Upload,
+  User,
+  Zap
 } from 'lucide-react';
-import {
-  isPathbuilderExport,
-  parsePathbuilderExport,
-  fetchPathbuilderBuild,
-  SAMPLE_PATHBUILDER_VALEROS,
-} from '../utils/pathbuilderParser.js';
-import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
+import React, { useEffect, useRef, useState } from 'react';
 import { DraggableWindowTitleBar } from '../../common/components/DraggableWindow.js';
+import HelpTip from '../../common/components/HelpTip.js';
+import { useDraggableWindow } from '../../common/hooks/useDraggableWindow.js';
 import {
   SavedCharacterRecord,
+  deleteSavedCharacter,
   getSavedCharacters,
   saveCharacterToStorage,
-  deleteSavedCharacter,
 } from '../storage/characterStorage.js';
-import HelpTip from '../../common/components/HelpTip.js';
+import {
+  SAMPLE_PATHBUILDER_VALEROS,
+  fetchPathbuilderBuild,
+  isPathbuilderExport,
+  parsePathbuilderExport,
+} from '../utils/pathbuilderParser.js';
 
+export { deleteSavedCharacter, getSavedCharacters, saveCharacterToStorage };
 export type { SavedCharacterRecord };
-export { getSavedCharacters, saveCharacterToStorage, deleteSavedCharacter };
 
 interface CharacterFlyoutProps {
   player: Player;
@@ -114,7 +113,7 @@ export const CharacterFlyout: React.FC<CharacterFlyoutProps> = ({
 
   const { windowRef, position, isDragging, handleMouseDown, zIndex } =
     useDraggableWindow({
-      storageKey: 'obr_character_sheet_pos',
+      storageKey: 'obb_character_sheet_pos',
       defaultZIndex: 50,
     });
 

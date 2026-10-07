@@ -1,6 +1,6 @@
-# Favicon Generation Prompt for Old Bear Rodeo
+# Favicon Generation Prompt for Old Bear Battles
 
-This document contains AI image generation prompts tailored for generating a modern, recognizable favicon and app icon for **Old Bear Rodeo**.
+This document contains AI image generation prompts tailored for generating a modern, recognizable favicon and app icon for **Old Bear Battles**.
 
 ---
 

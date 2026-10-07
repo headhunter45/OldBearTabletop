@@ -1,37 +1,66 @@
-# 🐻 Old Bear Rodeo
+# 🐻 Old Bear Battles
 
 A lightweight, zero-install, mobile-friendly virtual tabletop (VTT) and tactical battlemap system designed for seamless tabletop roleplaying sessions. Built with modern TypeScript, WebRTC voice communication, HTML5 Canvas, and deep D&D Beyond character synchronization.
 
 - 💬 **Feedback & Bug Reports**: [Feedback Form](https://forms.gle/zD9Rmqj4c3Dffpw39)
-- 🐙 **GitHub Repository**: [headhunter45/OldBearRodeo](https://github.com/headhunter45/OldBearRodeo)
+- 🐙 **GitHub Repository**: [headhunter45/OldBearVTT](https://github.com/headhunter45/OldBearVTT)
 
 ---
 
 ## Table of Contents
-1. [Key Features](#key-features)
-2. [Quickstart with Docker (Recommended)](#quickstart-with-docker-recommended)
-3. [Building, Pushing & Production Deployment](#building-pushing--production-deployment)
-   - [The Container Images](#1-the-container-images)
-   - [Automated CI Build & Publish Script (`scripts/ci-build.sh`)](#2-automated-ci-build--publish-script-scriptsci-buildsh)
-   - [Manual Docker Compose Workflow](#3-manual-docker-compose-workflow)
-   - [Deploying on Your Production Server](#4-deploying-on-your-production-server)
-   - [Reverse Proxy & Nginx Proxy Manager (NPM)](#5-reverse-proxy--nginx-proxy-manager-npm-configuration)
-4. [Environment Variables Reference (`.env`)](#environment-variables-reference-env)
-5. [Native Local Development](#native-local-development)
-6. [User Manual & App Guide](#user-manual--app-guide)
-   - [Starting a Game & Inviting Players](#starting-a-game--inviting-players)
-   - [Map Management & Grid Alignment](#map-management--grid-alignment)
-   - [Tokens & Combat Management](#tokens--combat-management)
-   - [D&D Beyond Character Integration](#dd-beyond-character-integration)
-   - [Voice Chat & Audio Streaming](#voice-chat--audio-streaming)
-   - [Soundboard & Custom Audio](#soundboard--custom-audio)
-   - [Dice Roller & Initiative Tracker](#dice-roller--initiative-tracker)
-   - [Chat Commands & Token Association](#chat-commands--token-association)
-   - [Tabletop Wargaming & Army Rosters (Brawl)](#tabletop-wargaming--army-rosters-brawl)
-   - [Full Data Backup & Browser Migration](#full-data-backup--browser-migration)
-   - [Global Drag and Drop](#global-drag-and-drop)
-7. [Configuring Available Colors](#configuring-available-colors)
-8. [Architecture & Technology Stack](#architecture--technology-stack)
+- [🐻 Old Bear Battles](#-old-bear-battles)
+  - [Table of Contents](#table-of-contents)
+  - [Key Features](#key-features)
+  - [Quickstart with Docker (Recommended)](#quickstart-with-docker-recommended)
+    - [Prerequisites](#prerequisites)
+    - [Running the Stack](#running-the-stack)
+    - [Docker Service Topology](#docker-service-topology)
+    - [Useful Docker Commands](#useful-docker-commands)
+  - [Building, Pushing \& Production Deployment](#building-pushing--production-deployment)
+    - [1. The Container Images](#1-the-container-images)
+    - [2. Automated CI Build \& Publish Script (`scripts/ci-build.sh`)](#2-automated-ci-build--publish-script-scriptsci-buildsh)
+      - [Single Source of Truth Versioning (`VERSION`)](#single-source-of-truth-versioning-version)
+      - [Command Options \& Flags](#command-options--flags)
+      - [Common CI Script Workflows](#common-ci-script-workflows)
+    - [3. Manual Docker Compose Workflow](#3-manual-docker-compose-workflow)
+    - [4. Deploying on Your Production Server](#4-deploying-on-your-production-server)
+      - [Option A: Using `docker-compose.yml` with `.env` (Recommended)](#option-a-using-docker-composeyml-with-env-recommended)
+      - [Option B: Standalone Production Compose File (e.g., for Portainer Stacks)](#option-b-standalone-production-compose-file-eg-for-portainer-stacks)
+    - [5. Reverse Proxy \& Nginx Proxy Manager (NPM) Configuration](#5-reverse-proxy--nginx-proxy-manager-npm-configuration)
+  - [Environment Variables Reference (`.env`)](#environment-variables-reference-env)
+    - [Configuration Hierarchy](#configuration-hierarchy)
+    - [Variable Reference](#variable-reference)
+      - [1. Network \& Service Ports](#1-network--service-ports)
+      - [2. Database Configuration](#2-database-configuration)
+      - [3. Environment \& Runtime](#3-environment--runtime)
+      - [4. Upload \& Storage Limits](#4-upload--storage-limits)
+      - [5. Security \& CORS](#5-security--cors)
+      - [6. WebRTC Voice \& P2P Networking (STUN / TURN)](#6-webrtc-voice--p2p-networking-stun--turn)
+      - [7. Container Registry \& Remote Deployment](#7-container-registry--remote-deployment)
+      - [8. UI \& Notification Timers](#8-ui--notification-timers)
+  - [Native Local Development](#native-local-development)
+    - [Prerequisites](#prerequisites-1)
+    - [1. Installation](#1-installation)
+    - [2. Build Packages](#2-build-packages)
+    - [3. Run Automated Tests](#3-run-automated-tests)
+    - [4. Start Development Servers](#4-start-development-servers)
+  - [User Manual \& App Guide](#user-manual--app-guide)
+    - [Starting a Game \& Inviting Players](#starting-a-game--inviting-players)
+    - [Map Management \& Grid Alignment](#map-management--grid-alignment)
+    - [Tokens \& Combat Management](#tokens--combat-management)
+    - [D\&D Beyond Character Integration](#dd-beyond-character-integration)
+    - [Pathbuilder 2e (PF2e) Character Integration](#pathbuilder-2e-pf2e-character-integration)
+    - [Voice Chat \& Audio Streaming](#voice-chat--audio-streaming)
+    - [Soundboard \& Custom Audio](#soundboard--custom-audio)
+    - [Dice Roller \& Initiative Tracker](#dice-roller--initiative-tracker)
+    - [Chat Commands \& Token Association](#chat-commands--token-association)
+    - [Tabletop Wargaming \& Army Rosters (Brawl)](#tabletop-wargaming--army-rosters-brawl)
+    - [Full Data Backup \& Universal `.binder` Pipeline](#full-data-backup--universal-binder-pipeline)
+    - [Global Drag and Drop](#global-drag-and-drop)
+    - [Help \& Keyboard Shortcuts](#help--keyboard-shortcuts)
+    - [Modular / Tileable Maps \& Snapping Map Tiles](#modular--tileable-maps--snapping-map-tiles)
+  - [Configuring Available Colors](#configuring-available-colors)
+  - [Architecture \& Technology Stack](#architecture--technology-stack)
 
 ---
 
@@ -50,7 +79,7 @@ A lightweight, zero-install, mobile-friendly virtual tabletop (VTT) and tactical
 
 ## Quickstart with Docker (Recommended)
 
-Old Bear Rodeo provides a complete multi-container setup via Docker Compose, including the client application, signaling/API server, PostgreSQL database, and an Nginx reverse proxy.
+Old Bear Battles provides a complete multi-container setup via Docker Compose, including the client application, signaling/API server, PostgreSQL database, and an Nginx reverse proxy.
 
 ### Prerequisites
 - [Docker Engine](https://docs.docker.com/engine/install/) (v24.0+)
@@ -59,8 +88,8 @@ Old Bear Rodeo provides a complete multi-container setup via Docker Compose, inc
 ### Running the Stack
 1. Clone the repository and navigate to the project root:
    ```bash
-   git clone https://github.com/your-org/OldBearRodeo.git
-   cd OldBearRodeo
+   git clone https://github.com/headhunter45/OldBearBattles.git
+   cd OldBearBattles
    ```
 
 2. Start all containers in the background:
@@ -98,7 +127,7 @@ Old Bear Rodeo provides a complete multi-container setup via Docker Compose, inc
 
 ## Building, Pushing & Production Deployment
 
-Old Bear Rodeo is packaged into three self-contained container images (`oldbear_server`, `oldbear_client`, and `oldbear_nginx`), allowing 1-step builds and zero-configuration remote deployments.
+Old Bear Battles is packaged into three self-contained container images (`oldbear_server`, `oldbear_client`, and `oldbear_nginx`), allowing 1-step builds and zero-configuration remote deployments.
 
 ### 1. The Container Images
 
@@ -111,10 +140,10 @@ Old Bear Rodeo is packaged into three self-contained container images (`oldbear_
 
 ### 2. Automated CI Build & Publish Script (`scripts/ci-build.sh`)
 
-Old Bear Rodeo includes an automated production build and publication script in [`scripts/ci-build.sh`](file:///Users/tom/Projects/OldBearRodeo/scripts/ci-build.sh). 
+Old Bear Battles includes an automated production build and publication script in [`scripts/ci-build.sh`](./scripts/ci-build.sh). 
 
 #### Single Source of Truth Versioning (`VERSION`)
-The repository root contains a [`VERSION`](file:///Users/tom/Projects/OldBearRodeo/VERSION) file (e.g. `0.1.0-alpha5`). 
+The repository root contains a [`VERSION`](./VERSION) file (e.g. `0.1.0-alpha5`). 
 - When updated, this single file controls the application version across the Vite frontend, backend container metadata, and container registry image tags.
 - The web app dynamically renders the version along with the short git commit hash, e.g. `v0.1.0-alpha5 (c292e59)`, in the TopBar and Mobile Drawer.
 - The CI script automatically tags images with the version from `VERSION` (or custom `--tag`), the short git commit hash, and `:latest`.
@@ -128,7 +157,7 @@ The repository root contains a [`VERSION`](file:///Users/tom/Projects/OldBearRod
 | Flag | Parameter | Description | Default |
 |:---|:---|:---|:---|
 | `--registry` | `<URL>` | Container registry prefix (default: `ghcr.io/headhunter45/`) | `${IMAGE_REGISTRY:-ghcr.io/headhunter45/}` |
-| `--tag` | `<TAG>` | Primary container image tag | Sourced from [`VERSION`](file:///Users/tom/Projects/OldBearRodeo/VERSION) (e.g. `0.1.0-alpha5`) |
+| `--tag` | `<TAG>` | Primary container image tag | Sourced from [`VERSION`](./VERSION) (e.g. `0.1.0-alpha5`) |
 | `--push` | *None* | Automatically push images to the container registry after building | `false` |
 | `--test` | *None* | Execute automated test suites (`npm test`) before building images | `false` |
 | `-h`, `--help` | *None* | Display usage information and available options | — |
@@ -290,7 +319,7 @@ When hosting behind an upstream reverse proxy (like Nginx Proxy Manager, Cloudfl
 
 ## Environment Variables Reference (`.env`)
 
-Old Bear Rodeo is configured using environment variables defined in `.env` (or `.env.production` for production deployments). A template file [` .env.example`](file:///Users/tom/Projects/OldBearRodeo/.env.example) is provided in the root directory.
+Old Bear Battles is configured using environment variables defined in `.env` (or `.env.production` for production deployments). A template file [` .env.example`](./.env.example) is provided in the root directory.
 
 ### Configuration Hierarchy
 - **`.env.example`**: Complete template documenting all variables, defaults, and usage examples.
@@ -614,17 +643,17 @@ To switch computers or browsers without losing maps, audio, tokens, or character
    - Includes private application state in `_oldbear.vtt` (scenes, tokens, custom statuses, audio, fog) and `_oldbear.brawl` (army rosters, units, points).
    - Generates third-party compatible card collections (`collections`) so tools like MonsterCards can read tokens and statblocks without losing application metadata.
    - User-Generated Content (UGC): Fully user-owned and free of hardcoded copyrighted material.
-3. **Export Standard JSON**: Click **"Export JSON Backup"** to download a standard `oldbear-rodeo-backup-YYYY-MM-DD.json` file.
+3. **Export Standard JSON**: Click **"Export JSON Backup"** to download a standard `oldbear-battles-backup-YYYY-MM-DD.json` file.
 4. **Importing**: Select any `.binder` or `.json` file via **"Import .binder / JSON"** (or simply drag and drop the `.binder` or `.json` file onto the window). All scenes, tokens, sound tracks, characters, and rosters are restored automatically!
 
 ---
 
 ### Global Drag and Drop
-You can drag and drop files from your desktop directly onto the Old Bear Rodeo window at any time:
+You can drag and drop files from your desktop directly onto the Old Bear Battles window at any time:
 - **Universal `.binder` Files (`.binder`)**: Restores tabletop campaign state, tokens, scenes, and rosters immediately.
 - **Images (`.png`, `.jpg`, `.webp`)**: GMs are prompted to add them either as Creature Tokens or as Battlemaps; players have them added as Tokens at the drop position.
 - **Audio (`.mp3`, `.wav`, `.ogg`)**: Added directly to the Soundboard library.
-- **JSON (`.json`)**: Recognized as an Old Bear Rodeo backup or character/monster export and restored immediately.
+- **JSON (`.json`)**: Recognized as an Old Bear Battles backup or character/monster export and restored immediately.
 
 ---
 

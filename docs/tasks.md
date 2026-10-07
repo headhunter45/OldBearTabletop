@@ -330,6 +330,7 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-207 | Changing to a token without a bound character sheet should reset the form to the token's state.                                                                                                                                                                                                                                                                                                                                                                                      | Vtt            | Ready    | [Bug](#ob-207)     |
 | OB-208 | Update the Open5EFetcher to use the v2 api.                                                                                                                                                                                                                                                                                                                                                                                                                                          | Vtt            | Ready    | [Feature](#ob-208) |
 | OB-209 | There is no settings button next to the active scene name in the top bar.                                                                                                                                                                                                                                                                                                                                                                                                            | Common         | Done     | [Bug](#ob-209)     |
+| OB-210 | Remove references to rodeo and obr to be nice.                                                                                                                                                                                                                                                                                                                                                                                                                                       | Common         | Done     | [Chore](#ob-210)   |
 
 ---
 
@@ -1599,7 +1600,7 @@ Inline input positioning during initiative tracker row editing
 
 **Description:**
 
-Add one-way sync from OldBearRodeo to a Discord text channel via a Discord webhook URL:
+Add one-way sync from OldBearBattles to a Discord text channel via a Discord webhook URL:
 
 - `/discord webhook <webhook url>` to configure webhook URL.
 - `/discord webhook none` to clear/disable webhook.
@@ -3333,6 +3334,17 @@ Provide a dedicated settings button (gear icon) next to the active scene name in
 - [x] Wire `onOpenSceneSettings` in `AppVtt.tsx` and `AppBrawl.tsx` to open `MapSettingsModal` for the active scene.
 - [x] Preserve role-based access so non-GM players see the scene name without the settings trigger.
 - [x] Verify component rendering and permissions with unit tests in `TopBar.test.ts` and `BrawlTopBar.test.ts`.
+
+<a id="ob-210" class="task" data-project="cmn" data-status="done" data-task-type="chore"></a>
+### Remove references to rodeo and obr to be nice.
+**ID:** OB-210
+**Project:** Common
+**Status:** Done
+**Type:** Chore
+
+**Description:**
+Describe task objectives and implementation requirements here.
+- [ ]
 
 ---
 

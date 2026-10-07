@@ -1,21 +1,21 @@
 {
-  "id": "oldbearrodeo",
-  "title": "OldBearRodeo",
+  "id": "oldbearbattles",
+  "title": "OldBearBattles",
   "description": "A lightweight, mobile-friendly virtual tabletop for hosting tabletop roleplaying sessions without mandatory sign-ins.",
-  "docId": "OldBearRodeo",
-  "url": "/projects/oldbearrodeo",
+  "docId": "OldBearBattles",
+  "url": "/projects/oldbearbattles",
   "tags": ["featured", "open-source"],
   "image": {
     "url": "",
-    "alt": "OldBearRodeo virtual tabletop",
-    "prompt": "Create a polished editorial game-interface illustration for OldBearRodeo, a lightweight fantasy virtual tabletop. Show a warm, rugged bear-themed rodeo emblem integrated with a tactical tabletop map: parchment map tiles, subtle square grid, colorful circular player tokens, a small dice set, and a lantern-lit wooden table. Use a bold palette of oxblood red, ochre, forest green, charcoal, and parchment cream; strong readable silhouettes; restrained texture; no gradients; no UI text; no watermark; wide landscape composition suitable for a project thumbnail.",
+    "alt": "OldBearBattles virtual tabletop",
+    "prompt": "Create a polished editorial game-interface illustration for OldBearBattles, a lightweight fantasy virtual tabletop. Show a warm, rugged bear-themed rodeo emblem integrated with a tactical tabletop map: parchment map tiles, subtle square grid, colorful circular player tokens, a small dice set, and a lantern-lit wooden table. Use a bold palette of oxblood red, ochre, forest green, charcoal, and parchment cream; strong readable silhouettes; restrained texture; no gradients; no UI text; no watermark; wide landscape composition suitable for a project thumbnail.",
     "width": 0,
     "height": 0,
     "backgroundClassName": "bg-surface"
   },
   "source": {
     "type": "github",
-    "url": "https://github.com/headhunter45/OldBearRodeo"
+    "url": "https://github.com/headhunter45/OldBearBattles"
   },
   "feedback": {
     "url": "https://forms.gle/zD9Rmqj4c3Dffpw39"

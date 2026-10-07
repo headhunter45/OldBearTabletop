@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { DieType, DiceRollResult } from '@oldbear/shared';
-import { Dices, Sparkles, X, RotateCcw, ChevronDown } from 'lucide-react';
+import { DiceRollResult, DieType } from '@oldbear/shared';
 import confetti from 'canvas-confetti';
+import { ChevronDown, Dices, RotateCcw, Sparkles, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 
 interface DiceRollerProps {
@@ -37,7 +37,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
 
   const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
-    storageKey: 'obr_dice_roller_pos',
+    storageKey: 'obb_dice_roller_pos',
     defaultZIndex: 50,
   });
 

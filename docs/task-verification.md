@@ -219,7 +219,7 @@ This document provides step-by-step instructions for manually verifying all feat
 1. In your browser, navigate to: `http://localhost:3000/?mode=brawl`.
    - Verify Old Bear Brawl loads with wargaming top bar, round stepper, chess clocks, and army roster tools.
 2. In your browser, navigate to: `http://localhost:3000/?mode=vtt`.
-   - Verify Old Bear Rodeo loads with tabletop RPG top bar, character sheet button, and initiative tracker.
+   - Verify Old Bear VTT loads with tabletop RPG top bar, character sheet button, and initiative tracker.
 3. Test TopBar Mode Switching:
    - While in VTT mode, locate the mode toggle pill next to the scene name: click **`⚔️ Brawl`**.
    - Notice the application transitions into Brawl mode and persists the preference in `localStorage`.

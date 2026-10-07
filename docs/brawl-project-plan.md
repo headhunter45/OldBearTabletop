@@ -6,7 +6,7 @@
 ## 1. Architectural Strategy & Deployment Model
 
 ### Unified Application with Deployment Game Modes
-Instead of maintaining a disconnected, permanently diverging fork, **Old Bear Rodeo will operate as a single unified codebase supporting selectable Game Modes** via environment configuration:
+Instead of maintaining a disconnected, permanently diverging fork, **Old Bear Battles will operate as a single unified codebase supporting selectable Game Modes** via environment configuration:
 - `GAME_MODE=vtt`: Traditional TTRPG mode (D&D 5e, Pathfinder 2e, character sheets, spellbooks).
 - `GAME_MODE=brawl`: Tabletop wargaming mode (Warhammer 40k, Kill Team, BattleTech, armies, units, chess clocks, VP boards).
 - `GAME_MODES=vtt,brawl`: Multi-mode enabled (allows choosing mode per room/session).

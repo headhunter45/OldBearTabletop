@@ -1,24 +1,25 @@
-import { getDB, StoredAsset } from './db.js';
-import { GameSession } from '@oldbear/shared';
-import { isBinderData, importBinderData } from './BinderPipeline.js';
+import {GameSession} from '@oldbear/shared';
+
+import {importBinderData, isBinderData} from './BinderPipeline.js';
+import {getDB, StoredAsset} from './db.js';
 
 export interface BackupPayload {
-  app: 'OldBearRodeo';
+  app: 'OldBearBattles';
   version: 1;
   exportedAt: number;
-  session?: GameSession | null;
+  session?: GameSession|null;
   assets: StoredAsset[];
   localStorage: Record<string, string>;
 }
 
-export async function exportAllData(session?: GameSession | null): Promise<Blob> {
+export async function exportAllData(session?: GameSession|null): Promise<Blob> {
   const db = await getDB();
   const assets = await db.getAll('assets');
 
   const storageMap: Record<string, string> = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.startsWith('oldbear_') || key.startsWith('obr_'))) {
+    if (key && (key.startsWith('oldbear_') || key.startsWith('obb_'))) {
       const val = localStorage.getItem(key);
       if (val !== null) {
         storageMap[key] = val;
@@ -27,7 +28,7 @@ export async function exportAllData(session?: GameSession | null): Promise<Blob>
   }
 
   const payload: BackupPayload = {
-    app: 'OldBearRodeo',
+    app: 'OldBearBattles',
     version: 1,
     exportedAt: Date.now(),
     session: session || null,
@@ -36,12 +37,12 @@ export async function exportAllData(session?: GameSession | null): Promise<Blob>
   };
 
   const json = JSON.stringify(payload, null, 2);
-  return new Blob([json], { type: 'application/json' });
+  return new Blob([json], {type: 'application/json'});
 }
 
 export function downloadBackupFile(blob: Blob, customName?: string) {
   const dateStr = new Date().toISOString().slice(0, 10);
-  const fileName = customName || `oldbear-rodeo-backup-${dateStr}.json`;
+  const fileName = customName || `oldbear-battles-backup-${dateStr}.json`;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -52,9 +53,8 @@ export function downloadBackupFile(blob: Blob, customName?: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function importAllData(
-  jsonString: string
-): Promise<{ assetCount: number; charCount: number; session?: GameSession | null }> {
+export async function importAllData(jsonString: string): Promise<
+    {assetCount: number; charCount: number; session?: GameSession | null}> {
   let parsed: any;
   try {
     parsed = JSON.parse(jsonString);
@@ -74,8 +74,9 @@ export async function importAllData(
 
   const data = parsed as BackupPayload;
 
-  if (data.app !== 'OldBearRodeo' || !Array.isArray(data.assets)) {
-    throw new Error('Invalid backup file: Not a recognized OldBearRodeo backup or .binder file.');
+  if (data.app !== 'OldBearBattles' || !Array.isArray(data.assets)) {
+    throw new Error(
+        'Invalid backup file: Not a recognized OldBearBattles backup or .binder file.');
   }
 
   // Restore IndexedDB assets

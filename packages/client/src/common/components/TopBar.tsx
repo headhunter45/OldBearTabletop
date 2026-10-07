@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import { Player } from '@oldbear/shared';
 import {
-  Share2,
-  Menu,
   Check,
+  Menu,
   MessageSquareHeart,
-  Swords,
   Settings,
+  Share2,
+  Swords,
 } from 'lucide-react';
-import { Player, GameMap } from '@oldbear/shared';
-import { VoiceState } from '../network/VoiceManager.js';
+import React, { useState } from 'react';
+import { isSingleGameModeEnforced, switchGameMode } from '../../App.js';
 import { FULL_VERSION_STRING } from '../config/version.js';
-import { switchGameMode, isSingleGameModeEnforced } from '../../App.js';
+import { VoiceState } from '../network/VoiceManager.js';
 
 interface TopBarProps {
   roomName: string;
@@ -124,7 +124,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 lineHeight: 1.1,
               }}
             >
-              Old Bear Rodeo
+              Old Bear Battles
             </span>
             <span
               style={{
@@ -293,7 +293,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* GitHub Repository Link (Task #125) */}
         <a
-          href="https://github.com/headhunter45/OldBearRodeo"
+          href="https://github.com/headhunter45/OldBearBattles"
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-secondary"

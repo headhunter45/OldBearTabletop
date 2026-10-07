@@ -1,46 +1,45 @@
-import React, { useState, useRef, useEffect } from 'react';
 import {
-  Player,
   ChatMessage,
   DiceRollResult,
-  DnDCharacter,
   DieType,
   DnDAction,
-  DnDSpell,
+  DnDCharacter,
   DnDItem,
-  Token,
-  getActivationCategory,
-  EntityAction,
+  DnDSpell,
   EntityStatBlock,
-  getActionCostGlyph,
-  convertDnDActionToEntityAction,
-  convertDnDSpellToEntityAction,
-  convertDnDItemToEntityAction,
+  Player,
+  Token,
   convertCharacterToMonsterStatBlock,
+  convertDnDActionToEntityAction,
+  convertDnDItemToEntityAction,
+  convertDnDSpellToEntityAction,
   generateUUID,
+  getActionCostGlyph,
+  getActivationCategory
 } from '@oldbear/shared';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { MessageSquare, Send, X, Dices, Sword, Sparkles, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
-import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
-import { DraggableWindowTitleBar } from './DraggableWindow.js';
-import { parseTimerDuration, formatTimer } from '../timer/timerUtils.js';
+import { MessageSquare, Send } from 'lucide-react';
 import {
+  formatRollDetails,
   isAdvancedDiceExpression,
   parseAndRollAdvanced,
-  formatRollDetails,
 } from '../dice/AdvancedDiceEngine.js';
-import { useChatHistory } from './useChatHistory.js';
-import { StatBlockCard } from './StatBlockCard.js';
+import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { formatTimer, parseTimerDuration } from '../timer/timerUtils.js';
 import {
-  fetchOpen5eSpell,
-  fetchOpen5eMonster,
   fetchOpen5eItem,
+  fetchOpen5eMonster,
+  fetchOpen5eSpell,
 } from '../utils/open5eFetcher.js';
 import {
   fetchPF2eFromUrl,
   fetchPF2eReference,
   parseFoundryPF2eJson,
 } from '../utils/pf2eFetcher.js';
+import { DraggableWindowTitleBar } from './DraggableWindow.js';
+import { StatBlockCard } from './StatBlockCard.js';
+import { useChatHistory } from './useChatHistory.js';
 
 export interface ChatPanelProps {
   player: Player;
@@ -1668,7 +1667,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     resetNavigation,
   } = useChatHistory();
   const { windowRef, position, isDragging, handleMouseDown, zIndex } = useDraggableWindow({
-    storageKey: 'obr_chat_pos',
+    storageKey: 'obb_chat_pos',
     defaultZIndex: 50,
   });
   const messagesEndRef = useRef<HTMLDivElement | null>(null);

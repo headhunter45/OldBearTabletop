@@ -1,6 +1,6 @@
-# Implementation Plan - OldBearRodeo Virtual Tabletop (VTT)
+# Implementation Plan - OldBearBattles Virtual Tabletop (VTT)
 
-OldBearRodeo is a lightweight, mobile-friendly, easy-to-host Virtual Tabletop (VTT) designed for quick game sessions without mandatory sign-ins. It features browser-local asset storage, peer-to-peer (WebRTC) networking with server relay fallback, a multi-layer canvas engine (maps, tokens, fog of war, dynamic pointers), HP and speed tracking, initiative management, dice rolling with advantage/disadvantage, and D&D Beyond character synchronization.
+OldBearBattles is a lightweight, mobile-friendly, easy-to-host Virtual Tabletop (VTT) designed for quick game sessions without mandatory sign-ins. It features browser-local asset storage, peer-to-peer (WebRTC) networking with server relay fallback, a multi-layer canvas engine (maps, tokens, fog of war, dynamic pointers), HP and speed tracking, initiative management, dice rolling with advantage/disadvantage, and D&D Beyond character synchronization.
 
 ## User Review Required
 
@@ -21,7 +21,7 @@ OldBearRodeo is a lightweight, mobile-friendly, easy-to-host Virtual Tabletop (V
 ## Proposed Architecture & Directory Structure
 
 ```
-OldBearRodeo/
+OldBearBattles/
 ├── packages/
 │   ├── shared/                # Shared TypeScript models, networking contracts, D&D types
 │   │   ├── package.json
@@ -65,10 +65,10 @@ OldBearRodeo/
 - Configure npm workspaces (`packages/shared`, `packages/client`, `packages/server`).
 - Set up TypeScript configurations and shared build pipelines.
 
-#### [NEW] [package.json](file:///Users/tom/Projects/OldBearRodeo/package.json)
-#### [NEW] [.gitignore](file:///Users/tom/Projects/OldBearRodeo/.gitignore)
-#### [NEW] [packages/shared/package.json](file:///Users/tom/Projects/OldBearRodeo/packages/shared/package.json)
-#### [NEW] [packages/shared/src/index.ts](file:///Users/tom/Projects/OldBearRodeo/packages/shared/src/index.ts)
+#### [NEW] [package.json](file:///Users/tom/Projects/OldBearBattles/package.json)
+#### [NEW] [.gitignore](file:///Users/tom/Projects/OldBearBattles/.gitignore)
+#### [NEW] [packages/shared/package.json](file:///Users/tom/Projects/OldBearBattles/packages/shared/package.json)
+#### [NEW] [packages/shared/src/index.ts](file:///Users/tom/Projects/OldBearBattles/packages/shared/src/index.ts)
 
 ---
 
@@ -83,11 +83,11 @@ OldBearRodeo/
 - D&D Beyond proxy endpoint (`/api/dndbeyond/:characterId`) to fetch and normalize public character stats.
 - PostgreSQL database client with local in-memory store adapter for seamless execution without Docker.
 
-#### [NEW] [packages/server/package.json](file:///Users/tom/Projects/OldBearRodeo/packages/server/package.json)
-#### [NEW] [packages/server/src/index.ts](file:///Users/tom/Projects/OldBearRodeo/packages/server/src/index.ts)
-#### [NEW] [packages/server/src/session.ts](file:///Users/tom/Projects/OldBearRodeo/packages/server/src/session.ts)
-#### [NEW] [packages/server/src/signaling.ts](file:///Users/tom/Projects/OldBearRodeo/packages/server/src/signaling.ts)
-#### [NEW] [packages/server/src/dndbeyond.ts](file:///Users/tom/Projects/OldBearRodeo/packages/server/src/dndbeyond.ts)
+#### [NEW] [packages/server/package.json](file:///Users/tom/Projects/OldBearBattles/packages/server/package.json)
+#### [NEW] [packages/server/src/index.ts](file:///Users/tom/Projects/OldBearBattles/packages/server/src/index.ts)
+#### [NEW] [packages/server/src/session.ts](file:///Users/tom/Projects/OldBearBattles/packages/server/src/session.ts)
+#### [NEW] [packages/server/src/signaling.ts](file:///Users/tom/Projects/OldBearBattles/packages/server/src/signaling.ts)
+#### [NEW] [packages/server/src/dndbeyond.ts](file:///Users/tom/Projects/OldBearBattles/packages/server/src/dndbeyond.ts)
 
 ---
 
@@ -104,13 +104,13 @@ OldBearRodeo/
     5. **Pointers & Measurement Layer**: Laser trails, pings, area circles/rectangles, and movement rulers.
 - IndexedDB local storage integration for offline asset caching (maps, tokens, audio).
 
-#### [NEW] [packages/client/src/engine/Viewport.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/Viewport.ts)
-#### [NEW] [packages/client/src/engine/CanvasEngine.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/CanvasEngine.ts)
-#### [NEW] [packages/client/src/engine/layers/MapLayer.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/layers/MapLayer.ts)
-#### [NEW] [packages/client/src/engine/layers/FogLayer.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/layers/FogLayer.ts)
-#### [NEW] [packages/client/src/engine/layers/TokenLayer.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/layers/TokenLayer.ts)
-#### [NEW] [packages/client/src/engine/layers/OverlayLayer.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/layers/OverlayLayer.ts)
-#### [NEW] [packages/client/src/storage/db.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/storage/db.ts)
+#### [NEW] [packages/client/src/engine/Viewport.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/Viewport.ts)
+#### [NEW] [packages/client/src/engine/CanvasEngine.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/CanvasEngine.ts)
+#### [NEW] [packages/client/src/engine/layers/MapLayer.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/layers/MapLayer.ts)
+#### [NEW] [packages/client/src/engine/layers/FogLayer.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/layers/FogLayer.ts)
+#### [NEW] [packages/client/src/engine/layers/TokenLayer.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/layers/TokenLayer.ts)
+#### [NEW] [packages/client/src/engine/layers/OverlayLayer.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/layers/OverlayLayer.ts)
+#### [NEW] [packages/client/src/storage/db.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/storage/db.ts)
 
 ---
 
@@ -129,9 +129,9 @@ OldBearRodeo/
   - Real-time distance measurement during token dragging.
   - Visual warning indicator (ruler line color transition) when dragging exceeds token speed.
 
-#### [NEW] [packages/client/src/components/TokenEditorModal.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/TokenEditorModal.tsx)
-#### [NEW] [packages/client/src/components/TokenControls.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/TokenControls.tsx)
-#### [NEW] [packages/client/src/engine/Ruler.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/Ruler.ts)
+#### [NEW] [packages/client/src/components/TokenEditorModal.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/TokenEditorModal.tsx)
+#### [NEW] [packages/client/src/components/TokenControls.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/TokenControls.tsx)
+#### [NEW] [packages/client/src/engine/Ruler.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/Ruler.ts)
 
 ---
 
@@ -145,8 +145,8 @@ OldBearRodeo/
   - Rectangle zone marker.
 - Synchronized automatic fade-out timers per effect broadcasted across peers.
 
-#### [NEW] [packages/client/src/engine/PointerSystem.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/PointerSystem.ts)
-#### [NEW] [packages/client/src/components/ToolBar.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/ToolBar.tsx)
+#### [NEW] [packages/client/src/engine/PointerSystem.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/PointerSystem.ts)
+#### [NEW] [packages/client/src/components/ToolBar.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/ToolBar.tsx)
 
 ---
 
@@ -161,8 +161,8 @@ OldBearRodeo/
   - Sortable turn order, current turn indicator, and round counter.
   - Map focus: clicking on a combatant pans/highlights their token on the active map.
 
-#### [NEW] [packages/client/src/components/DiceRoller.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/DiceRoller.tsx)
-#### [NEW] [packages/client/src/components/InitiativeTracker.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/InitiativeTracker.tsx)
+#### [NEW] [packages/client/src/components/DiceRoller.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/DiceRoller.tsx)
+#### [NEW] [packages/client/src/components/InitiativeTracker.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/InitiativeTracker.tsx)
 
 ---
 
@@ -176,8 +176,8 @@ OldBearRodeo/
   - Responsive hamburger menus and bottom sheet drawers.
   - Frictionless switching between chat, character sheet, dice roller, and map view.
 
-#### [NEW] [packages/client/src/components/CharacterFlyout.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/CharacterFlyout.tsx)
-#### [NEW] [packages/client/src/components/MobileDrawer.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/MobileDrawer.tsx)
+#### [NEW] [packages/client/src/components/CharacterFlyout.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/CharacterFlyout.tsx)
+#### [NEW] [packages/client/src/components/MobileDrawer.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/MobileDrawer.tsx)
 
 ---
 
@@ -188,8 +188,8 @@ OldBearRodeo/
   - Relative volume sliders.
   - GM broadcast toggle (mute audio to players vs play locally).
 
-#### [NEW] [packages/client/src/engine/AudioManager.ts](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/engine/AudioManager.ts)
-#### [NEW] [packages/client/src/components/Soundboard.tsx](file:///Users/tom/Projects/OldBearRodeo/packages/client/src/components/Soundboard.tsx)
+#### [NEW] [packages/client/src/engine/AudioManager.ts](file:///Users/tom/Projects/OldBearBattles/packages/client/src/engine/AudioManager.ts)
+#### [NEW] [packages/client/src/components/Soundboard.tsx](file:///Users/tom/Projects/OldBearBattles/packages/client/src/components/Soundboard.tsx)
 
 ---
 
@@ -197,10 +197,10 @@ OldBearRodeo/
 - Dockerfiles for client and server.
 - Docker Compose configuration with PostgreSQL and Nginx reverse proxy with WebSocket/WebRTC proxying support.
 
-#### [NEW] [docker/Dockerfile.client](file:///Users/tom/Projects/OldBearRodeo/docker/Dockerfile.client)
-#### [NEW] [docker/Dockerfile.server](file:///Users/tom/Projects/OldBearRodeo/docker/Dockerfile.server)
-#### [NEW] [docker/nginx.conf](file:///Users/tom/Projects/OldBearRodeo/docker/nginx.conf)
-#### [NEW] [docker-compose.yml](file:///Users/tom/Projects/OldBearRodeo/docker-compose.yml)
+#### [NEW] [docker/Dockerfile.client](file:///Users/tom/Projects/OldBearBattles/docker/Dockerfile.client)
+#### [NEW] [docker/Dockerfile.server](file:///Users/tom/Projects/OldBearBattles/docker/Dockerfile.server)
+#### [NEW] [docker/nginx.conf](file:///Users/tom/Projects/OldBearBattles/docker/nginx.conf)
+#### [NEW] [docker-compose.yml](file:///Users/tom/Projects/OldBearBattles/docker-compose.yml)
 
 ---
 

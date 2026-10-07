@@ -1,84 +1,83 @@
-import React, { useEffect, useRef, useState } from 'react';
 import {
+  ChatMessage,
+  DiceRollResult,
+  DnDAction,
+  DnDCharacter,
   GameMap,
   GameSession,
-  Player,
-  Token,
-  DiceRollResult,
-  InitiativeState,
-  InitiativeItem,
-  DnDCharacter,
-  ScreenMarker,
-  ProgressClock,
-  DnDAction,
-  ChatMessage,
   generateRandomName,
   generateUUID,
+  InitiativeItem,
+  Player,
+  ProgressClock,
+  ScreenMarker,
+  Token
 } from '@oldbear/shared';
-import { CanvasEngine, ActiveTool } from '../common/engine/CanvasEngine.js';
-import { getTokenAABB } from '../common/engine/GridRenderer.js';
-import { NetworkClient } from '../common/network/NetworkClient.js';
-import { ToolBar } from '../common/components/ToolBar.js';
-import { TopBar } from '../common/components/TopBar.js';
-import { TokenControls } from '../common/components/TokenControls.js';
-import { TokenEditorModal } from '../common/components/TokenEditorModal.js';
-import { DiceRoller } from '../common/components/DiceRoller.js';
-import { InitiativeTracker } from './components/InitiativeTracker.js';
-import { CharacterFlyout } from './components/CharacterFlyout.js';
-import {
-  saveCharacterToStorage,
-  getSavedCharacters,
-  deleteSavedCharacter,
-} from './storage/characterStorage.js';
-import {
-  isTetraCubeMonsterFile,
-  parseTetraCubeMonster,
-  createMonsterToken,
-} from './utils/monsterParser.js';
-import {
-  isPathbuilderExport,
-  parsePathbuilderExport,
-  createPathbuilderToken,
-} from './utils/pathbuilderParser.js';
-import {
-  isDnDBeyondExport,
-  parseDnDBeyondCharacter,
-  createDnDBeyondToken,
-} from './utils/dndBeyondParser.js';
-import {
-  isMonsterCard,
-  createTokenFromMonsterCard,
-} from '../common/utils/importDetector.js';
-import { MapManagerModal } from '../common/components/MapManagerModal.js';
-import { MapSettingsModal } from '../common/components/MapSettingsModal.js';
-import { SoundboardModal } from '../common/components/SoundboardModal.js';
-import { MobileDrawer } from '../common/components/MobileDrawer.js';
-import { HotkeyCheatSheetModal } from '../common/components/HotkeyCheatSheetModal.js';
-import { VoiceManager, VoiceState } from '../common/network/VoiceManager.js';
-import { VoiceSettingsModal } from '../common/components/VoiceSettingsModal.js';
-import { DataBackupModal, AssetTab, AssetManagerExtensions } from '../common/components/DataBackupModal.js';
-import { GlobalDropOverlay } from '../common/components/GlobalDropOverlay.js';
-import { TokenPickerModal, TokenSpawnData } from '../common/components/TokenPickerModal.js';
+import { AlertTriangle, Compass, Mic, Radio, RefreshCw } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BatchTokenTransferModal } from '../common/components/BatchTokenTransferModal.js';
-import { PlayerTokenPickerModal } from '../common/components/PlayerTokenPickerModal.js';
-import { RollAnnouncementBanner } from '../common/components/RollAnnouncementBanner.js';
-import { TurnAnnouncementBanner, TurnAnnouncement } from '../common/components/TurnAnnouncementBanner.js';
 import { ChatPanel, parseDiceExpression } from '../common/components/ChatPanel.js';
-import {
-  isAdvancedDiceExpression,
-  parseAndRollAdvanced,
-  formatRollDetails,
-} from '../common/dice/AdvancedDiceEngine.js';
-import { TOAST_DURATION_MS } from '../common/config/toast.js';
-import { Mic, Radio, Compass, Check, AlertTriangle, RefreshCw } from 'lucide-react';
-import { MarkerControls } from '../common/components/MarkerControls.js';
-import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
-import { resolveStatusDefinitions, processTurnTransition } from '../common/status/StatusManager.js';
-import { TimerHUD } from '../common/components/TimerHUD.js';
-import { formatTimerCompletionText } from '../common/timer/timerUtils.js';
-import { ProgressClockModal } from '../common/components/ProgressClockModal.js';
 import { ClockWidget } from '../common/components/ClockWidget.js';
 import { ClockWidgetBar } from '../common/components/ClockWidgetBar.js';
+import { AssetTab, DataBackupModal } from '../common/components/DataBackupModal.js';
+import { DiceRoller } from '../common/components/DiceRoller.js';
+import { GlobalDropOverlay } from '../common/components/GlobalDropOverlay.js';
+import { HotkeyCheatSheetModal } from '../common/components/HotkeyCheatSheetModal.js';
+import { MapManagerModal } from '../common/components/MapManagerModal.js';
+import { MapSettingsModal } from '../common/components/MapSettingsModal.js';
+import { MarkerControls } from '../common/components/MarkerControls.js';
+import { MobileDrawer } from '../common/components/MobileDrawer.js';
+import { PlayerTokenPickerModal } from '../common/components/PlayerTokenPickerModal.js';
+import { ProgressClockModal } from '../common/components/ProgressClockModal.js';
+import { RollAnnouncementBanner } from '../common/components/RollAnnouncementBanner.js';
+import { SoundboardModal } from '../common/components/SoundboardModal.js';
+import { TimerHUD } from '../common/components/TimerHUD.js';
+import { TokenControls } from '../common/components/TokenControls.js';
+import { TokenEditorModal } from '../common/components/TokenEditorModal.js';
+import { TokenPickerModal, TokenSpawnData } from '../common/components/TokenPickerModal.js';
+import { ToolBar } from '../common/components/ToolBar.js';
+import { TopBar } from '../common/components/TopBar.js';
+import { TurnAnnouncement, TurnAnnouncementBanner } from '../common/components/TurnAnnouncementBanner.js';
+import { VoiceSettingsModal } from '../common/components/VoiceSettingsModal.js';
+import { TOAST_DURATION_MS } from '../common/config/toast.js';
+import {
+  formatRollDetails,
+  isAdvancedDiceExpression,
+  parseAndRollAdvanced,
+} from '../common/dice/AdvancedDiceEngine.js';
+import { ActiveTool, CanvasEngine } from '../common/engine/CanvasEngine.js';
+import { getTokenAABB } from '../common/engine/GridRenderer.js';
+import { duplicateAttachedMarkers } from '../common/engine/PointerSystem.js';
+import { NetworkClient } from '../common/network/NetworkClient.js';
+import { VoiceManager, VoiceState } from '../common/network/VoiceManager.js';
+import { processTurnTransition, resolveStatusDefinitions } from '../common/status/StatusManager.js';
+import { formatTimerCompletionText } from '../common/timer/timerUtils.js';
+import {
+  createTokenFromMonsterCard,
+  isMonsterCard,
+} from '../common/utils/importDetector.js';
+import { CharacterFlyout } from './components/CharacterFlyout.js';
+import { InitiativeTracker } from './components/InitiativeTracker.js';
+import {
+  deleteSavedCharacter,
+  getSavedCharacters,
+  saveCharacterToStorage,
+} from './storage/characterStorage.js';
+import {
+  createDnDBeyondToken,
+  isDnDBeyondExport,
+  parseDnDBeyondCharacter,
+} from './utils/dndBeyondParser.js';
+import {
+  createMonsterToken,
+  isTetraCubeMonsterFile,
+  parseTetraCubeMonster,
+} from './utils/monsterParser.js';
+import {
+  createPathbuilderToken,
+  isPathbuilderExport,
+  parsePathbuilderExport,
+} from './utils/pathbuilderParser.js';
 
 export const AppVtt: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -164,7 +163,7 @@ export const AppVtt: React.FC = () => {
   const [minimizedClockIds, setMinimizedClockIds] = useState<Set<string>>(() => {
     if (typeof localStorage === 'undefined') return new Set();
     try {
-      const raw = localStorage.getItem('obr_minimized_clocks');
+      const raw = localStorage.getItem('obb_minimized_clocks');
       return raw ? new Set(JSON.parse(raw)) : new Set();
     } catch {
       return new Set();
@@ -180,7 +179,7 @@ export const AppVtt: React.FC = () => {
         next.add(id);
       }
       try {
-        localStorage.setItem('obr_minimized_clocks', JSON.stringify(Array.from(next)));
+        localStorage.setItem('obb_minimized_clocks', JSON.stringify(Array.from(next)));
       } catch {}
       return next;
     });

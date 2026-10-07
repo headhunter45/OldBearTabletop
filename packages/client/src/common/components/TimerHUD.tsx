@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Clock, Bell } from 'lucide-react';
+import { Bell, Clock, Pause, Play, RotateCcw } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 import { formatTimer, playTimerChime } from '../timer/timerUtils.js';
 import { DraggableWindow, DraggableWindowTitleBar } from './DraggableWindow.js';
@@ -29,7 +29,7 @@ export const TimerHUD: React.FC<TimerHUDProps> = ({
   const { windowRef, position, zIndex, isDragging, handleMouseDown, bringToFront } = useDraggableWindow({
     initialX: typeof window !== 'undefined' ? window.innerWidth / 2 - 120 : 300,
     initialY: 70,
-    storageKey: 'obr_timer_hud_pos',
+    storageKey: 'obb_timer_hud_pos',
   });
 
   // Reset or update when initialDuration changes

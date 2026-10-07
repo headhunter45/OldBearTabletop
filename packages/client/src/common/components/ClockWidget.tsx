@@ -1,5 +1,5 @@
-import React from 'react';
 import { ProgressClock } from '@oldbear/shared';
+import React from 'react';
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
 
 export interface ClockWidgetProps {
@@ -35,7 +35,7 @@ export const ClockWidget: React.FC<ClockWidgetProps> = ({
   const { windowRef, position, zIndex, handleMouseDown, bringToFront } = useDraggableWindow({
     initialX: defaultX,
     initialY: defaultY,
-    storageKey: `obr_widget_clock_${clock.id}`,
+    storageKey: `obb_widget_clock_${clock.id}`,
   });
 
   const handleClick = (e: React.MouseEvent) => {

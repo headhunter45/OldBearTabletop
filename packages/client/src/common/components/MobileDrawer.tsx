@@ -1,28 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import { Player } from '@oldbear/shared';
 import {
-  X,
-  User,
-  Dices,
-  Swords,
-  Map,
-  Volume2,
-  Settings,
-  Share2,
   Check,
-  Mic,
-  MicOff,
-  Headphones,
-  Radio,
   Database,
+  Dices,
+  Headphones,
+  Keyboard,
   MessageSquare,
   MessageSquareHeart,
-  Plus,
+  Mic,
+  MicOff,
   PieChart,
-  Keyboard,
+  Plus,
+  Radio,
+  Share2,
+  Swords,
+  User,
+  Volume2,
+  X
 } from 'lucide-react';
-import { Player } from '@oldbear/shared';
-import { VoiceState } from '../network/VoiceManager.js';
+import React, { useEffect, useState } from 'react';
 import { FULL_VERSION_STRING } from '../config/version.js';
+import { VoiceState } from '../network/VoiceManager.js';
 
 import { COLOR_VALUES } from '../config/colors.js';
 
@@ -177,7 +175,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
             <span style={{ fontSize: '1.25rem' }}>🐻</span>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                Old Bear Rodeo
+                Old Bear Battles
               </span>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.03em' }}>
                 {FULL_VERSION_STRING}
@@ -550,7 +548,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
             </a>
 
             <a
-              href="https://github.com/headhunter45/OldBearRodeo"
+              href="https://github.com/headhunter45/OldBearBattles"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"

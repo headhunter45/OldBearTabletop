@@ -1,8 +1,10 @@
-import { GameSession } from '@oldbear/shared';
-import { getDB, StoredAsset } from './db.js';
+import {GameSession} from '@oldbear/shared';
+
+import {getDB, StoredAsset} from './db.js';
 
 export const BINDER_SCHEMA_ID = 'https://schemas.ttrpgwith.me/v1/binder.json';
-export const BINDER_JSON_SCHEMA = 'https://json-schema.org/draft/2020-12/schema';
+export const BINDER_JSON_SCHEMA =
+    'https://json-schema.org/draft/2020-12/schema';
 export const BINDER_SCHEMA_VERSION = 1;
 export const CARD_SCHEMA_ID = 'https://schemas.ttrpgwith.me/v1/card.json';
 
@@ -30,10 +32,11 @@ export interface MonsterCard {
   climbSpeed?: number;
   flySpeed?: number;
   swimSpeed?: number;
-  abilities?: Array<{ name: string; description: string; [key: string]: any }>;
-  actions?: Array<{ name: string; description: string; [key: string]: any }>;
-  reactions?: Array<{ name: string; description: string; [key: string]: any }>;
-  legendaryActions?: Array<{ name: string; description: string; [key: string]: any }>;
+  abilities?: Array<{name: string; description: string; [key: string]: any}>;
+  actions?: Array<{name: string; description: string; [key: string]: any}>;
+  reactions?: Array<{name: string; description: string; [key: string]: any}>;
+  legendaryActions?:
+      Array<{name: string; description: string; [key: string]: any}>;
   imageUrl?: string;
   [key: string]: any;
 }
@@ -49,7 +52,7 @@ export interface BinderCollection {
 }
 
 export interface OldBearVttModuleData {
-  session?: GameSession | null;
+  session?: GameSession|null;
   assets?: StoredAsset[];
   characters?: any[];
   customStatuses?: any[];
@@ -77,127 +80,134 @@ export interface BinderData {
   dashboard?: any[];
   _oldbear?: {
     vtt?: OldBearVttModuleData;
-    brawl?: OldBearBrawlModuleData;
-    [key: string]: any;
+    brawl?: OldBearBrawlModuleData; [key: string]: any;
   };
   [key: string]: any;
 }
 
 export interface BinderExportOptions {
-  session?: GameSession | null;
+  session?: GameSession|null;
   includeAssets?: boolean;
   includeLocalStorage?: boolean;
   brawlData?: OldBearBrawlModuleData;
   customCollections?: BinderCollection[];
-  rawBinder?: BinderData; // To preserve third-party collections/dashboard during round-trip
+  rawBinder?: BinderData;  // To preserve third-party collections/dashboard
+                           // during round-trip
 }
 
 export interface BinderImportResult {
   schemaVersion: number;
   assetCount: number;
   charCount: number;
-  session?: GameSession | null;
+  session?: GameSession|null;
   brawlRosterCount: number;
   collectionsCount: number;
   rawBinder: BinderData;
 }
 
 /**
- * Validates whether an unknown object adheres to the .binder schema specifications.
+ * Validates whether an unknown object adheres to the .binder schema
+ * specifications.
  */
 export function isBinderData(data: unknown): data is BinderData {
   if (!data || typeof data !== 'object') return false;
   const candidate = data as Record<string, any>;
-  if (typeof candidate.schemaVersion !== 'number' || candidate.schemaVersion < 1) {
+  if (typeof candidate.schemaVersion !== 'number' ||
+      candidate.schemaVersion < 1) {
     return false;
   }
   // Must have either _oldbear, collections, or dashboard
   return Boolean(
-    candidate._oldbear ||
-    Array.isArray(candidate.collections) ||
-    Array.isArray(candidate.dashboard)
-  );
+      candidate._oldbear || Array.isArray(candidate.collections) ||
+      Array.isArray(candidate.dashboard));
 }
 
 /**
- * Maps a StoredAsset or creature data to a standard MonsterCard conforming to docs/schema/card.json (OB-174).
+ * Maps a StoredAsset or creature data to a standard MonsterCard conforming to
+ * docs/schema/card.json (OB-174).
  */
-export function mapAssetToCard(asset: StoredAsset, instanceId?: string): MonsterCard {
+export function mapAssetToCard(
+    asset: StoredAsset, instanceId?: string): MonsterCard {
   const mData = asset.monsterData || {};
   const char = asset.character || {};
 
   // Size string mapping
   let sizeStr = mData.size || char.size;
   if (!sizeStr && typeof asset.size === 'number') {
-    if (asset.size <= 0.5) sizeStr = 'Tiny';
-    else if (asset.size <= 0.8) sizeStr = 'Small';
-    else if (asset.size <= 1.2) sizeStr = 'Medium';
-    else if (asset.size <= 2.2) sizeStr = 'Large';
-    else if (asset.size <= 3.2) sizeStr = 'Huge';
-    else sizeStr = 'Gargantuan';
+    if (asset.size <= 0.5)
+      sizeStr = 'Tiny';
+    else if (asset.size <= 0.8)
+      sizeStr = 'Small';
+    else if (asset.size <= 1.2)
+      sizeStr = 'Medium';
+    else if (asset.size <= 2.2)
+      sizeStr = 'Large';
+    else if (asset.size <= 3.2)
+      sizeStr = 'Huge';
+    else
+      sizeStr = 'Gargantuan';
   }
 
   // Speed
-  const walkSpeed =
-    typeof mData.speed === 'number'
-      ? mData.speed
-      : typeof asset.speed === 'number'
-      ? asset.speed
-      : typeof char.speed === 'number'
-      ? char.speed
-      : 30;
+  const walkSpeed = typeof mData.speed === 'number' ? mData.speed :
+      typeof asset.speed === 'number'               ? asset.speed :
+      typeof char.speed === 'number'                ? char.speed :
+                                                      30;
 
   // Abilities
-  const rawAbilities = Array.isArray(mData.specialAbilities)
-    ? mData.specialAbilities
-    : Array.isArray(mData.abilities)
-    ? mData.abilities
-    : Array.isArray(char.abilities)
-    ? char.abilities
-    : [];
+  const rawAbilities = Array.isArray(mData.specialAbilities) ?
+      mData.specialAbilities :
+      Array.isArray(mData.abilities) ? mData.abilities :
+      Array.isArray(char.abilities)  ? char.abilities :
+                                       [];
 
-  const abilities = rawAbilities.map((a: any) => ({
-    name: a.name || 'Ability',
-    description: a.desc || a.description || '',
-  }));
+  const abilities =
+      rawAbilities.map((a: any) => ({
+                         name: a.name || 'Ability',
+                         description: a.desc || a.description || '',
+                       }));
 
   // Actions
-  const rawActions = Array.isArray(mData.actions)
-    ? mData.actions
-    : Array.isArray(char.actions)
-    ? char.actions
-    : [];
+  const rawActions = Array.isArray(mData.actions) ? mData.actions :
+      Array.isArray(char.actions)                 ? char.actions :
+                                                    [];
 
   const actions = rawActions.map((a: any) => ({
-    name: a.name || 'Action',
-    description: a.desc || a.description || '',
-  }));
+                                   name: a.name || 'Action',
+                                   description: a.desc || a.description || '',
+                                 }));
 
   // Reactions
   const rawReactions = Array.isArray(mData.reactions) ? mData.reactions : [];
-  const reactions = rawReactions.map((r: any) => ({
-    name: r.name || 'Reaction',
-    description: r.desc || r.description || '',
-  }));
+  const reactions =
+      rawReactions.map((r: any) => ({
+                         name: r.name || 'Reaction',
+                         description: r.desc || r.description || '',
+                       }));
 
   // Legendary actions
-  const rawLegendary = Array.isArray(mData.legendaryActions) ? mData.legendaryActions : [];
-  const legendaryActions = rawLegendary.map((l: any) => ({
-    name: l.name || 'Legendary Action',
-    description: l.desc || l.description || '',
-  }));
+  const rawLegendary =
+      Array.isArray(mData.legendaryActions) ? mData.legendaryActions : [];
+  const legendaryActions =
+      rawLegendary.map((l: any) => ({
+                         name: l.name || 'Legendary Action',
+                         description: l.desc || l.description || '',
+                       }));
 
   // Ability stats
   const stats = char.stats || {};
   const strengthScore = Number(mData.strPoints ?? mData.str ?? stats.str ?? 10);
-  const dexterityScore = Number(mData.dexPoints ?? mData.dex ?? stats.dex ?? 10);
-  const constitutionScore = Number(mData.conPoints ?? mData.con ?? stats.con ?? 10);
-  const intelligenceScore = Number(mData.intPoints ?? mData.int ?? stats.int ?? 10);
+  const dexterityScore =
+      Number(mData.dexPoints ?? mData.dex ?? stats.dex ?? 10);
+  const constitutionScore =
+      Number(mData.conPoints ?? mData.con ?? stats.con ?? 10);
+  const intelligenceScore =
+      Number(mData.intPoints ?? mData.int ?? stats.int ?? 10);
   const wisdomScore = Number(mData.wisPoints ?? mData.wis ?? stats.wis ?? 10);
   const charismaScore = Number(mData.chaPoints ?? mData.cha ?? stats.cha ?? 10);
 
   // Hit dice
-  let hitDice: number | undefined;
+  let hitDice: number|undefined;
   if (typeof mData.hitDice === 'number') {
     hitDice = mData.hitDice;
   } else if (typeof mData.hit_dice === 'string') {
@@ -213,7 +223,10 @@ export function mapAssetToCard(asset: StoredAsset, instanceId?: string): Monster
     id: instanceId || asset.id || crypto.randomUUID(),
     name: asset.name,
     size: sizeStr || 'Medium',
-    type: mData.type || (asset.monsterData ? 'monster' : asset.character ? 'character' : 'token'),
+    type: mData.type ||
+        (asset.monsterData   ? 'monster' :
+             asset.character ? 'character' :
+                               'token'),
     subtype: mData.subtype || '',
     alignment: mData.alignment || char.alignment || 'any alignment',
     strengthScore,
@@ -239,12 +252,19 @@ export function mapAssetToCard(asset: StoredAsset, instanceId?: string): Monster
 }
 
 /**
- * Constructs a fully compliant .binder document according to docs/schema/binder.json
+ * Constructs a fully compliant .binder document according to
+ * docs/schema/binder.json
  */
-export async function createBinderPayload(
-  options: BinderExportOptions = {}
-): Promise<BinderData> {
-  const { session = null, includeAssets = true, includeLocalStorage = true, brawlData, customCollections, rawBinder } = options;
+export async function createBinderPayload(options: BinderExportOptions = {}):
+    Promise<BinderData> {
+  const {
+    session = null,
+    includeAssets = true,
+    includeLocalStorage = true,
+    brawlData,
+    customCollections,
+    rawBinder
+  } = options;
 
   let assets: StoredAsset[] = [];
   if (includeAssets) {
@@ -266,9 +286,9 @@ export async function createBinderPayload(
       const val = localStorage.getItem(key);
       if (val === null) continue;
 
-      if (key.startsWith('obr_brawl') || key.startsWith('oldbear_brawl')) {
+      if (key.startsWith('obb_brawl') || key.startsWith('oldbear_brawl')) {
         brawlLocalStorage[key] = val;
-      } else if (key.startsWith('oldbear_') || key.startsWith('obr_')) {
+      } else if (key.startsWith('oldbear_') || key.startsWith('obb_')) {
         vttLocalStorage[key] = val;
       }
     }
@@ -283,16 +303,19 @@ export async function createBinderPayload(
     collections.push(...customCollections);
   }
 
-  // Convert saved assets/characters/monsters into standard MonsterCard objects conforming to docs/schema/card.json
+  // Convert saved assets/characters/monsters into standard MonsterCard objects
+  // conforming to docs/schema/card.json
   const cards: MonsterCard[] = [];
   for (const asset of assets) {
     if (asset.type === 'token' || asset.monsterData || asset.character) {
-      // Each card instance gets a unique ID so monsters can be included multiple times in a collection
+      // Each card instance gets a unique ID so monsters can be included
+      // multiple times in a collection
       cards.push(mapAssetToCard(asset, crypto.randomUUID()));
     }
   }
 
-  if (cards.length > 0 && !collections.some((c) => c.name === 'Tokens & Creatures')) {
+  if (cards.length > 0 &&
+      !collections.some((c) => c.name === 'Tokens & Creatures')) {
     collections.push({
       id: crypto.randomUUID(),
       name: 'Tokens & Creatures',
@@ -330,18 +353,21 @@ export async function createBinderPayload(
 /**
  * Serializes and exports current state into a downloadable .binder file blob.
  */
-export async function exportToBinderBlob(options: BinderExportOptions = {}): Promise<Blob> {
+export async function exportToBinderBlob(options: BinderExportOptions = {}):
+    Promise<Blob> {
   const payload = await createBinderPayload(options);
   const json = JSON.stringify(payload, null, 2);
-  return new Blob([json], { type: 'application/json' });
+  return new Blob([json], {type: 'application/json'});
 }
 
 /**
  * Triggers a client-side file save/download for a .binder file.
- * Uses window.showSaveFilePicker when available to allow native OS destination selection
- * and prevent Chromium/Brave unknown-extension "Keep" download warnings (OB-166).
+ * Uses window.showSaveFilePicker when available to allow native OS destination
+ * selection and prevent Chromium/Brave unknown-extension "Keep" download
+ * warnings (OB-166).
  */
-export async function downloadBinderFile(blob: Blob, customName?: string): Promise<boolean> {
+export async function downloadBinderFile(
+    blob: Blob, customName?: string): Promise<boolean> {
   const dateStr = new Date().toISOString().slice(0, 10);
   const fileName = customName || `oldbear-collection-${dateStr}.binder`;
 
@@ -383,11 +409,13 @@ export async function downloadBinderFile(blob: Blob, customName?: string): Promi
 }
 
 /**
- * Imports a .binder document, restoring VTT and Brawl modules while preserving third-party data.
- * Note: Per OB-174, importing from collections or dashboard is disabled; OldBear imports exclusively
- * from the native _oldbear extension block while preserving third-party data in rawBinder.
+ * Imports a .binder document, restoring VTT and Brawl modules while preserving
+ * third-party data. Note: Per OB-174, importing from collections or dashboard
+ * is disabled; OldBear imports exclusively from the native _oldbear extension
+ * block while preserving third-party data in rawBinder.
  */
-export async function importBinderData(jsonStringOrObject: string | object): Promise<BinderImportResult> {
+export async function importBinderData(jsonStringOrObject: string|object):
+    Promise<BinderImportResult> {
   let binder: any;
   if (typeof jsonStringOrObject === 'string') {
     try {
@@ -400,20 +428,22 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
   }
 
   if (!isBinderData(binder)) {
-    throw new Error('Invalid .binder file: missing schemaVersion or standard binder properties.');
+    throw new Error(
+        'Invalid .binder file: missing schemaVersion or standard binder properties.');
   }
 
   let assetCount = 0;
   let charCount = 0;
   let brawlRosterCount = 0;
-  let restoredSession: GameSession | null = null;
+  let restoredSession: GameSession|null = null;
 
   // 1. Process _oldbear.vtt module
   if (binder._oldbear?.vtt) {
     const vtt = binder._oldbear.vtt;
 
     // Restore assets into IndexedDB
-    if (typeof indexedDB !== 'undefined' && Array.isArray(vtt.assets) && vtt.assets.length > 0) {
+    if (typeof indexedDB !== 'undefined' && Array.isArray(vtt.assets) &&
+        vtt.assets.length > 0) {
       try {
         const db = await getDB();
         const tx = db.transaction('assets', 'readwrite');
@@ -430,7 +460,8 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
     }
 
     // Restore localStorage entries
-    if (vtt.localStorage && typeof vtt.localStorage === 'object' && typeof localStorage !== 'undefined') {
+    if (vtt.localStorage && typeof vtt.localStorage === 'object' &&
+        typeof localStorage !== 'undefined') {
       for (const [key, value] of Object.entries(vtt.localStorage)) {
         try {
           localStorage.setItem(key, value as string);
@@ -439,7 +470,8 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
             if (Array.isArray(parsed)) charCount += parsed.length;
           }
         } catch (e) {
-          console.warn(`Failed restoring localStorage key ${key} from .binder:`, e);
+          console.warn(
+              `Failed restoring localStorage key ${key} from .binder:`, e);
         }
       }
     }
@@ -452,7 +484,8 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
   // 2. Process _oldbear.brawl module
   if (binder._oldbear?.brawl) {
     const brawl = binder._oldbear.brawl;
-    if (brawl.localStorage && typeof brawl.localStorage === 'object' && typeof localStorage !== 'undefined') {
+    if (brawl.localStorage && typeof brawl.localStorage === 'object' &&
+        typeof localStorage !== 'undefined') {
       for (const [key, value] of Object.entries(brawl.localStorage)) {
         try {
           localStorage.setItem(key, value as string);
@@ -475,7 +508,8 @@ export async function importBinderData(jsonStringOrObject: string | object): Pro
     charCount,
     session: restoredSession,
     brawlRosterCount,
-    collectionsCount: Array.isArray(binder.collections) ? binder.collections.length : 0,
+    collectionsCount:
+        Array.isArray(binder.collections) ? binder.collections.length : 0,
     rawBinder: binder,
   };
 }

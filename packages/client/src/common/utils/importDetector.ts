@@ -1,20 +1,12 @@
-import { Token, DnDCharacter, GameMap } from '@oldbear/shared';
-import { isBinderData, BinderData, MonsterCard, CARD_SCHEMA_ID } from '../storage/BinderPipeline.js';
+import {DnDCharacter, GameMap, Token} from '@oldbear/shared';
 
-export const CONFIRMATION_SIZE_THRESHOLD_BYTES = 250 * 1024; // 250 KB (OB-140)
+import {BinderData, CARD_SCHEMA_ID, isBinderData, MonsterCard} from '../storage/BinderPipeline.js';
+
+export const CONFIRMATION_SIZE_THRESHOLD_BYTES = 250 * 1024;  // 250 KB (OB-140)
 
 export type ImportCategory =
-  | 'binder'
-  | 'backup'
-  | 'dndbeyond'
-  | 'pathbuilder'
-  | 'tetracube'
-  | 'card'
-  | 'multi-character'
-  | 'audio'
-  | 'image'
-  | 'generic-json'
-  | 'unknown';
+    |'binder'|'backup'|'dndbeyond'|'pathbuilder'|'tetracube'|'card'|
+    'multi-character'|'audio'|'image'|'generic-json'|'unknown';
 
 export interface ImportContentsBreakdown {
   npcs: number;
@@ -44,7 +36,8 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * Checks if a parsed JSON object represents a standalone MonsterCard (OB-174, docs/schema/card.json).
+ * Checks if a parsed JSON object represents a standalone MonsterCard (OB-174,
+ * docs/schema/card.json).
  */
 export function isMonsterCard(data: unknown): data is MonsterCard {
   if (!data || typeof data !== 'object') return false;
@@ -53,30 +46,28 @@ export function isMonsterCard(data: unknown): data is MonsterCard {
     return true;
   }
   return Boolean(
-    candidate.schemaVersion === 1 &&
-      candidate.name &&
+      candidate.schemaVersion === 1 && candidate.name &&
       (candidate.strengthScore !== undefined ||
-        candidate.hitDice !== undefined ||
-        Array.isArray(candidate.actions) ||
-        Array.isArray(candidate.abilities))
-  );
+       candidate.hitDice !== undefined || Array.isArray(candidate.actions) ||
+       Array.isArray(candidate.abilities)));
 }
 
 /**
  * Converts a MonsterCard into a battlemap Token and DnDCharacter.
  */
 export function createTokenFromMonsterCard(
-  card: MonsterCard,
-  activeMapId: string,
-  x: number,
-  y: number
-): Token {
+    card: MonsterCard, activeMapId: string, x: number, y: number): Token {
   const sizeRaw = (card.size || 'Medium').toLowerCase();
   let size = 1;
-  if (sizeRaw.includes('tiny') || sizeRaw.includes('small') || sizeRaw.includes('medium')) size = 1;
-  else if (sizeRaw.includes('large')) size = 2;
-  else if (sizeRaw.includes('huge')) size = 3;
-  else if (sizeRaw.includes('gargantuan')) size = 4;
+  if (sizeRaw.includes('tiny') || sizeRaw.includes('small') ||
+      sizeRaw.includes('medium'))
+    size = 1;
+  else if (sizeRaw.includes('large'))
+    size = 2;
+  else if (sizeRaw.includes('huge'))
+    size = 3;
+  else if (sizeRaw.includes('gargantuan'))
+    size = 4;
 
   const hitDice = card.hitDice || 4;
   const conMod = Math.floor(((card.constitutionScore || 10) - 10) / 2);
@@ -85,7 +76,9 @@ export function createTokenFromMonsterCard(
   const character: DnDCharacter = {
     id: card.id || crypto.randomUUID(),
     name: card.name,
-    classes: `${card.type || 'Monster'} ${card.subtype ? `(${card.subtype})` : ''}`.trim(),
+    classes:
+        `${card.type || 'Monster'} ${card.subtype ? `(${card.subtype})` : ''}`
+            .trim(),
     race: card.type || 'Creature',
     level: hitDice,
     stats: {
@@ -104,12 +97,13 @@ export function createTokenFromMonsterCard(
     proficiencyBonus: Math.floor((hitDice - 1) / 4) + 2,
     passivePerception: 10 + Math.floor(((card.wisdomScore || 10) - 10) / 2),
     initiativeBonus: Math.floor(((card.dexterityScore || 10) - 10) / 2),
-    actions: (card.actions || []).map((a: any) => ({
-      name: a.name || 'Action',
-      type: 'melee',
-      activationType: 'action',
-      description: a.description || a.desc || '',
-    })),
+    actions:
+        (card.actions || []).map((a: any) => ({
+                                   name: a.name || 'Action',
+                                   type: 'melee',
+                                   activationType: 'action',
+                                   description: a.description || a.desc || '',
+                                 })),
     spells: [],
     avatarUrl: card.imageUrl,
   };
@@ -140,18 +134,19 @@ export function createTokenFromMonsterCard(
 }
 
 /**
- * Inspects a dropped file and content, identifying format and breakdown (OB-140).
+ * Inspects a dropped file and content, identifying format and breakdown
+ * (OB-140).
  */
 export function inspectImportFile(
-  file: { name: string; size: number; type?: string },
-  content: string
-): ImportInspectionResult {
+    file: {name: string; size: number; type?: string},
+    content: string): ImportInspectionResult {
   const fileName = file.name;
   const fileSize = file.size;
   const fileSizeFormatted = formatFileSize(fileSize);
 
   // Audio files
-  if (file.type?.startsWith('audio/') || fileName.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
+  if (file.type?.startsWith('audio/') ||
+      fileName.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
     return {
       category: 'audio',
       fileName,
@@ -160,12 +155,14 @@ export function inspectImportFile(
       requiresConfirmation: false,
       title: 'Soundboard Audio',
       summary: `Audio file (${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: 0, maps: 0, audio: 1, props: 0, total: 1 },
+      breakdown:
+          {npcs: 0, characters: 0, maps: 0, audio: 1, props: 0, total: 1},
     };
   }
 
   // Image files
-  if (file.type?.startsWith('image/') || fileName.match(/\.(png|jpe?g|webp|gif|svg)$/i)) {
+  if (file.type?.startsWith('image/') ||
+      fileName.match(/\.(png|jpe?g|webp|gif|svg)$/i)) {
     return {
       category: 'image',
       fileName,
@@ -174,7 +171,8 @@ export function inspectImportFile(
       requiresConfirmation: false,
       title: 'Image Asset',
       summary: `Image file (${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: 0, maps: 1, audio: 0, props: 0, total: 1 },
+      breakdown:
+          {npcs: 0, characters: 0, maps: 1, audio: 0, props: 0, total: 1},
     };
   }
 
@@ -191,7 +189,8 @@ export function inspectImportFile(
       requiresConfirmation: false,
       title: 'Unknown File',
       summary: `Unrecognized file format (${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: 0, maps: 0, audio: 0, props: 0, total: 0 },
+      breakdown:
+          {npcs: 0, characters: 0, maps: 0, audio: 0, props: 0, total: 0},
     };
   }
 
@@ -208,8 +207,10 @@ export function inspectImportFile(
       for (const col of json.collections) {
         if (Array.isArray(col.cards)) {
           for (const card of col.cards) {
-            if (card.type === 'character') characters++;
-            else npcs++;
+            if (card.type === 'character')
+              characters++;
+            else
+              npcs++;
           }
         }
       }
@@ -220,11 +221,16 @@ export function inspectImportFile(
       const vtt = json._oldbear.vtt;
       if (Array.isArray(vtt.assets)) {
         for (const a of vtt.assets) {
-          if (a.type === 'map') maps++;
-          else if (a.type === 'audio') audio++;
-          else if (a.type === 'prop') props++;
-          else if (a.character) characters++;
-          else npcs++;
+          if (a.type === 'map')
+            maps++;
+          else if (a.type === 'audio')
+            audio++;
+          else if (a.type === 'prop')
+            props++;
+          else if (a.character)
+            characters++;
+          else
+            npcs++;
         }
       }
       if (Array.isArray(vtt.characters)) {
@@ -243,13 +249,13 @@ export function inspectImportFile(
       requiresConfirmation: isLarge,
       title: 'Import Confirmation',
       summary: `Universal .binder package (${fileSizeFormatted})`,
-      breakdown: { npcs, characters, maps, audio, props, total },
+      breakdown: {npcs, characters, maps, audio, props, total},
       parsedData: json,
     };
   }
 
   // 2. OldBear Backup Archive
-  if (json.app === 'OldBearRodeo' && Array.isArray(json.assets)) {
+  if (json.app === 'OldBearBattles' && Array.isArray(json.assets)) {
     let npcs = 0;
     let characters = 0;
     let maps = 0;
@@ -257,11 +263,16 @@ export function inspectImportFile(
     let props = 0;
 
     for (const a of json.assets) {
-      if (a.type === 'map') maps++;
-      else if (a.type === 'audio') audio++;
-      else if (a.type === 'prop') props++;
-      else if (a.character) characters++;
-      else npcs++;
+      if (a.type === 'map')
+        maps++;
+      else if (a.type === 'audio')
+        audio++;
+      else if (a.type === 'prop')
+        props++;
+      else if (a.character)
+        characters++;
+      else
+        npcs++;
     }
 
     // Count characters in localStorage
@@ -271,7 +282,8 @@ export function inspectImportFile(
           try {
             const parsed = JSON.parse(v as string);
             if (Array.isArray(parsed)) characters += parsed.length;
-          } catch {}
+          } catch {
+          }
         }
       }
     }
@@ -287,17 +299,16 @@ export function inspectImportFile(
       requiresConfirmation: isLarge,
       title: 'Import Confirmation',
       summary: `OldBear Backup Archive (${fileSizeFormatted})`,
-      breakdown: { npcs, characters, maps, audio, props, total },
+      breakdown: {npcs, characters, maps, audio, props, total},
       parsedData: json,
     };
   }
 
   // 3. Multi-character JSON
-  if (
-    Array.isArray(json) &&
-    json.length > 1 &&
-    json.every((item) => item && typeof item === 'object' && (item.classes || item.stats || item.name))
-  ) {
+  if (Array.isArray(json) && json.length > 1 &&
+      json.every(
+          (item) => item && typeof item === 'object' &&
+              (item.classes || item.stats || item.name))) {
     return {
       category: 'multi-character',
       fileName,
@@ -305,8 +316,16 @@ export function inspectImportFile(
       fileSizeFormatted,
       requiresConfirmation: true,
       title: 'Import Confirmation',
-      summary: `Multi-character archive (${json.length} characters, ${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: json.length, maps: 0, audio: 0, props: 0, total: json.length },
+      summary: `Multi-character archive (${json.length} characters, ${
+          fileSizeFormatted})`,
+      breakdown: {
+        npcs: 0,
+        characters: json.length,
+        maps: 0,
+        audio: 0,
+        props: 0,
+        total: json.length
+      },
       parsedData: json,
     };
   }
@@ -316,15 +335,12 @@ export function inspectImportFile(
 
   // 4. TetraCube Monster JSON / .monster
   const isTetra = Boolean(
-    fileName.toLowerCase().endsWith('.monster') ||
+      fileName.toLowerCase().endsWith('.monster') ||
       (json &&
-        (json.monsterName ||
-          (json.name &&
-            (json.hpText ||
-              json.challenge !== undefined ||
-              json.strPoints !== undefined ||
-              json.hitDice !== undefined))))
-  );
+       (json.monsterName ||
+        (json.name &&
+         (json.hpText || json.challenge !== undefined ||
+          json.strPoints !== undefined || json.hitDice !== undefined)))));
   if (isTetra) {
     return {
       category: 'tetracube',
@@ -334,15 +350,16 @@ export function inspectImportFile(
       requiresConfirmation: isLargeGeneral,
       title: isLargeGeneral ? 'Import Confirmation' : 'TetraCube Monster',
       summary: `TetraCube Monster (${fileSizeFormatted})`,
-      breakdown: { npcs: 1, characters: 0, maps: 0, audio: 0, props: 0, total: 1 },
+      breakdown:
+          {npcs: 1, characters: 0, maps: 0, audio: 0, props: 0, total: 1},
       parsedData: json,
     };
   }
 
   // 5. Pathbuilder 2e JSON
   const isPathbuilder = Boolean(
-    json && (json.build || (json.success && json.build)) && (json.build?.name || json.name)
-  );
+      json && (json.build || (json.success && json.build)) &&
+      (json.build?.name || json.name));
   if (isPathbuilder) {
     return {
       category: 'pathbuilder',
@@ -350,9 +367,11 @@ export function inspectImportFile(
       fileSize,
       fileSizeFormatted,
       requiresConfirmation: isLargeGeneral,
-      title: isLargeGeneral ? 'Import Confirmation' : 'Pathbuilder 2e Character',
+      title: isLargeGeneral ? 'Import Confirmation' :
+                              'Pathbuilder 2e Character',
       summary: `Pathbuilder 2e Character (${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: 1, maps: 0, audio: 0, props: 0, total: 1 },
+      breakdown:
+          {npcs: 0, characters: 1, maps: 0, audio: 0, props: 0, total: 1},
       parsedData: json,
     };
   }
@@ -360,12 +379,9 @@ export function inspectImportFile(
   // 6. D&D Beyond Character
   const dndData = json.data && typeof json.data === 'object' ? json.data : json;
   const isDnDBeyond = Boolean(
-    dndData &&
-      (dndData.name || dndData.id) &&
-      (Array.isArray(dndData.classes) ||
-        Array.isArray(dndData.stats) ||
-        (dndData.modifiers && typeof dndData.modifiers === 'object'))
-  );
+      dndData && (dndData.name || dndData.id) &&
+      (Array.isArray(dndData.classes) || Array.isArray(dndData.stats) ||
+       (dndData.modifiers && typeof dndData.modifiers === 'object')));
   if (isDnDBeyond) {
     return {
       category: 'dndbeyond',
@@ -375,7 +391,8 @@ export function inspectImportFile(
       requiresConfirmation: isLargeGeneral,
       title: isLargeGeneral ? 'Import Confirmation' : 'D&D Beyond Character',
       summary: `D&D Beyond Character (${fileSizeFormatted})`,
-      breakdown: { npcs: 0, characters: 1, maps: 0, audio: 0, props: 0, total: 1 },
+      breakdown:
+          {npcs: 0, characters: 1, maps: 0, audio: 0, props: 0, total: 1},
       parsedData: json,
     };
   }
@@ -390,7 +407,8 @@ export function inspectImportFile(
       requiresConfirmation: isLargeGeneral,
       title: isLargeGeneral ? 'Import Confirmation' : 'MonsterCard',
       summary: `MonsterCard (${fileSizeFormatted})`,
-      breakdown: { npcs: 1, characters: 0, maps: 0, audio: 0, props: 0, total: 1 },
+      breakdown:
+          {npcs: 1, characters: 0, maps: 0, audio: 0, props: 0, total: 1},
       parsedData: json,
     };
   }
@@ -404,7 +422,7 @@ export function inspectImportFile(
     requiresConfirmation: isLargeGeneral,
     title: isLargeGeneral ? 'Import Confirmation' : 'Generic JSON',
     summary: `Generic JSON file (${fileSizeFormatted})`,
-    breakdown: { npcs: 0, characters: 0, maps: 0, audio: 0, props: 0, total: 1 },
+    breakdown: {npcs: 0, characters: 0, maps: 0, audio: 0, props: 0, total: 1},
     parsedData: json,
   };
 }

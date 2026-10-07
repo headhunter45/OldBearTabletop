@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
 import { ProgressClock, ScreenMarker } from '@oldbear/shared';
 import {
-  Plus,
-  Minus,
-  Trash2,
-  PieChart,
-  Palette,
   Check,
+  Minus,
+  Palette,
+  PieChart,
+  Plus,
+  Trash2,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { COLOR_VALUES } from '../config/colors.js';
-import { DraggableWindow, DraggableWindowTitleBar } from './DraggableWindow.js';
 import { getClockTotalSteps } from './ClockWidget.js';
+import { DraggableWindow, DraggableWindowTitleBar } from './DraggableWindow.js';
 
 export interface ProgressClockModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export interface ProgressClockModalProps {
   onDeleteMarker?: (id: string) => void;
 }
 
-const STORAGE_KEY = 'obr_progress_clocks';
+const STORAGE_KEY = 'obb_progress_clocks';
 
 export function getSavedProgressClocks(): ProgressClock[] {
   if (typeof localStorage === 'undefined') return [];
@@ -256,7 +256,7 @@ export const ProgressClockModal: React.FC<ProgressClockModalProps> = ({
       onClose={onClose}
       isMinimized={isMinimized}
       title="Progress Clocks"
-      storageKey="obr_progress_clocks_pos"
+      storageKey="obb_progress_clocks_pos"
       initialX={typeof window !== 'undefined' ? Math.max(20, window.innerWidth - 380) : 400}
       initialY={90}
       width="360px"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Old Bear Rodeo - Production Container Build & CI Publish Script
+# Old Bear Battles - Production Container Build & CI Publish Script
 # Sourced from single source of truth: VERSION file in repository root
 # ==============================================================================
 set -euo pipefail
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "======================================================================"
-echo " Old Bear Rodeo - Production Container Build"
+echo " Old Bear Battles - Production Container Build"
 echo "======================================================================"
 echo " Application Ver : ${APP_VERSION} (from VERSION)"
 echo " Git Commit Hash : ${GIT_COMMIT_SHORT}"

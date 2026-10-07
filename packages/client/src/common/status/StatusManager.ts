@@ -1,11 +1,12 @@
-import { CustomStatusDefinition, GameMap, Token } from '@oldbear/shared';
+import {CustomStatusDefinition, GameMap, Token} from '@oldbear/shared';
 
-export const DEFAULT_STATUS_DEFINITIONS: Record<string, CustomStatusDefinition> = {
+export const DEFAULT_STATUS_DEFINITIONS: Record<
+    string, CustomStatusDefinition> = {
   Dying: {
     label: 'Dying',
     description: 'The unit is dying',
     color: '#ef4444',
-    counter: { start: 1, update: 1, max: 3 },
+    counter: {start: 1, update: 1, max: 3},
     showOnToken: true,
     clearWhen: 'beginning_of_turn',
     updates: 'end_of_turn',
@@ -14,7 +15,7 @@ export const DEFAULT_STATUS_DEFINITIONS: Record<string, CustomStatusDefinition> 
     label: 'Bleeding',
     description: 'Taking bleed damage each turn',
     color: '#dc2626',
-    counter: { start: 3, update: -1, min: 0 },
+    counter: {start: 3, update: -1, min: 0},
     showOnToken: true,
     clearWhen: 'beginning_of_turn',
     updates: 'beginning_of_turn',
@@ -28,7 +29,8 @@ export const DEFAULT_STATUS_DEFINITIONS: Record<string, CustomStatusDefinition> 
   },
   Blinded: {
     label: 'Blinded',
-    description: 'Cannot see and automatically fails sight-based ability checks',
+    description:
+        'Cannot see and automatically fails sight-based ability checks',
     color: '#64748b',
     showOnToken: true,
   },
@@ -52,7 +54,8 @@ export const DEFAULT_STATUS_DEFINITIONS: Record<string, CustomStatusDefinition> 
   },
   Restrained: {
     label: 'Restrained',
-    description: 'Speed 0, attack rolls against have advantage, unit has disadvantage',
+    description:
+        'Speed 0, attack rolls against have advantage, unit has disadvantage',
     color: '#a855f7',
     showOnToken: true,
   },
@@ -70,12 +73,13 @@ export const DEFAULT_STATUS_DEFINITIONS: Record<string, CustomStatusDefinition> 
   },
 };
 
-const STORAGE_KEY = 'obr_custom_statuses';
+const STORAGE_KEY = 'obb_custom_statuses';
 
 /**
  * Retrieves global custom status definitions stored in localStorage.
  */
-export function getGlobalStatusDefinitions(): Record<string, CustomStatusDefinition> {
+export function getGlobalStatusDefinitions():
+    Record<string, CustomStatusDefinition> {
   if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -89,13 +93,15 @@ export function getGlobalStatusDefinitions(): Record<string, CustomStatusDefinit
 /**
  * Saves a custom status definition to global defaults in localStorage.
  */
-export function saveGlobalStatusDefinition(status: CustomStatusDefinition): void {
+export function saveGlobalStatusDefinition(status: CustomStatusDefinition):
+    void {
   if (typeof localStorage === 'undefined') return;
   const current = getGlobalStatusDefinitions();
   current[status.label] = status;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {}
+  } catch {
+  }
 }
 
 /**
@@ -107,7 +113,8 @@ export function deleteGlobalStatusDefinition(label: string): void {
   delete current[label];
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {}
+  } catch {
+  }
 }
 
 /**
@@ -116,9 +123,8 @@ export function deleteGlobalStatusDefinition(label: string): void {
  * 2. Global localStorage customizations
  * 3. Per-scene overrides (from scene.customStatuses)
  */
-export function resolveStatusDefinitions(
-  scene?: GameMap | null
-): Record<string, CustomStatusDefinition> {
+export function resolveStatusDefinitions(scene?: GameMap|null):
+    Record<string, CustomStatusDefinition> {
   const globalDefs = getGlobalStatusDefinitions();
   const sceneDefs = scene?.customStatuses || {};
   return {
@@ -129,24 +135,24 @@ export function resolveStatusDefinitions(
 }
 
 /**
- * Extracts condition label and optional counter value from condition string or token state.
+ * Extracts condition label and optional counter value from condition string or
+ * token state.
  */
 export function parseCondition(
-  cond: string,
-  token?: Token
-): { label: string; count?: number } {
+    cond: string, token?: Token): {label: string; count?: number} {
   const parts = cond.split(':');
   const label = parts[0];
-  let count: number | undefined;
+  let count: number|undefined;
 
   if (parts.length > 1) {
     const parsed = parseInt(parts[1], 10);
     if (!isNaN(parsed)) count = parsed;
-  } else if (token?.statusCounters && token.statusCounters[label] !== undefined) {
+  } else if (
+      token?.statusCounters && token.statusCounters[label] !== undefined) {
     count = token.statusCounters[label];
   }
 
-  return { label, count };
+  return {label, count};
 }
 
 /**
@@ -163,95 +169,91 @@ export interface TurnTransitionResult {
 }
 
 /**
- * Evaluates turn lifecycle triggers (beginning_of_turn, end_of_turn) across tokens.
- * Advances counters or clears statuses based on schema configuration.
+ * Evaluates turn lifecycle triggers (beginning_of_turn, end_of_turn) across
+ * tokens. Advances counters or clears statuses based on schema configuration.
  */
 export function processTurnTransition(
-  tokens: Record<string, Token>,
-  endingTokenId: string | undefined,
-  startingTokenId: string | undefined,
-  definitions: Record<string, CustomStatusDefinition>
-): TurnTransitionResult {
+    tokens: Record<string, Token>, endingTokenId: string|undefined,
+    startingTokenId: string|undefined,
+    definitions: Record<string, CustomStatusDefinition>): TurnTransitionResult {
   const updatedTokens: Record<string, Token> = {};
   const auditMessages: string[] = [];
 
   // Helper to process triggers for a specific combatant
-  const processTrigger = (
-    tokenId: string,
-    trigger: 'beginning_of_turn' | 'end_of_turn',
-    triggerDescription: string
-  ) => {
-    const token = updatedTokens[tokenId] || tokens[tokenId];
-    if (!token || !token.conditions || token.conditions.length === 0) return;
+  const processTrigger =
+      (tokenId: string, trigger: 'beginning_of_turn'|'end_of_turn',
+       triggerDescription: string) => {
+        const token = updatedTokens[tokenId] || tokens[tokenId];
+        if (!token || !token.conditions || token.conditions.length === 0)
+          return;
 
-    let hasChanges = false;
-    const nextConditions: string[] = [];
-    const nextCounters: Record<string, number> = { ...(token.statusCounters || {}) };
+        let hasChanges = false;
+        const nextConditions: string[] = [];
+        const nextCounters:
+            Record<string, number> = {...(token.statusCounters || {})};
 
-    for (const cond of token.conditions) {
-      const { label, count } = parseCondition(cond, token);
-      const def = definitions[label];
+        for (const cond of token.conditions) {
+          const {label, count} = parseCondition(cond, token);
+          const def = definitions[label];
 
-      if (!def) {
-        nextConditions.push(cond);
-        continue;
-      }
+          if (!def) {
+            nextConditions.push(cond);
+            continue;
+          }
 
-      // 1. Check if counter should update on this turn trigger
-      if (def.updates === trigger && def.counter) {
-        hasChanges = true;
-        const currentVal = count ?? def.counter.start;
-        let newVal = currentVal + def.counter.update;
+          // 1. Check if counter should update on this turn trigger
+          if (def.updates === trigger && def.counter) {
+            hasChanges = true;
+            const currentVal = count ?? def.counter.start;
+            let newVal = currentVal + def.counter.update;
 
-        // Check if counter has expired / reached min and should clear
-        const minVal = def.counter.min ?? 0;
-        if (def.clearWhen === trigger && newVal <= minVal) {
-          delete nextCounters[label];
-          auditMessages.push(
-            `✨ **${token.name}**: Condition **${label}** expired at the ${triggerDescription}.`
-          );
-          continue;
+            // Check if counter has expired / reached min and should clear
+            const minVal = def.counter.min ?? 0;
+            if (def.clearWhen === trigger && newVal <= minVal) {
+              delete nextCounters[label];
+              auditMessages.push(`✨ **${token.name}**: Condition **${
+                  label}** expired at the ${triggerDescription}.`);
+              continue;
+            }
+
+            // Min clamp
+            if (def.counter.min !== undefined && newVal < def.counter.min) {
+              newVal = def.counter.min;
+            }
+
+            // Max check
+            if (def.counter.max !== undefined && newVal > def.counter.max) {
+              newVal = def.counter.max;
+            }
+
+            nextCounters[label] = newVal;
+            nextConditions.push(formatCondition(label, newVal));
+            auditMessages.push(`⏱️ **${token.name}**: **${
+                label}** counter updated to **${newVal}** (was ${
+                currentVal}) at the ${triggerDescription}.`);
+            continue;
+          }
+
+          // 2. Check if condition should be cleared on this turn trigger
+          if (def.clearWhen === trigger) {
+            hasChanges = true;
+            delete nextCounters[label];
+            auditMessages.push(`✨ **${token.name}**: Condition **${
+                label}** expired at the ${triggerDescription}.`);
+            continue;
+          }
+
+          nextConditions.push(cond);
         }
 
-        // Min clamp
-        if (def.counter.min !== undefined && newVal < def.counter.min) {
-          newVal = def.counter.min;
+        if (hasChanges) {
+          updatedTokens[tokenId] = {
+            ...token,
+            conditions: nextConditions,
+            statusCounters: nextCounters,
+          };
         }
-
-        // Max check
-        if (def.counter.max !== undefined && newVal > def.counter.max) {
-          newVal = def.counter.max;
-        }
-
-        nextCounters[label] = newVal;
-        nextConditions.push(formatCondition(label, newVal));
-        auditMessages.push(
-          `⏱️ **${token.name}**: **${label}** counter updated to **${newVal}** (was ${currentVal}) at the ${triggerDescription}.`
-        );
-        continue;
-      }
-
-      // 2. Check if condition should be cleared on this turn trigger
-      if (def.clearWhen === trigger) {
-        hasChanges = true;
-        delete nextCounters[label];
-        auditMessages.push(
-          `✨ **${token.name}**: Condition **${label}** expired at the ${triggerDescription}.`
-        );
-        continue;
-      }
-
-      nextConditions.push(cond);
-    }
-
-    if (hasChanges) {
-      updatedTokens[tokenId] = {
-        ...token,
-        conditions: nextConditions,
-        statusCounters: nextCounters,
       };
-    }
-  };
 
   // 1. End of turn for the combatant finishing their action
   if (endingTokenId) {
@@ -260,7 +262,8 @@ export function processTurnTransition(
 
   // 2. Beginning of turn for the combatant starting their action
   if (startingTokenId) {
-    processTrigger(startingTokenId, 'beginning_of_turn', 'beginning of their turn');
+    processTrigger(
+        startingTokenId, 'beginning_of_turn', 'beginning of their turn');
   }
 
   return {

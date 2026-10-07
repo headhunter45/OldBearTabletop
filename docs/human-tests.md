@@ -553,7 +553,7 @@ All tasks in your requested sequence have been implemented, tested, and individu
      - Navigate to `http://localhost:3000/?mode=brawl`.
      - Verify the application loads **Old Bear Brawl** with the wargaming header, chess clocks, and army roster tools.
      - Navigate to `http://localhost:3000/?mode=vtt`.
-     - Verify the application loads **Old Bear Rodeo** with standard RPG tools, character sheet flyout, and initiative tracker.
+     - Verify the application loads **Old Bear VTT** with standard RPG tools, character sheet flyout, and initiative tracker.
   2. **TopBar One-Click Mode Switcher**:
      - When running in default multi-mode (`GAME_MODES=vtt,brawl`), locate the mode switch pill button in the TopBar:
        - In VTT mode, click **`⚔️ Brawl`** next to the map title. The browser switches into Brawl mode and persists preference in `localStorage`.

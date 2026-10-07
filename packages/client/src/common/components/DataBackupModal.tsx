@@ -1,50 +1,47 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { GameMap, GameSession, Token } from '@oldbear/shared';
 import {
-  Download,
-  Upload,
-  Database,
-  CheckCircle,
-  AlertTriangle,
-  X,
-  FileJson,
-  RefreshCw,
-  Trash2,
-  Edit2,
   Check,
-  Play,
-  Pause,
-  Map,
-  User,
-  Music,
-  Plus,
-  Layers,
-  Skull,
-  Shield,
-  Package,
   ChevronDown,
-  Grid,
+  Database,
   Dices,
+  Download,
+  Edit2,
+  Grid,
+  Layers,
+  Map,
+  Music,
+  Package,
+  Pause,
+  Play,
+  Plus,
+  RefreshCw,
+  Shield,
+  Skull,
+  Trash2,
+  Upload,
+  User,
+  X
 } from 'lucide-react';
-import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
-import { GameSession, GameMap, Token, DnDCharacter } from '@oldbear/shared';
-import { exportAllData, downloadBackupFile, importAllData } from '../storage/BackupManager.js';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   DEFAULT_MODULAR_TILES,
   ModularMapTile,
-  drawRandomTile,
   createModularTileToken,
+  drawRandomTile,
 } from '../engine/ModularTileManager.js';
-import { exportToBinderBlob, downloadBinderFile } from '../storage/BinderPipeline.js';
+import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { downloadBackupFile, exportAllData, importAllData } from '../storage/BackupManager.js';
+import { downloadBinderFile, exportToBinderBlob } from '../storage/BinderPipeline.js';
 import {
+  ASSET_UPDATED_EVENT,
   StoredAsset,
+  computeContentHash,
+  deleteAsset,
+  deleteMultipleAssets,
+  findDuplicateAsset,
   getAllAssets,
   saveAsset,
   updateAsset,
-  deleteAsset,
-  deleteMultipleAssets,
-  computeContentHash,
-  findDuplicateAsset,
-  ASSET_UPDATED_EVENT,
 } from '../storage/db.js';
 export interface SavedCharacterRecord {
   id: string;
@@ -134,7 +131,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
   // Draggable window state (Task #112)
   const [isMinimized, setIsMinimized] = useState(false);
   const { windowRef, position, isDragging: isWindowDragging, handleMouseDown, zIndex } = useDraggableWindow({
-    storageKey: 'obr_asset_manager_pos',
+    storageKey: 'obb_asset_manager_pos',
     initialX: typeof window !== 'undefined' ? Math.max(20, Math.min(window.innerWidth - 750, 80)) : 80,
     initialY: 80,
     defaultZIndex: 55,
@@ -685,7 +682,7 @@ export const DataBackupModal: React.FC<DataBackupModalProps> = ({
     if (!file.name.endsWith('.json') && !file.name.endsWith('.binder')) {
       setResultMessage({
         type: 'error',
-        text: 'Please select a valid .binder or .json Old Bear Rodeo backup file.',
+        text: 'Please select a valid .binder or .json Old Bear Battles backup file.',
       });
       return;
     }
