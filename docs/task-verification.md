@@ -10,6 +10,7 @@ This document provides step-by-step instructions for manually verifying all feat
 | :------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------- | :-------------------- | :------ |
 | **[OB-128](#ob-128---modular--tileable-maps--snapping-map-tiles)**                                | Modular / Tileable Maps & Snapping Map Tiles                                     | VTT Engine            | Testing |
 | **[OB-130](#ob-130---submaps--secondary-logical-maps-per-scene)**                                 | Submaps & Secondary Logical Maps per Scene                                       | VTT Engine            | Testing |
+| **[OB-209](#ob-209---settings-button-next-to-active-scene-name-in-top-bar)**                       | Settings Button Next to Active Scene Name in Top Bar                              | Common / UI           | Testing |
 | **[OB-131](#ob-131---custom-configurable-statuses-with-counters--turn-lifecycles)**               | Custom Configurable Statuses with Counters & Turn Lifecycles                     | VTT Engine            | Testing |
 | **[OB-143](#ob-143---direct-token-creation-from-dd-beyond-monstercharacter-url)**                 | Direct Token Creation from D&D Beyond Monster/Character URL                      | Character / Importers | Testing |
 | **[OB-154](#ob-154---game_mode-environment-configuration--deployment-toggles)**                   | `GAME_MODE` Environment Configuration & Deployment Toggles                       | Platform / Brawl      | Testing |
@@ -56,6 +57,39 @@ This document provides step-by-step instructions for manually verifying all feat
 
 - The canvas displays the secondary submap alongside the primary map with its own styled boundary border, title banner pill, and independent grid layout.
 - Tokens, props, and drawings can be placed, moved, and interacted with inside the submap boundary without disturbing the primary map.
+
+---
+
+### OB-209 - Settings Button Next to Active Scene Name in Top Bar
+
+- **Reference in tasks.md:** [tasks.md: OB-209](file:///Users/tom/Projects/OldBearVTT/docs/tasks.md#ob-209)
+- **Primary Source Code:** [TopBar.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/common/components/TopBar.tsx), [BrawlTopBar.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/brawl/components/BrawlTopBar.tsx), [AppVtt.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/vtt/AppVtt.tsx), [AppBrawl.tsx](file:///Users/tom/Projects/OldBearVTT/packages/client/src/brawl/AppBrawl.tsx)
+- **Where to find it:** Floating top header navigation bar, next to the active scene name.
+
+#### Step-by-Step Instructions:
+
+1. Open the VTT application at `http://localhost:3000/?mode=vtt` (or default route) as GM.
+2. In the top navigation bar, observe the active scene indicator:
+   - It displays `Scene:` followed by the active scene name (e.g. `Default Map`).
+   - A gear settings icon button is visible immediately to the right of the scene name.
+3. Click the gear icon settings button.
+4. Verify that the **Map/Scene Settings Modal** opens directly for the active scene.
+5. In the settings modal:
+   - Notice options for scene name, grid display toggle, grid type (square/hex), grid size, grid color/opacity, background color, and secondary submaps.
+   - Adjust a setting (such as changing the scene name or grid color) and click **Save Changes**.
+6. Verify that the modal closes and the scene updates immediately without errors.
+7. Switch to Brawl mode (`?mode=brawl`) and verify:
+   - For the Tournament Organizer, the `Scene:` label and gear icon settings button appear in the top bar.
+   - Clicking the gear button opens the active table/scene settings modal.
+8. Connect in another browser window or incognito tab as a non-GM player:
+   - Verify the `Scene:` label and scene name are visible, but the gear settings button is hidden.
+
+#### Expected Result (Pass Criteria):
+
+- The settings button (gear icon) is displayed next to the active scene name in the top navigation bar for GMs and Tournament Organizers.
+- Clicking the gear button opens the settings modal for the currently active scene.
+- Saving or closing the modal updates scene properties and cleanly dismisses the modal.
+- Non-GM players see the scene name but cannot access the settings button.
 
 ---
 

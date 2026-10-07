@@ -5,6 +5,7 @@ import {
   Check,
   MessageSquareHeart,
   Swords,
+  Settings,
 } from 'lucide-react';
 import { Player, GameMap } from '@oldbear/shared';
 import { VoiceState } from '../network/VoiceManager.js';
@@ -28,6 +29,7 @@ interface TopBarProps {
   onOpenInitiative: () => void;
   onOpenCharacter: () => void;
   onOpenMaps: () => void;
+  onOpenSceneSettings?: () => void;
   onOpenSoundboard: () => void;
   onOpenBackup?: () => void;
   onAddNewToken: () => void;
@@ -51,6 +53,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenInitiative,
   onOpenCharacter,
   onOpenMaps,
+  onOpenSceneSettings,
   onOpenSoundboard,
   onOpenBackup,
   onAddNewToken,
@@ -146,8 +149,29 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="topbar-map-label" style={{ width: '1px', height: '20px', background: 'var(--border-subtle)' }} />
 
         <div className="topbar-map-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Map:</span>
+          <span style={{ color: 'var(--text-muted)' }}>Scene:</span>
           <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{activeMapName}</span>
+          {isGm && onOpenSceneSettings && (
+            <button
+              className="btn-icon"
+              onClick={onOpenSceneSettings}
+              title="Scene Settings"
+              aria-label="Scene Settings"
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-secondary)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              <Settings size={14} />
+            </button>
+          )}
         </div>
 
         {!isSingleGameModeEnforced() && (

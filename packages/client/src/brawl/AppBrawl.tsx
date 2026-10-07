@@ -16,6 +16,7 @@ import { TokenControls } from '../common/components/TokenControls.js';
 import { TokenEditorModal } from '../common/components/TokenEditorModal.js';
 import { DiceRoller } from '../common/components/DiceRoller.js';
 import { MapManagerModal } from '../common/components/MapManagerModal.js';
+import { MapSettingsModal } from '../common/components/MapSettingsModal.js';
 import { SoundboardModal } from '../common/components/SoundboardModal.js';
 import { MobileDrawer } from '../common/components/MobileDrawer.js';
 import { VoiceManager, VoiceState } from '../common/network/VoiceManager.js';
@@ -127,6 +128,7 @@ export const AppBrawl: React.FC = () => {
   const [showChessClockHUD, setShowChessClockHUD] = useState(false);
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [showMapManager, setShowMapManager] = useState(false);
+  const [showSceneSettings, setShowSceneSettings] = useState(false);
   const [showSoundboard, setShowSoundboard] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
@@ -585,6 +587,7 @@ export const AppBrawl: React.FC = () => {
         onOpenArmyRoster={() => setShowArmyRoster(true)}
         onOpenDice={() => setShowDiceRoller((prev) => !prev)}
         onOpenMaps={() => setShowMapManager(true)}
+        onOpenSceneSettings={() => setShowSceneSettings(true)}
         onOpenSoundboard={() => setShowSoundboard(true)}
         onOpenBackup={() => setShowBackupModal(true)}
         onAddNewModel={() => setShowTokenPickerModal(true)}
@@ -820,6 +823,24 @@ export const AppBrawl: React.FC = () => {
           onUpdateMap={handleUpdateMap}
           onDeleteMap={handleDeleteMap}
           onClose={() => setShowMapManager(false)}
+        />
+      )}
+
+      {/* Active Scene Settings Modal (OB-209) */}
+      {showSceneSettings && currentMap && session && (
+        <MapSettingsModal
+          key={currentMap.id}
+          map={currentMap}
+          canDelete={session.maps.length > 1}
+          onSave={(updates) => {
+            handleUpdateMap(currentMap.id, updates);
+            setShowSceneSettings(false);
+          }}
+          onDelete={(mapId) => {
+            handleDeleteMap(mapId);
+            setShowSceneSettings(false);
+          }}
+          onClose={() => setShowSceneSettings(false)}
         />
       )}
 

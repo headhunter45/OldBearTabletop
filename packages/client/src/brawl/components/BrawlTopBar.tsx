@@ -16,6 +16,7 @@ import {
   Compass,
   Gavel,
   Eye,
+  Settings,
 } from 'lucide-react';
 import { BrawlUserRole } from '../domain/toManager.js';
 import { Player } from '@oldbear/shared';
@@ -55,6 +56,7 @@ interface BrawlTopBarProps {
   onAddNewModel: () => void;
   onToggleMobileDrawer: () => void;
   onToggleChessClockHUD?: () => void;
+  onOpenSceneSettings?: () => void;
   voiceState?: VoiceState;
 }
 
@@ -85,6 +87,7 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
   onOpenArmyRoster,
   onOpenDice,
   onOpenMaps,
+  onOpenSceneSettings,
   onOpenSoundboard,
   onOpenBackup,
   onAddNewModel,
@@ -158,6 +161,34 @@ export const BrawlTopBar: React.FC<BrawlTopBarProps> = ({
             <span>🐻 VTT</span>
           </button>
         )}
+
+        <div className="topbar-map-label" style={{ width: '1px', height: '20px', background: 'var(--border-subtle)' }} />
+
+        <div className="topbar-map-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}>
+          <span style={{ color: 'var(--text-muted)' }}>Scene:</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{activeMapName}</span>
+          {isOrganizer && onOpenSceneSettings && (
+            <button
+              className="btn-icon"
+              onClick={onOpenSceneSettings}
+              title="Scene Settings"
+              aria-label="Scene Settings"
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-secondary)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              <Settings size={14} />
+            </button>
+          )}
+        </div>
 
         {/* Round & Phase Bar */}
         <div

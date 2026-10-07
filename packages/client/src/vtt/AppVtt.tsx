@@ -50,6 +50,7 @@ import {
   createTokenFromMonsterCard,
 } from '../common/utils/importDetector.js';
 import { MapManagerModal } from '../common/components/MapManagerModal.js';
+import { MapSettingsModal } from '../common/components/MapSettingsModal.js';
 import { SoundboardModal } from '../common/components/SoundboardModal.js';
 import { MobileDrawer } from '../common/components/MobileDrawer.js';
 import { HotkeyCheatSheetModal } from '../common/components/HotkeyCheatSheetModal.js';
@@ -136,6 +137,7 @@ export const AppVtt: React.FC = () => {
   const [showInitiative, setShowInitiative] = useState(false);
   const [showCharacterFlyout, setShowCharacterFlyout] = useState(false);
   const [showMapManager, setShowMapManager] = useState(false);
+  const [showSceneSettings, setShowSceneSettings] = useState(false);
   const [showSoundboard, setShowSoundboard] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [backupModalTab, setBackupModalTab] = useState<AssetTab | undefined>(undefined);
@@ -2078,6 +2080,7 @@ export const AppVtt: React.FC = () => {
           onOpenInitiative={() => setShowInitiative((v) => !v)}
           onOpenCharacter={() => setShowCharacterFlyout((v) => !v)}
           onOpenMaps={() => setShowMapManager(true)}
+          onOpenSceneSettings={() => setShowSceneSettings(true)}
           onOpenSoundboard={() => setShowSoundboard(true)}
           onOpenBackup={() => setShowBackupModal(true)}
           onAddNewToken={() => setShowTokenPickerModal(true)}
@@ -2505,6 +2508,24 @@ export const AppVtt: React.FC = () => {
           onUpdateMap={handleUpdateMap}
           onDeleteMap={handleDeleteMap}
           onClose={() => setShowMapManager(false)}
+        />
+      )}
+
+      {/* Active Scene Settings Modal (OB-209) */}
+      {showSceneSettings && currentMap && session && (
+        <MapSettingsModal
+          key={currentMap.id}
+          map={currentMap}
+          canDelete={session.maps.length > 1}
+          onSave={(updates) => {
+            handleUpdateMap(currentMap.id, updates);
+            setShowSceneSettings(false);
+          }}
+          onDelete={(mapId) => {
+            handleDeleteMap(mapId);
+            setShowSceneSettings(false);
+          }}
+          onClose={() => setShowSceneSettings(false)}
         />
       )}
 
