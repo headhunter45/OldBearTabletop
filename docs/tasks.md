@@ -300,6 +300,8 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-184 | HelpTip Component & Placement Guide (docs/helptip-locations.md)                                                                                                                                                                                                                                                                                                                                                                                                                      | Old Bear VTT   | Testing | [Feature](#ob-184) |
 | OB-185 | Backlog Research & Implementation Guide (docs/backlog-implementation-guide.md)                                                                                                                                                                                                                                                                                                                                                                                                       | Old Bear VTT   | Testing | [Feature](#ob-185) |
 | OB-186 | Unable to create new maps or duplicate existing ones.                                                                                                                                                                                                                                                                                                                                                                                                                                | Shared         | Done    | [Bug](#ob-186)     |
+| OB-187 | Submap & Deployment Zone Customization UI (Position, Dimensions, Colors, Background Images)                                                                                                                                                                                                                                                                                                                                                                                          | Old Bear VTT   | Ready   | [Feature](#ob-187) |
+| OB-188 | Relative Dragging for Tokens, Modular Tiles, and Props                                                                                                                                                                                                                                                                                                                                                                                                                               | Old Bear VTT   | Ready   | [Feature](#ob-188) |
 
 ---
 
@@ -3190,6 +3192,44 @@ The buttons do nothing when clicked.
 
 - [x]
 
+<a id="ob-187" class="task" data-project="old-bear-vtt" data-status="ready" data-task-type="feature"></a>
+
+### Submap & Deployment Zone Customization UI (Position, Dimensions, Colors, Background Images)
+
+**ID:** OB-187
+**Project:** Old Bear VTT
+**Status:** Ready
+**Type:** Feature
+
+**Description:**
+Provide user interface controls to edit, position, resize, style, and set backgrounds for secondary submaps and deployment zones:
+
+- [ ] **Submap Property Editor in MapSettingsModal**: Expandable editor or drawer for each submap in the Secondary Submaps & Staging section.
+- [ ] **Positioning & Sizing Controls**: Inputs for canvas offset coordinates (X, Y) and dimensions (Width, Height) in pixels or grid cells.
+- [ ] **Color & Border Styling**: Color picker/swatches for border outline (borderColor/colorCode) and background fill/tint (backgroundColor).
+- [ ] **Background Image Support**: Asset picker or image URL input to set custom floor plans/battlemaps for submaps (imageUrl).
+- [ ] **Testing**: Automated unit tests for updating submap properties and preserving them across scene saves and template duplications.
+
+<a id="ob-188" class="task" data-project="old-bear-vtt" data-status="ready" data-task-type="feature"></a>
+
+### Relative Dragging for Tokens, Modular Tiles, and Props
+
+**ID:** OB-188
+**Project:** Old Bear VTT
+**Status:** Ready
+**Type:** Feature
+
+**Description:**
+Make dragging tokens, modular tiles, and props relative to the initial cursor grab point instead of jumping the token origin or pivot to the cursor position on drag start.
+
+### Requirements:
+
+- [ ] On token drag start in `CanvasEngine`, record the cursor grab offset relative to the token origin or initial pointer position.
+- [ ] During drag move, compute the token's raw position relatively using the initial grab offset (`worldPos - grabOffset`).
+- [ ] Ensure grid snapping and magnetic edge-to-edge snapping maintain clean alignment to the grid without abruptly jumping the token center or pivot directly under the cursor.
+- [ ] Preserve multi-token group drag relative offsets for all selected tokens.
+- [ ] Verify dragging feels natural for both standard 1x1 tokens and large multi-tile props (e.g. 8x8 rooms, 4x1 corridors).
+
 ---
 
 ## Notes
@@ -3219,5 +3259,3 @@ The buttons do nothing when clicked.
 | bug     | Bug     | BUG    | The task is a bug to fix.                                 |
 | feature | Feature | ENH    | The task is a new feature to implement.                   |
 | chore   | Chore   | CHR    | The task is a routine maintenance or administrative task. |
-
-<!-- Table Sort Injection -->

@@ -2186,24 +2186,28 @@ export const AppVtt: React.FC = () => {
             }
 
             const newToken: Token = {
-              id: crypto.randomUUID(),
+              id: `token-${crypto.randomUUID()}`,
               name: statBlock.name,
               x: spawnX,
               y: spawnY,
               size: tokenSize,
               imageUrl: statBlock.imageUrl,
               mapId: session.activeMapId,
-              color: '#10b981',
-              hp: hpParsed,
+              rotation: 0,
+              ringColor: '#10b981',
+              fillColor: '#1e293b',
+              clipCircle: true,
+              clipShape: 'circle',
+              currentHp: hpParsed,
               maxHp: hpParsed,
-              ac: acParsed,
+              tempHp: 0,
+              speed: 30,
               ownerId: '',
-              visibleToPlayers: true,
-              isLocked: false,
-              customProps: {
-                character: char,
-                statBlock,
-              },
+              locked: false,
+              conditions: [],
+              isProp: false,
+              layer: 'token',
+              character: char,
             };
 
             setSession((prev) => {

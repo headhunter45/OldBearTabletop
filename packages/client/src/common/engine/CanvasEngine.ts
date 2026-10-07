@@ -1190,6 +1190,15 @@ export class CanvasEngine {
   };
 
   private onPointerUp = (e: PointerEvent) => {
+    const rect = this.canvas.getBoundingClientRect();
+    const worldPos = this.viewport.screenToWorld(
+      e.clientX - rect.left,
+      e.clientY - rect.top
+    );
+    const currentMap =
+      this.session?.maps.find((m) => m.id === this.currentMapId) ||
+      this.session?.maps[0];
+
     this.activePointers.delete(e.pointerId);
     if (this.activePointers.size < 2) {
       this.initialPinchDist = 0;
