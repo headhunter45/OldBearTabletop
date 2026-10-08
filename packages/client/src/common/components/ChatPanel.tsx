@@ -6,6 +6,7 @@ import {
   DnDCharacter,
   DnDItem,
   DnDSpell,
+  EntityAction,
   EntityStatBlock,
   Player,
   Token,
@@ -1628,6 +1629,236 @@ export function processSlashCommand(
   return false;
 }
 
+export interface AddBlockTargetOptions {
+  block: EntityAction | EntityStatBlock;
+  targetToken?: Token | null;
+  character?: DnDCharacter | null;
+  player: Player;
+  onSyncToken?: (tokenId: string, updates: Partial<Token>) => void;
+  onUpdatePlayerChar?: (char: DnDCharacter) => void;
+  onSendMessage?: (msg: ChatMessage) => void;
+  onSetAssociatedToken?: (token: Token | null) => void;
+}
+
+export function addBlockToTokenOrCharacter({
+  block,
+  targetToken,
+  character,
+  player,
+  onSyncToken,
+  onUpdatePlayerChar,
+  onSendMessage,
+  onSetAssociatedToken,
+}: AddBlockTargetOptions): {
+  targetType: 'token' | 'character';
+  targetId: string;
+  targetName: string;
+  updatedCharacter: DnDCharacter;
+} | null {
+  if (targetToken && onSyncToken) {
+    const rawChar = (targetToken as any).customProps?.character || targetToken.character;
+    let baseChar: DnDCharacter;
+    if (rawChar) {
+      baseChar = {
+        ...rawChar,
+        spells: [...(rawChar.spells || [])],
+        items: [...(rawChar.items || [])],
+        actions: [...(rawChar.actions || [])],
+      };
+    } else {
+      const monsterData = (targetToken as any).monsterData;
+      const mActions: DnDAction[] = (monsterData?.actions || []).map((a: any) => ({
+        name: a.name,
+        type: a.attack_bonus !== undefined || /attack/i.test(a.desc || '') ? 'melee' : 'action',
+        toHitModifier: a.attack_bonus ?? a.toHitModifier ?? 0,
+        damageDice: a.damage_dice || a.damageDice || '',
+        description: a.desc || a.description || '',
+        reach: a.reach,
+        range: a.range,
+      }));
+      baseChar = {
+        id: targetToken.id,
+        name: targetToken.name,
+        level: 1,
+        classes: monsterData?.type || 'Token',
+        race: monsterData?.race || '',
+        currentHp: targetToken.currentHp,
+        maxHp: targetToken.maxHp,
+        tempHp: targetToken.tempHp || 0,
+        speed: targetToken.speed || 30,
+        armorClass: monsterData?.armor_class ?? 10,
+        passivePerception: 10,
+        initiativeBonus: targetToken.initiativeBonus ?? 0,
+        stats: {
+          str: monsterData?.strength ?? monsterData?.str ?? 10,
+          dex: monsterData?.dexterity ?? monsterData?.dex ?? 10,
+          con: monsterData?.constitution ?? monsterData?.con ?? 10,
+          int: monsterData?.intelligence ?? monsterData?.int ?? 10,
+          wis: monsterData?.wisdom ?? monsterData?.wis ?? 10,
+          cha: monsterData?.charisma ?? monsterData?.cha ?? 10,
+        },
+        spells: [],
+        actions: mActions.length > 0 ? mActions : undefined,
+        avatarUrl: targetToken.imageUrl,
+      };
+    }
+
+    let updatedChar: DnDCharacter;
+    let confirmText = '';
+
+    if (block.type === 'spell') {
+      const newSpell: DnDSpell = {
+        id: block.id || crypto.randomUUID(),
+        name: block.name,
+        level: (block as EntityStatBlock).level ?? 0,
+        school: (block as EntityStatBlock).school || block.traits?.[0] || 'Universal',
+        castingTime: (block as EntityStatBlock).castingTime || getActionCostGlyph(block.cost) || '1 action',
+        range: block.range || 'Self',
+        duration: block.duration || 'Instantaneous',
+        description: block.description || '',
+        dndBeyondUrl: block.sourceUrl || '',
+      };
+      updatedChar = {
+        ...baseChar,
+        spells: [...(baseChar.spells || []), newSpell],
+      };
+      confirmText = `✅ Added spell **${block.name}** to ${targetToken.name}'s character sheet.`;
+    } else if (block.type === 'item') {
+      const newItem: DnDItem = {
+        id: block.id || crypto.randomUUID(),
+        name: block.name,
+        description: block.description,
+        dndBeyondUrl: block.sourceUrl,
+        quantity: 1,
+      };
+      updatedChar = {
+        ...baseChar,
+        items: [...(baseChar.items || []), newItem],
+      };
+      confirmText = `✅ Added item **${block.name}** to ${targetToken.name}'s inventory.`;
+    } else {
+      const newAction: DnDAction = {
+        name: block.name,
+        type: block.type,
+        activationType: block.cost,
+        damageDice: block.damageFormula,
+        range: block.range,
+        description: block.description,
+      };
+      updatedChar = {
+        ...baseChar,
+        actions: [...(baseChar.actions || []), newAction],
+      };
+      confirmText = `✅ Added action **${block.name}** to ${targetToken.name}'s actions.`;
+    }
+
+    const updatedToken: Token = {
+      ...targetToken,
+      character: updatedChar,
+    };
+
+    onSyncToken(targetToken.id, { character: updatedChar });
+    onSetAssociatedToken?.(updatedToken);
+
+    if (
+      character &&
+      onUpdatePlayerChar &&
+      (character.id === targetToken.id || character.name === targetToken.name || character.id === targetToken.character?.id)
+    ) {
+      onUpdatePlayerChar(updatedChar);
+    }
+
+    onSendMessage?.({
+      id: crypto.randomUUID(),
+      senderId: 'system',
+      senderName: 'VTT Guide',
+      senderColor: '#10b981',
+      text: confirmText,
+      timestamp: Date.now(),
+      isEphemeral: true,
+      recipientId: player.id,
+    });
+
+    return {
+      targetType: 'token',
+      targetId: targetToken.id,
+      targetName: targetToken.name,
+      updatedCharacter: updatedChar,
+    };
+  } else if (character && onUpdatePlayerChar) {
+    let updatedChar: DnDCharacter;
+    let confirmText = '';
+
+    if (block.type === 'spell') {
+      const newSpell: DnDSpell = {
+        id: block.id || crypto.randomUUID(),
+        name: block.name,
+        level: (block as EntityStatBlock).level ?? 0,
+        school: (block as EntityStatBlock).school || block.traits?.[0] || 'Universal',
+        castingTime: (block as EntityStatBlock).castingTime || getActionCostGlyph(block.cost) || '1 action',
+        range: block.range || 'Self',
+        duration: block.duration || 'Instantaneous',
+        description: block.description || '',
+        dndBeyondUrl: block.sourceUrl || '',
+      };
+      updatedChar = {
+        ...character,
+        spells: [...(character.spells || []), newSpell],
+      };
+      confirmText = `✅ Added spell **${block.name}** to ${character.name}'s character sheet.`;
+    } else if (block.type === 'item') {
+      const newItem: DnDItem = {
+        id: block.id || crypto.randomUUID(),
+        name: block.name,
+        description: block.description,
+        dndBeyondUrl: block.sourceUrl,
+        quantity: 1,
+      };
+      updatedChar = {
+        ...character,
+        items: [...(character.items || []), newItem],
+      };
+      confirmText = `✅ Added item **${block.name}** to ${character.name}'s inventory.`;
+    } else {
+      const newAction: DnDAction = {
+        name: block.name,
+        type: block.type,
+        activationType: block.cost,
+        damageDice: block.damageFormula,
+        range: block.range,
+        description: block.description,
+      };
+      updatedChar = {
+        ...character,
+        actions: [...(character.actions || []), newAction],
+      };
+      confirmText = `✅ Added action **${block.name}** to ${character.name}'s actions.`;
+    }
+
+    onUpdatePlayerChar(updatedChar);
+
+    onSendMessage?.({
+      id: crypto.randomUUID(),
+      senderId: 'system',
+      senderName: 'VTT Guide',
+      senderColor: '#10b981',
+      text: confirmText,
+      timestamp: Date.now(),
+      isEphemeral: true,
+      recipientId: player.id,
+    });
+
+    return {
+      targetType: 'character',
+      targetId: character.id,
+      targetName: character.name,
+      updatedCharacter: updatedChar,
+    };
+  }
+
+  return null;
+}
+
 export const ChatPanel: React.FC<ChatPanelProps> = ({
   player,
   character,
@@ -1937,135 +2168,90 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       </div>
                     )}
 
-                    {m.statBlock && (
-                      <StatBlockCard
-                        statBlock={m.statBlock}
-                        compact
-                        onAddToCharacter={
-                          onUpdatePlayerChar && character
-                            ? (block) => {
-                                if (block.type === 'spell') {
-                                  const newSpell: DnDSpell = {
-                                    id: block.id || crypto.randomUUID(),
-                                    name: block.name,
-                                    level: (block as EntityStatBlock).level ?? 0,
-                                    school: (block as EntityStatBlock).school || block.traits?.[0] || 'Universal',
-                                    castingTime: (block as EntityStatBlock).castingTime || getActionCostGlyph(block.cost) || '1 action',
-                                    range: block.range || 'Self',
-                                    duration: block.duration || 'Instantaneous',
-                                    description: block.description || '',
-                                    dndBeyondUrl: block.sourceUrl || '',
-                                  };
-                                  onUpdatePlayerChar({
-                                    ...character,
-                                    spells: [...(character.spells || []), newSpell],
+                    {m.statBlock && (() => {
+                      const targetToken =
+                        (activeAssociatedToken
+                          ? (tokens || []).find((t) => t.id === activeAssociatedToken.id) || activeAssociatedToken
+                          : null) ||
+                        (m.tokenId ? (tokens || []).find((t) => t.id === m.tokenId) : null);
+                      const canAddToCharacter = Boolean(
+                        (targetToken && onSyncToken) ||
+                        (character && onUpdatePlayerChar)
+                      );
+
+                      return (
+                        <StatBlockCard
+                          statBlock={m.statBlock}
+                          compact
+                          canAddToCharacter={canAddToCharacter}
+                          onAddToCharacter={
+                            canAddToCharacter
+                              ? (block) => {
+                                  addBlockToTokenOrCharacter({
+                                    block,
+                                    targetToken,
+                                    character,
+                                    player,
+                                    onSyncToken,
+                                    onUpdatePlayerChar,
+                                    onSendMessage,
+                                    onSetAssociatedToken: (updatedTok) => {
+                                      if (activeAssociatedToken?.id === targetToken?.id) {
+                                        handleSetAssociatedToken(updatedTok);
+                                      }
+                                    },
                                   });
+                                }
+                              : undefined
+                          }
+                          onRoll={(block) => {
+                            const expr = block.damageFormula || block.rollFormula || '1d20';
+                            const parsed = parseDiceExpression(expr);
+                            if (parsed) {
+                              const rollResult: DiceRollResult = {
+                                id: crypto.randomUUID(),
+                                userId: player.id,
+                                userName: player.name,
+                                userColor: player.color,
+                                diceType: parsed.diceType,
+                                count: parsed.count,
+                                modifier: parsed.modifier,
+                                rolls: parsed.rolls,
+                                total: parsed.total,
+                                timestamp: Date.now(),
+                              };
+                              onBroadcastRoll?.(rollResult);
+                              onSendMessage({
+                                id: crypto.randomUUID(),
+                                senderId: player.id,
+                                senderName: player.name,
+                                senderColor: player.color,
+                                text: `rolls **${block.name}** (${expr}) = ${parsed.total} [${parsed.rolls.join(', ')}]`,
+                                timestamp: Date.now(),
+                                roll: rollResult,
+                              });
+                            }
+                          }}
+                          onSpawnToken={
+                            onSpawnMonsterToken
+                              ? (block) => {
+                                  onSpawnMonsterToken(block);
                                   onSendMessage({
                                     id: crypto.randomUUID(),
                                     senderId: 'system',
                                     senderName: 'VTT Guide',
                                     senderColor: '#10b981',
-                                    text: `✅ Added spell **${block.name}** to ${character.name}'s character sheet.`,
-                                    timestamp: Date.now(),
-                                    isEphemeral: true,
-                                    recipientId: player.id,
-                                  });
-                                } else if (block.type === 'item') {
-                                  const newItem: DnDItem = {
-                                    id: block.id || crypto.randomUUID(),
-                                    name: block.name,
-                                    description: block.description,
-                                    dndBeyondUrl: block.sourceUrl,
-                                    quantity: 1,
-                                  };
-                                  onUpdatePlayerChar({
-                                    ...character,
-                                    items: [...(character.items || []), newItem],
-                                  });
-                                  onSendMessage({
-                                    id: crypto.randomUUID(),
-                                    senderId: 'system',
-                                    senderName: 'VTT Guide',
-                                    senderColor: '#10b981',
-                                    text: `✅ Added item **${block.name}** to ${character.name}'s inventory.`,
-                                    timestamp: Date.now(),
-                                    isEphemeral: true,
-                                    recipientId: player.id,
-                                  });
-                                } else {
-                                  const newAction: DnDAction = {
-                                    name: block.name,
-                                    type: block.type,
-                                    activationType: block.cost,
-                                    damageDice: block.damageFormula,
-                                    range: block.range,
-                                    description: block.description,
-                                  };
-                                  onUpdatePlayerChar({
-                                    ...character,
-                                    actions: [...(character.actions || []), newAction],
-                                  });
-                                  onSendMessage({
-                                    id: crypto.randomUUID(),
-                                    senderId: 'system',
-                                    senderName: 'VTT Guide',
-                                    senderColor: '#10b981',
-                                    text: `✅ Added action **${block.name}** to ${character.name}'s actions.`,
+                                    text: `✨ Spawned token for **${block.name}** on the canvas.`,
                                     timestamp: Date.now(),
                                     isEphemeral: true,
                                     recipientId: player.id,
                                   });
                                 }
-                              }
-                            : undefined
-                        }
-                        onRoll={(block) => {
-                          const expr = block.damageFormula || block.rollFormula || '1d20';
-                          const parsed = parseDiceExpression(expr);
-                          if (parsed) {
-                            const rollResult: DiceRollResult = {
-                              id: crypto.randomUUID(),
-                              userId: player.id,
-                              userName: player.name,
-                              userColor: player.color,
-                              diceType: parsed.diceType,
-                              count: parsed.count,
-                              modifier: parsed.modifier,
-                              rolls: parsed.rolls,
-                              total: parsed.total,
-                              timestamp: Date.now(),
-                            };
-                            onBroadcastRoll?.(rollResult);
-                            onSendMessage({
-                              id: crypto.randomUUID(),
-                              senderId: player.id,
-                              senderName: player.name,
-                              senderColor: player.color,
-                              text: `rolls **${block.name}** (${expr}) = ${parsed.total} [${parsed.rolls.join(', ')}]`,
-                              timestamp: Date.now(),
-                              roll: rollResult,
-                            });
+                              : undefined
                           }
-                        }}
-                        onSpawnToken={
-                          onSpawnMonsterToken
-                            ? (block) => {
-                                onSpawnMonsterToken(block);
-                                onSendMessage({
-                                  id: crypto.randomUUID(),
-                                  senderId: 'system',
-                                  senderName: 'VTT Guide',
-                                  senderColor: '#10b981',
-                                  text: `✨ Spawned token for **${block.name}** on the canvas.`,
-                                  timestamp: Date.now(),
-                                  isEphemeral: true,
-                                  recipientId: player.id,
-                                });
-                              }
-                            : undefined
-                        }
-                      />
-                    )}
+                        />
+                      );
+                    })()}
                   </div>
                 );
               })

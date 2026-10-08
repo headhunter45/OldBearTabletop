@@ -325,7 +325,7 @@ You can manage tasks using the provided automation scripts in `./scripts/` (or v
 | OB-202 | *Make help in chat look better.*                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Common         | Triage   | [Feature](#ob-202) |
 | OB-203 | *Make draggable windows resizable on desktop. Especially chat.*                                                                                                                                                                                                                                                                                                                                                                                                                      | Common         | Triage   | [Feature](#ob-203) |
 | OB-204 | *Error when trying to import pf2 content with /import*                                                                                                                                                                                                                                                                                                                                                                                                                               | Vtt            | Triage   | [Bug](#ob-204)     |
-| OB-205 | The add to character sheet button on an inspected spell adds to the currently selected character. Not the as token.                                                                                                                                                                                                                                                                                                                                                                  | Vtt            | Ready    | [Bug](#ob-205)     |
+| OB-205 | The add to character sheet button on an inspected spell adds to the currently selected character. Not the as token.                                                                                                                                                                                                                                                                                                                                                                  | Vtt            | Done     | [Bug](#ob-205)     |
 | OB-206 | Inspecting a spell like /spell? magic missile' shows the spell, but it has the wrong buttons.                                                                                                                                                                                                                                                                                                                                                                                        | Vtt            | Ready    | [Bug](#ob-206)     |
 | OB-207 | Changing to a token without a bound character sheet should reset the form to the token's state.                                                                                                                                                                                                                                                                                                                                                                                      | Vtt            | Ready    | [Bug](#ob-207)     |
 | OB-208 | Update the Open5EFetcher to use the v2 api.                                                                                                                                                                                                                                                                                                                                                                                                                                          | Vtt            | Ready    | [Feature](#ob-208) |
@@ -3271,16 +3271,19 @@ Error when trying to import pf2 content with /import Uncaught TypeError: Cannot 
 
 - [ ]
 
-<a id="ob-205" class="task" data-project="vtt" data-status="ready" data-task-type="bug"></a>
+<a id="ob-205" class="task" data-project="vtt" data-status="done" data-task-type="bug"></a>
 ### The add to character sheet button on an inspected spell adds to the currently selected character. Not the as token.
 **ID:** OB-205
 **Project:** Vtt
-**Status:** Ready
+**Status:** Done
 **Type:** Bug
-
 
 **Description:**
 Inspecting a spell like '/spell? magic missile' shows the spell adds the spell to the wrong character/token. The add to character sheet button adds to the currently selected character on the character sheet page, not to the 'as->' character in chat. See [OB-177](#0b-177).
+### Implementation Notes:
+- Added `addBlockToTokenOrCharacter` in `ChatPanel.tsx` to target the active associated token in chat (`activeAssociatedToken`) or message token (`m.tokenId`) via `onSyncToken`, falling back to player character sheet if no token is associated.
+- Automatically builds a fallback `DnDCharacter` for tokens without an existing sheet.
+- Added comprehensive unit tests in `chat.test.ts`.
 
 <a id="ob-206" class="task" data-project="vtt" data-status="ready" data-task-type="bug"></a>
 ### Inspecting a spell like /spell? magic missile' shows the spell, but it has the wrong buttons.

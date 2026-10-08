@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseDiceExpression, processSlashCommand } from './ChatPanel.js';
+import { addBlockToTokenOrCharacter, parseDiceExpression, processSlashCommand } from './ChatPanel.js';
 
 describe('Dice Parser & Slash Command Utilities', () => {
   it('correctly parses standard single and multi-dice expressions', () => {
@@ -944,6 +944,247 @@ describe('Dice Parser & Slash Command Utilities', () => {
     const defaultAttackMsg = sentMessages[sentMessages.length - 1];
     assert.ok(defaultAttackMsg.text.includes('Shortsword'));
     assert.ok(!defaultAttackMsg.text.includes('Scimitar'));
+  });
+
+  it('adds an inspected spell to the associated "as" token rather than the player sheet (OB-205)', () => {
+    const testPlayer = { id: 'p1', name: 'Alice', color: '#6366f1' };
+    const playerChar = {
+      id: 'char-player',
+      name: 'Alice Player',
+      level: 3,
+      classes: 'Rogue',
+      race: 'Human',
+      currentHp: 24,
+      maxHp: 24,
+      tempHp: 0,
+      speed: 30,
+      armorClass: 14,
+      passivePerception: 13,
+      initiativeBonus: 3,
+      stats: { str: 10, dex: 16, con: 12, int: 14, wis: 12, cha: 10 },
+      spells: [],
+      actions: [],
+    };
+    const asToken = {
+      id: 'tok-wizard',
+      name: 'Gandalf the Grey',
+      mapId: 'map-1',
+      x: 100,
+      y: 100,
+      size: 1,
+      rotation: 0,
+      ringColor: '#38bdf8',
+      fillColor: '#000000',
+      clipCircle: true,
+      currentHp: 18,
+      maxHp: 18,
+      tempHp: 0,
+      speed: 30,
+      isProp: false,
+      layer: 'token' as const,
+      conditions: [],
+      character: {
+        id: 'char-gandalf',
+        name: 'Gandalf the Grey',
+        level: 5,
+        classes: 'Wizard',
+        race: 'Maia',
+        currentHp: 18,
+        maxHp: 18,
+        tempHp: 0,
+        speed: 30,
+        armorClass: 12,
+        passivePerception: 14,
+        initiativeBonus: 2,
+        stats: { str: 10, dex: 14, con: 12, int: 18, wis: 15, cha: 12 },
+        spells: [],
+        actions: [],
+      },
+    };
+
+    const spellBlock = {
+      name: 'Magic Missile',
+      type: 'spell' as const,
+      cost: 'action' as const,
+      level: 1,
+      school: 'Evocation',
+      castingTime: '1 action',
+      range: '120 feet',
+      duration: 'Instantaneous',
+      description: 'You create three glowing darts of magical force.',
+      traits: ['Evocation'],
+      sourceUrl: 'https://open5e.com/spells/magic-missile',
+    };
+
+    let syncedTokenId: string | null = null;
+    let syncedTokenUpdates: any = null;
+    let updatedPlayerChar: any = null;
+    const sentMessages: any[] = [];
+    let associatedTokenState: any = asToken;
+
+    const res = addBlockToTokenOrCharacter({
+      block: spellBlock as any,
+      targetToken: asToken as any,
+      character: playerChar as any,
+      player: testPlayer as any,
+      onSyncToken: (id, updates) => {
+        syncedTokenId = id;
+        syncedTokenUpdates = updates;
+      },
+      onUpdatePlayerChar: (char) => {
+        updatedPlayerChar = char;
+      },
+      onSendMessage: (msg) => sentMessages.push(msg),
+      onSetAssociatedToken: (tok) => {
+        associatedTokenState = tok;
+      },
+    });
+
+    assert.ok(res);
+    assert.strictEqual(res.targetType, 'token');
+    assert.strictEqual(res.targetId, 'tok-wizard');
+    assert.strictEqual(res.targetName, 'Gandalf the Grey');
+
+    // 1. Token was synced with updated spell
+    assert.strictEqual(syncedTokenId, 'tok-wizard');
+    assert.ok(syncedTokenUpdates?.character);
+    assert.strictEqual(syncedTokenUpdates.character.spells.length, 1);
+    assert.strictEqual(syncedTokenUpdates.character.spells[0].name, 'Magic Missile');
+    assert.strictEqual(syncedTokenUpdates.character.spells[0].level, 1);
+
+    // 2. Associated token state updated
+    assert.strictEqual(associatedTokenState?.character?.spells?.length, 1);
+    assert.strictEqual(associatedTokenState.character.spells[0].name, 'Magic Missile');
+
+    // 3. Player character sheet was NOT modified (different entity)
+    assert.strictEqual(updatedPlayerChar, null);
+    assert.strictEqual(playerChar.spells.length, 0);
+
+    // 4. Confirmation message sent to caller
+    assert.strictEqual(sentMessages.length, 1);
+    assert.ok(sentMessages[0].isEphemeral);
+    assert.ok(sentMessages[0].text.includes('Gandalf the Grey'));
+    assert.ok(sentMessages[0].text.includes('Magic Missile'));
+
+    // 5. Subsequent /spell? from the token finds the added spell
+    const ctx = {
+      player: testPlayer as any,
+      character: playerChar as any,
+      associatedToken: associatedTokenState,
+      onSendMessage: (msg: any) => sentMessages.push(msg),
+    };
+    const inspected = processSlashCommand('/spell? 1', ctx as any);
+    assert.strictEqual(inspected, true);
+    const lastMsg = sentMessages[sentMessages.length - 1];
+    assert.strictEqual(lastMsg.statBlock?.name, 'Magic Missile');
+    assert.strictEqual(lastMsg.tokenId, 'tok-wizard');
+  });
+
+  it('adds an inspected spell to an "as" token that did not initially have a character sheet', () => {
+    const testPlayer = { id: 'p1', name: 'Alice', color: '#6366f1' };
+    const rawToken = {
+      id: 'tok-raw-monster',
+      name: 'Goblin Minion',
+      mapId: 'map-1',
+      x: 50,
+      y: 50,
+      size: 1,
+      rotation: 0,
+      ringColor: '#ef4444',
+      fillColor: '#000000',
+      clipCircle: true,
+      currentHp: 7,
+      maxHp: 7,
+      tempHp: 0,
+      speed: 30,
+      isProp: false,
+      layer: 'token' as const,
+      conditions: [],
+    };
+
+    const spellBlock = {
+      name: 'Burning Hands',
+      type: 'spell' as const,
+      cost: 'action' as const,
+      level: 1,
+      school: 'Evocation',
+      castingTime: '1 action',
+      range: 'Self (15-foot cone)',
+      duration: 'Instantaneous',
+      description: 'A thin sheet of flames shoots forth.',
+    };
+
+    let syncedUpdates: any = null;
+    const sentMessages: any[] = [];
+
+    const res = addBlockToTokenOrCharacter({
+      block: spellBlock as any,
+      targetToken: rawToken as any,
+      character: null,
+      player: testPlayer as any,
+      onSyncToken: (_id, updates) => {
+        syncedUpdates = updates;
+      },
+      onSendMessage: (msg) => sentMessages.push(msg),
+    });
+
+    assert.ok(res);
+    assert.strictEqual(res.targetType, 'token');
+    assert.strictEqual(syncedUpdates?.character?.name, 'Goblin Minion');
+    assert.strictEqual(syncedUpdates.character.spells.length, 1);
+    assert.strictEqual(syncedUpdates.character.spells[0].name, 'Burning Hands');
+    assert.ok(sentMessages[0].text.includes('Goblin Minion'));
+  });
+
+  it('falls back to the player character sheet when no token is associated', () => {
+    const testPlayer = { id: 'p1', name: 'Bob', color: '#10b981' };
+    const playerChar = {
+      id: 'char-bob',
+      name: 'Bob the Fighter',
+      level: 1,
+      classes: 'Fighter',
+      race: 'Dwarf',
+      currentHp: 12,
+      maxHp: 12,
+      tempHp: 0,
+      speed: 25,
+      armorClass: 16,
+      passivePerception: 10,
+      initiativeBonus: 0,
+      stats: { str: 16, dex: 10, con: 14, int: 10, wis: 10, cha: 8 },
+      spells: [],
+      actions: [],
+    };
+
+    const spellBlock = {
+      name: 'Shield',
+      type: 'spell' as const,
+      cost: 'reaction' as const,
+      level: 1,
+      school: 'Abjuration',
+      description: 'An invisible barrier of magical force appears.',
+    };
+
+    let updatedChar: any = null;
+    const sentMessages: any[] = [];
+
+    const res = addBlockToTokenOrCharacter({
+      block: spellBlock as any,
+      targetToken: null,
+      character: playerChar as any,
+      player: testPlayer as any,
+      onUpdatePlayerChar: (char) => {
+        updatedChar = char;
+      },
+      onSendMessage: (msg) => sentMessages.push(msg),
+    });
+
+    assert.ok(res);
+    assert.strictEqual(res.targetType, 'character');
+    assert.strictEqual(updatedChar.name, 'Bob the Fighter');
+    assert.strictEqual(updatedChar.spells.length, 1);
+    assert.strictEqual(updatedChar.spells[0].name, 'Shield');
+    assert.ok(sentMessages[0].text.includes('Bob the Fighter'));
   });
 });
 
