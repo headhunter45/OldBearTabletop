@@ -2,6 +2,7 @@
 node_modules
 .pnp
 .pnp.js
+__pycache__
 
 # Production build artifacts
 dist
@@ -37,5 +38,3 @@ data/
 
 # Example datafiles. Large and unsure of specific rights to each file so ignoring all of them until they can be verified.
 docs/schema/examples
-
-__pycache__
